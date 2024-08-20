@@ -104,30 +104,27 @@ async function removeAndTransfer(path, removeId, transferId) {
 }
 
 async function login(username, password) {
-  try {
-    // const res = await fetch(`${url}/api/login`,
-    const res = await fetch(`http://localhost:8080/api/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: username,
-        password: password,
-      }),
-    });
-    if (!res.ok) {
-      const errorMessage = await res.status;
-      throw new Error(errorMessage);
-    }
+  const res = await fetch(`http://localhost:8080/api/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username: username,
+      password: password,
+    }),
+  });
+
+  if (res.ok) {
     const result = await res.text();
-    console.log('Login successful;', result);
+    console.log('Login successful:', result);
     return result;
-  } catch (error) {
-    console.log('Error during login :', error.message);
-    throw error;
+  } else {
+    console.log('Error during login:', res.statusText);
+    return null;
   }
 }
+
 
 // async function editStatus(status_ID, data) {
 //   try {

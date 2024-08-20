@@ -57,7 +57,7 @@ const router = createRouter({
     },
     {
       path: '/:catchAll(.*)',
-      redirect: '/task',
+      redirect: '/login',
     },
   ],
 })

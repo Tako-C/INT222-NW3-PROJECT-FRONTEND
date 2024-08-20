@@ -1,41 +1,21 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useStore } from '@/stores/store';
-import modalNotification from '@/components/modals/modalNotification.vue';
-import { login } from '@/libs/fetchs';
+import { ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useStore } from "@/stores/store";
+import modalNotification from "@/components/modals/modalNotification.vue";
+import { login } from "@/libs/fetchs";
+import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie";
 
 const router = useRouter();
 const Store = useStore();
-const usernameCount = ref('');
-const passwordCount = ref('');
+const usernameCount = ref("");
+const passwordCount = ref("");
 const showPassword = ref(false);
+const up_check = ref(false);
 
 function togglePasswordVisibility() {
   showPassword.value = !showPassword.value;
-}
-
-// function usernameAndpasswordCheck() {
-//   if (usernameCount.value.length === 0 || passwordCount.value.length === 0) {
-//     Store.errorLoginStatus = true
-//   } else {
-//     switchToTaskBoard()
-//     Store.errorLoginStatus = false
-//   }
-// }
-
-async function usernameAndpasswordCheck() {
-  if (usernameCount.value.length === 0 || passwordCount.value.length === 0) {
-    Store.errorLoginStatus = true;
-  } else {
-    const result = await login(usernameCount.value, passwordCount.value);
-    if (result) {
-      Store.errorLoginStatus = false;
-      // switchToTaskBoard();
-    } else {
-      Store.errorLoginStatus = true;
-    }
-  }
 }
 
 function switchToTaskBoard() {
@@ -44,9 +24,47 @@ function switchToTaskBoard() {
 
 function closeNotificationModal() {
   Store.errorLoginStatus = false;
-  usernameCount.value = '';
-  passwordCount.value = '';
+  usernameCount.value = "";
+  passwordCount.value = "";
 }
+
+async function usernameAndpasswordCheck() {
+  const result = await login(usernameCount.value, passwordCount.value);
+  if (result) {
+    console.log("Login successful :", result);
+
+    // Decode the JWT
+    const decodedToken = jwtDecode(result);
+    const now = Math.floor(Date.now() / 1000);
+    const exp = decodedToken.exp;
+
+    const cookieExpiresInSeconds = exp - now;
+    const cookieExpiresInDays = cookieExpiresInSeconds / (60 * 60 * 24);
+
+    // Store the decoded claims in cookies
+    Cookies.set("name", decodedToken.name, { expires: cookieExpiresInDays });
+    Cookies.set("oid", decodedToken.oid, { expires: cookieExpiresInDays });
+    Cookies.set("email", decodedToken.email, {
+      expires: cookieExpiresInDays,
+    });
+    Cookies.set("role", decodedToken.role, { expires: cookieExpiresInDays });
+    Cookies.set("iat", decodedToken.iat, { expires: cookieExpiresInDays });
+    Cookies.set("exp", decodedToken.exp, { expires: cookieExpiresInDays });
+
+    Store.errorLoginStatus = false;
+    switchToTaskBoard();
+  } else {
+    Store.errorLoginStatus = true;
+  }
+}
+
+watch([usernameCount, passwordCount], ([username, password]) => {
+  if (username.length > 0 && password.length > 0) {
+    up_check.value = true;
+  } else {
+    up_check.value = false;
+  }
+});
 </script>
 
 <template>
@@ -69,7 +87,7 @@ function closeNotificationModal() {
           <input
             v-model="usernameCount"
             maxlength="50"
-            class="w-full p-2 mt-2 border rounded-lg focus:outline-none focus:border-blue-500"
+            class="itbkk-username w-full p-2 mt-2 border rounded-lg focus:outline-none focus:border-blue-500"
             placeholder="Enter Your Username"
           />
           <span :class="{ 'text-red-500': usernameCount.length === 50 }">
@@ -83,7 +101,7 @@ function closeNotificationModal() {
               :type="showPassword ? 'text' : 'password'"
               v-model="passwordCount"
               maxlength="14"
-              class="w-full p-2 mt-2 border rounded-lg focus:outline-none focus:border-blue-500"
+              class="itbkk-password w-full p-2 mt-2 border rounded-lg focus:outline-none focus:border-blue-500"
               placeholder="Enter Your Password"
             />
             <button
@@ -129,8 +147,19 @@ function closeNotificationModal() {
         </div>
       </div>
       <div class="text-center mt-8">
-        <button @click="usernameAndpasswordCheck()" class="button buttonOK">
-          Login
+        <button
+          @click="usernameAndpasswordCheck()"
+          :disabled="!up_check"
+          class="itbkk-button-signin button"
+          :class="[
+            {
+              buttonDisabled: !up_check,
+              buttonOK: up_check,
+              disabled: !up_check,
+            },
+          ]"
+        >
+          Sign In
         </button>
       </div>
     </div>
@@ -151,13 +180,22 @@ function closeNotificationModal() {
   transition-duration: 0.4s;
   cursor: pointer;
 }
+
 .buttonOK {
   background-color: white;
   color: black;
   border: 2px solid #04aa6d;
 }
+
 .buttonOK:hover {
   background-color: #04aa6d;
   color: white;
+}
+
+.buttonDisabled {
+  background-color: #ccc;
+  color: #666;
+  border: 2px solid #ccc;
+  cursor: not-allowed;
 }
 </style>
