@@ -1,53 +1,20 @@
 <script setup>
-import { defineEmits, watchEffect } from 'vue'
-import { ref, defineProps } from 'vue'
-import { useStore } from '@/stores/store.js'
+import { defineEmits } from 'vue'
+import { defineProps } from 'vue'
+
 const emits = defineEmits(['closemodal', 'confirmed'])
-const Store = useStore()
 const props = defineProps({
   statusName: { type: String },
-})
-
-const statusData = ref([])
-const transferStatus = ref(null)
-
-watchEffect(() => {
-  statusData.value = [...Store.statuses]
-  if (
-    props.statusName &&
-    statusData.value.some((status) => status.name === props.statusName)
-  ) {
-    statusData.value = statusData.value.filter(
-      (status) => status.name !== props.statusName
-    )
-  }
 })
 </script>
 
 <template>
-  <div class="fixed modal-box z-40">
-    <h3 class="text-lg font-bold">Transfer a Status</h3>
+  <div class="itbkk-message fixed modal-box">
+    <h3 class="text-lg font-bold">Delete a status</h3>
     <p class="border-b mt-2"></p>
-    {{ (props.statusName, statusData.value) }}
     <p class="itbkk-message py-4">
-      There is some task associated with the Doing status.{{ props.statusName }}
+      Do you want to delete the status "{{ props.statusName }}"
     </p>
-    <p class="itbkk-message py-4">
-      Transfer to
-      <select
-        class="itbkk-status w-[30%] h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
-        v-model="transferStatus"
-      >
-        <option
-          v-for="(status, index) in statusData"
-          :key="index"
-          :value="status.name"
-        >
-          {{ status.name }}
-        </option>
-      </select>
-    </p>
-
     <div class="boxButton">
       <button
         @click="emits('closemodal')"
@@ -56,12 +23,7 @@ watchEffect(() => {
         Cancel
       </button>
       <button
-        @click="
-          emits('confirmed', {
-            removeStatus: props.statusName,
-            transferStatus: transferStatus,
-          })
-        "
+        @click="emits('confirmed')"
         class="itbkk-button-confirm button buttonConfirm"
       >
         Confirm

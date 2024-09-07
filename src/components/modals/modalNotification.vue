@@ -24,6 +24,7 @@ let successUpdateStatus = ref(Store.successUpdateStatus);
 let errorUpdateStatus = ref(Store.errorUpdateStatus);
 let successDeleteStatus = ref(props.successDeleteStatus);
 let errorDeleteStatus = ref(props.errorDeleteStatus);
+let errorDeleteNoStatus = ref(Store.errorDeleteNoStatus)
 
 // login by ch
 let errorLoginStatus = ref(props.errorLoginStatus);
@@ -39,6 +40,7 @@ watchEffect(() => {
   errorUpdateStatus.value = Store.errorUpdateStatus;
   successDeleteStatus.value = props.successDeleteStatus;
   errorDeleteStatus.value = props.errorDeleteStatus;
+  errorDeleteNoStatus.value = Store.errorDeleteNoStatus
 
   // login by ch
   errorLoginStatus.value = props.errorLoginStatus;
@@ -79,7 +81,11 @@ function checkEvent() {
   } else if (errorDeleteStatus.value) {
     message.value.header = 'Error!';
     message.value.detail = 'An error has occurred, the status does not exist.';
+  } else if (errorDeleteNoStatus.value) {
+    message.value.header = 'Error!';
+    message.value.detail = 'This status cannot be deleted.';
   }
+
 
   // login
   else if (errorLoginStatus.value) {

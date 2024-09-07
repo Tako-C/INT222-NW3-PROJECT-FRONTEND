@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUpdated } from 'vue'
-import { getData, editData } from '@/libs/fetchs.js'
+import { getBoard, editDatas } from '@/libs/fetchs.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
 
@@ -24,14 +24,15 @@ if (route.params.id == 1) {
 }
 async function fetchData() {
   try {
-    
-    statusData.value = await getData(`statuses/${route.params.statusId}`)
+    statusData.value = await getBoard(`boards/${route.params.id}/statuses/${route.params.statusId}`)
     console.log(originalStatusData.value)
-
     originalStatusData.value = { ...statusData.value }
+    
   } catch (error) {
     Store.errorUpdateStatus = true
-    router.push({ name: 'StatusTable' })
+    console.log( Store.errorUpdateStatus);
+    
+    router.push({ name: "Status", params: { id: route.params.id } })
   }
 }
 
@@ -50,7 +51,9 @@ async function updateStatus(statusId) {
       statusData.value.name = statusData.value.name.trim()
       statusData.value.description = statusData.value.description.trim()
     }
-    let result = await editData('statuses', statusId, statusData.value)
+    console.log(statusData.value);
+    
+    let result = await editDatas(`boards/${route.params.id}/statuses/${route.params.statusId}`,statusData.value)
     ID.value = result.id
     Store.successUpdateStatus = true
 
@@ -63,7 +66,7 @@ function addToStore() {
   // ค้นหา index ของ Store.tasks ที่มี id เท่ากับ statusData.value.id
   let indexToUpdate = 0
   for (let i = 0; i < Store.statuses.length; i++) {
-    if (Store.statuses[i].id === statusData.value.id) {
+    if (Store.statuses[i].statusId === statusData.value.statusId) {
       indexToUpdate = i
       break
     }
@@ -76,9 +79,9 @@ function addToStore() {
 }
 
 function closeModal() {
-  router.push({ name: 'StatusTable' })
-  clearData()
+  router.push({ name: "Status", params: { id: route.params.id } })
 }
+
 
 function clearData() {
   statusData.value = {
@@ -86,6 +89,8 @@ function clearData() {
     description: '',
   }
 }
+
+
 
 onMounted(fetchData)
 

@@ -9,29 +9,30 @@ import modalNotification from '@/components/modals/modalNotification.vue'
 import modalconfirmed from '@/components/modals/modalConfirmed.vue'
 import Cookies from 'js-cookie'
 
+
 const Store = useStore()
 let boardData = ref([])
 let statusData = ref([])
 const router = useRouter()
 const route = useRoute()
-const optionsDropDownIndex = ref(null)
-const errorDelete = ref(false)
-const successDelete = ref(false)
-const openConfirmed = ref(false)
-const taskTitle = ref('')
-const taskID = ref('')
-const sortStatus = ref(0)
-const newFilterString = ref('')
-const filterList = ref([])
-const showStatusList = ref(false)
+
+// const optionsDropDownIndex = ref(null)
+// const errorDelete = ref(false)
+// const successDelete = ref(false)
+// const openConfirmed = ref(false)
+// const taskTitle = ref('')
+// const taskID = ref('')
+// const sortStatus = ref(0)
+// const newFilterString = ref('')
+// const filterList = ref([])
+// const showStatusList = ref(false)
 
 const username = ref(Cookies.get('name'))
-Store.username = username
 
-
-const isBoardPage = computed(() => route.path === '/board')
+const isBoardPage = computed(() => route.path.startsWith('/board'))
 const isStatusPage = computed(() => route.path.endsWith('/status'));
-
+const isStatusDropdownOpen = ref(false)
+const isTaskDropdownOpen = ref(false)
 
 
 async function fetchData() {
@@ -40,19 +41,17 @@ async function fetchData() {
   Store.boards = boardData.value
   console.log(boardData.value)
 }
-
 function openBoardDetailModal(boardId) {
   router.push({ name:'BoardDetail', params: { id: boardId } })
 }
-
 function openStatuses(boardId) {
   router.push({ name:'Status', params: { id: boardId } })
 
 }
+function openCreateBoard(boardId) {
+  router.push({ name:'createBoard', params: { id: boardId } })
 
-const isStatusDropdownOpen = ref(false)
-const isTaskDropdownOpen = ref(false)
-
+}
 function toggleStatusDropdown() {
     isStatusDropdownOpen.value = !isStatusDropdownOpen.value;
 }
@@ -60,7 +59,10 @@ function toggleTaskDropdown() {
     isTaskDropdownOpen.value = !isTaskDropdownOpen.value;
 }
 
-onMounted(fetchData)
+
+onMounted(() => {
+    fetchData()
+})
 </script>
  
 
@@ -182,7 +184,8 @@ onMounted(fetchData)
             </svg>
         </div>
     </div>
-    <div class="fixed right-0 mt-3 flex  bg-orange-400 items-center justify-center h-14 w-40 rounded-xl">
+    <div class="fixed right-0 mt-3 flex  bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
+        @click="openCreateBoard()">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
@@ -198,7 +201,7 @@ onMounted(fetchData)
       <div v-for="(board ,index) in Store.boards" :key="index" 
       class="bg-white rounded-lg shadow p-6 w-10 md:w-1/5 lg:w-1/5 flex flex-col"
       @click="openBoardDetailModal(board.boardId)"
-      >
+      >{{ board.board }}
         <div class="mb-4">
             <img :src="`/images/bg-theme-${(index %5) +1}.jpg`" alt="bg-board" class="w-full h-full object-cover rounded-2xl">
         </div>

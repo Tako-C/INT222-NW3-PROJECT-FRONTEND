@@ -4,23 +4,37 @@ import { addData } from '@/libs/fetchs.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
 import { validateTask } from '@/libs/varidateTask.js'
-const DefualtStatus = 1
+
 const router = useRouter()
 const route = useRoute()
 const Store = useStore()
 const boardId = ref(route.params.id)
 const TaskID = ref(0)
+const DefualtStatus = ref()
+
+console.log(Store.statuses);
+
+function setDefualtStatus() {
+   DefualtStatus.value = Store.statuses.find(
+    (status) => status.name === "No Status"
+  )
+  console.log(Store.statuses,DefualtStatus.value);
+  
+  
+  taskData.value.status = DefualtStatus.value.statusId
+  return DefualtStatus
+}
 let taskData = ref({
   title: '',
   description: '',
   assignees: '',
   status: DefualtStatus,
-  status: '',
+  
 })
 
 
 function closeModal() {
-  router.push({ name: 'BoardDetail' })
+  router.push({ name: 'BoardDetail'})
   clearData()
 }
 
@@ -61,9 +75,11 @@ function clearData() {
     description: '',
     assignees: '',
     status: DefualtStatus,
-    status: '',
   }
 }
+setDefualtStatus()
+console.log(DefualtStatus.value);
+
 </script>
 <template>
   <div

@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from "vue"
-import { createStatus } from "@/libs/fetchs.js"
+import { ref  } from "vue"
+import { addBoard } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
 
@@ -9,55 +9,43 @@ const route = useRoute()
 const Store = useStore()
 const statusID = ref(0)
 const boardId = ref(route.params.id)
-let statusData = ref({
-    name: '',
-    description: ''
+
+let boardData = ref({
+    board_name: ''
 })
 
 function closeModal() {
-    router.push({name: 'Status'})
+    router.push({name: 'Board'})
     clearData()
 }
 
-function addToStore() {
-    statusData.value.statusId = statusID.value
-    console.log(statusData.value);
-    Store.statuses.push(statusData.value)
+function addToStore(newBoard) {
+    boardData.value = newBoard
+    console.log(boardData.value);
+    Store.boards.push(boardData.value)
     Store.successAddStatus = true
-    console.log(Store.statuses);
-    clearData()
+    console.log(Store.boards);
 }
 
 
-async function saveTaskData() {
-    let checkStatusName = Store.statuses.filter((status) => status.name === statusData.value.name)
+async function saveBoardData() {
+    let checkStatusName = Store.statuses.filter((status) => status.name === boardData.value.name)
         if(checkStatusName.length === 1){
             window.alert("An error has occurred, the status could not be added.")
         }   
         else{
-            if (!statusData.value.description) {
-                statusData.value.description = null
-            }
-            if(statusData.value.name !== null && statusData.value.description !== null) {
-                statusData.value.name = statusData.value.name.trim()
-                statusData.value.description = statusData.value.description.trim()      
-            
-            } 
-            statusData.value.boards = boardId.value
-            let result = await createStatus(statusData.value, `${boardId.value}/statuses`)
-            console.log(result.statusId);
-            
-            statusID.value = result.statusId
+            boardData.value.boards = boardId.value
+            let result = await addBoard(boardData.value, `boards`)
+        
             console.log(result)
-            addToStore()
+            addToStore(result)
             closeModal()           
     }
 }
 
 function clearData() {
-    statusData.value = {
-        name: '',
-        description: ''
+    boardData.value = {
+        board_name: ''
     }
 }
 
@@ -77,7 +65,7 @@ function clearData() {
         >
             <div class=" rounded-2xl ">
                 <h1 class=" break-words w-[79%]">
-                    <span class="font-serif text-[100%]">Add </span><span class="text-[70%] opacity-[60%] font-serif">New Status</span>
+                    <span class="font-serif text-[100%]">Add </span><span class="text-[70%] opacity-[60%] font-serif">New</span>
             </h1>
             <p class="border-b mt-2"></p>
             </div>
@@ -85,10 +73,7 @@ function clearData() {
             <div class=" mt-3 ml-7">
 
                     <div class=" font-bold">Name</div>
-                    <input v-model="statusData.name" class="itbkk-status-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
-
-                    <div class=" font-bold">Description</div>
-                    <textarea v-model="statusData.description" class="itbkk-status-description  w-[90%] h-44 resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-2 overflow-hidden hover:overflow-y-scroll border-2"></textarea>
+                    <input v-model="boardData.board_name" class="itbkk-status-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
 
             </div>
 
@@ -104,8 +89,8 @@ function clearData() {
                     <button 
                         type="submit"
                         class="itbkk-button-confirm button buttonOK btn"
-                        @click="saveTaskData()"
-                        :disabled="statusData.name.length === 0">
+                        @click="saveBoardData()"
+                        :disabled="boardData.board_name.length === 0">
                         
                     Add
                     </button>

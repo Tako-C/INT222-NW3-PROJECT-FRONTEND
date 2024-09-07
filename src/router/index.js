@@ -1,9 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import boardTable from '@/components/boards/board.vue'
 import boardDetail from '@/components/boards/boardDetail.vue'
+import createBoard from '@/components/boards/createBoard.vue'
 import createTask from '@/components/tasks/createTask.vue'
+import editTask from '@/components/tasks/EditTask.vue'
 import statusTable from '@/components/statuses/statuses.vue'
 import createStatus from '@/components/statuses/createStatus.vue'
+import editStatus from '@/components/statuses/editStatus.vue'
 
 import taskTable from '../components/taskTable.vue'
 import taskDetail from '../components/taskDetail.vue'
@@ -28,11 +31,17 @@ const router = createRouter({
     {
       path: '/board',
       name: 'Board', 
-      component: boardTable
-      
+      component: boardTable,
+      children: [
+        {
+          path: 'add',
+          name: 'createBoard',
+          component: createBoard,
+        }
+      ]
     },
     {
-      path: '/board/:id',
+      path: '/board/:id/task',
       name: 'BoardDetail',
       component: boardDetail,
       children: [
@@ -40,6 +49,11 @@ const router = createRouter({
           path: 'add',
           name: 'createTask',
           component: createTask,
+        },
+        {
+          path: ':taskId/edit',
+          name: 'editTask',
+          component: editTask,
         },
       ]
     },
@@ -53,8 +67,18 @@ const router = createRouter({
           name: 'createStatus',
           component: createStatus,
         },
+        {
+          path: ':statusId/edit',
+          name: 'editStatus',
+          component: editStatus,
+        },
       ]
     },
+
+
+
+
+    
     {
       // path: '/task',
       path: '/task',
