@@ -34,6 +34,11 @@ const isStatusPage = computed(() => route.path.endsWith('/status'));
 const isStatusDropdownOpen = ref(false)
 const isTaskDropdownOpen = ref(false)
 
+function getImageUrl(index){
+//   return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
+ return `/images/bg-theme-${(index %5) +1}.jpg`
+ 
+}
 
 async function fetchData() {
   let endpoint = 'boards'
@@ -203,7 +208,7 @@ onMounted(() => {
       @click="openBoardDetailModal(board.boardId)"
       >{{ board.board }}
         <div class="mb-4">
-            <img :src="`/images/bg-theme-${(index %5) +1}.jpg`" alt="bg-board" class="w-full h-full object-cover rounded-2xl">
+            <img :src="getImageUrl(index)" alt="bg-board" class="w-full h-full object-cover rounded-2xl">
         </div>
         <h3 class="text-lg font-bold mb-2">{{ board.board_name }}</h3>
         
