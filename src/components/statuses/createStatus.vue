@@ -31,6 +31,8 @@ function addToStore() {
 
 async function saveTaskData() {
     let checkStatusName = Store.statuses.filter((status) => status.name === statusData.value.name)
+    console.log(statusData.value,checkStatusName);
+    
         if(checkStatusName.length === 1){
             window.alert("An error has occurred, the status could not be added.")
         }   

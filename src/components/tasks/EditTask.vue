@@ -155,29 +155,33 @@ onUpdated(() => {
       <div class="flex mt-3 mb-20 ml-7">
         <div class="w-1/2">
           <p class="font-bold">Title</p>
-
-          <textarea
+            <textarea
             v-model="taskData.title"
             v-if="taskData.title !== null"
+            maxlength="100"
             class="itbkk-title text-black w-[90%] h-auto resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3 border-2 overflow-hidden hover:overflow-y-scroll"
-            >{{ taskData.title }} </textarea
-          >
-
+            > {{ taskData.title }}  
+            </textarea>
+          <p class=" flex justify-end pr-14 text-[10px]">{{ taskData.title.length }}/100</p>
+          
+          
           <p class="font-bold mt-2">Description</p>
-
           <textarea
+            maxlength="500"
             class="itbkk-description border-2 w-[90%] h-[105%] resize-none italic bg-gray-400 bg-opacity-15 rounded-lg"
-            style="color: grey"
+            style=""
             v-model="taskData.description"
             :placeholder="taskData.description ? '' : 'No Description Provided'"
           >
                         {{ taskData.description }}
-                        </textarea
-          >
+          </textarea>
+          <p class=" flex justify-end pr-14 text-[10px]">{{ taskData.description === null ? "0" : taskData.description.length}}/500</p>
         </div>
+
         <div class="w-1/2">
           <div class="font-bold">Assignees</div>
           <textarea
+            maxlength="30"
             class="itbkk-assignees border-2 w-[80%] h-[30%] resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3"
             :class="{ 'italic text-gray-400': !taskData.assignees }"
             type="text"
@@ -186,6 +190,7 @@ onUpdated(() => {
             >{{ taskData.assignees }}
                         </textarea
           >
+          <p class=" flex justify-end pr-20 text-[10px]">{{ taskData.assignees === null ? "0" : taskData.assignees.length }}/30</p>
 
           <div class="font-bold">Status</div>
           <select

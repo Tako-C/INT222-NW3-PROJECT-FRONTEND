@@ -28,6 +28,7 @@ export const useStore = defineStore('task', () => {
   const successAddStatus = false
   const errorUpdateStatus = false
   const errorDeleteNoStatus = false
+  const errorEditDefaultStatus = false
 
   // Login error noti by chaiyo
   const errorLoginStatus = false
@@ -42,6 +43,7 @@ export const useStore = defineStore('task', () => {
     successUpdateStatus,
     errorUpdateStatus,
     errorUpdateTask,
+    errorEditDefaultStatus,
 
     // login by ch
     errorLoginStatus,

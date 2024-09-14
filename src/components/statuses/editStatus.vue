@@ -137,8 +137,8 @@ onUpdated(() => {
           <p class="font-bold mt-2">Description</p>
 
           <textarea
-            class="itbkk-status-description border-2 w-[90%] h-44 resize-none italic pl-2 bg-gray-400 bg-opacity-15 rounded-lg"
-            style="color: grey"
+            class="itbkk-status-description border-2 w-[90%] h-44 resize-none italic pl-2 bg-opacity-15 rounded-lg"
+            style=""
             v-model="statusData.description"
             :placeholder="
               statusData.description ? '' : 'No Description Provided'

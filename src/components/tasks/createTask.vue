@@ -108,18 +108,23 @@ console.log(DefualtStatus.value);
           class="itbkk-title w-[80%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2 "
           maxlength="100"
         />
-        <div>{{ taskData.title.length }} /100</div>
+        <p class=" flex justify-end pr-14 text-[10px]">{{ taskData.title === null ? "0" : taskData.title.length}}/100</p>
         <div class="font-bold">Description</div>
         <textarea
+          maxlength="500"
           v-model="taskData.description"
           class="itbkk-description w-[80%] h-[80%] resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-2 overflow-hidden hover:overflow-y-scroll border-2"
         ></textarea>
+        <p class=" flex justify-end pr-14 text-[10px]">{{ taskData.description === null ? "0" : taskData.description.length}}/500</p>
+        
 
         <div class="font-bold">Assignees</div>
         <textarea
+          maxlength="30"
           v-model="taskData.assignees"
           class="itbkk-assignees w-[80%] h-[30%] resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3 border-2"
         ></textarea>
+        <p class=" flex justify-end pr-14 text-[10px]">{{ taskData.description === null ? "0" : taskData.assignees.length}}/30</p>
 
         <div class="font-bold">Status</div>
         <select
