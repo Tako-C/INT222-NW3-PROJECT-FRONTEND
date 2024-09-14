@@ -22,9 +22,6 @@ const removeId = ref("")
 
 
 const openConfirmed = ref(false)
-const errorDelete = ref(false)
-const successDelete = ref(false)
-const statusNameDelete = ref("")
 const transferModal = ref(false)
 const errorDeleteStatus = ref(false)
 const successDeleteStatus = ref(false)
@@ -57,7 +54,7 @@ onBeforeRouteUpdate((to, from, next) => {
   next();
 });
 
-console.log(Store.statuses)
+// console.log(Store.statuses)
 
 async function fetchData() {
     const endpoint = `${boardId.value}/statuses`
@@ -88,12 +85,18 @@ function openStatuses(id) {
     boardId.value = id
 }
 
-function openStatusDetail(statusId) {
-    router.push({
+function openStatusDetail(statusId,statusName) {
+    if (statusName === "No Status" ||  statusName ==="Done") {
+         Store.errorEditDefaultStatus = true
+    }else{
+        router.push({
         name: "editStatus",
-        params: { id: boardId.value, statusId: statusId },
-    })
-}
+        params: { id: boardId.value, statusId: statusId }
+        })
+        // window.alert('You can not edit this Status.')
+    }
+   
+}    
 
 function openConfirmModal(id, name) {
   openConfirmed.value = true
@@ -112,6 +115,7 @@ function closeNotificationModal() {
     openConfirmed.value = false
     transferModal.value = false
     Store.errorDeleteNoStatus = false
+    Store.errorEditDefaultStatus = false
     removeId.value = ''
     removeName.value = ''
 }
@@ -169,7 +173,7 @@ async function removeStatus() {
     Store.errorDeleteNoStatus = true
     console.log(removeName.value);
 
-    openStatuses()
+    openStatuses(route.params.id)
   }  else {
     transferModal.value = true
   }
@@ -215,7 +219,8 @@ function checkVariable() {
         Store.errorUpdateStatus == true ||
         successDeleteStatus.value === true ||
         errorDeleteStatus.value === true ||
-        Store.errorDeleteNoStatus === true
+        Store.errorDeleteNoStatus == true ||
+        Store.errorEditDefaultStatus == true
     ) {
         return true
     }
@@ -562,9 +567,16 @@ function checkVariable() {
                     class="bg-white rounded-b-lg shadow-md mb-2"
                 >
                     <div class="grid grid-cols-4 gap-4 p-4">
-                        <p @click="openStatusDetail(status.statusId)">{{ index + 1 }}({{ status.statusId }})</p>
-                        <p @click="openStatusDetail(status.statusId)">{{ status.name }}</p>
-                        <p @click="openStatusDetail(status.statusId)">{{ status.description}}</p>
+                        <p @click="openStatusDetail(status.statusId,status.name)">{{ index + 1 }}({{ status.statusId }})</p>
+                        <p @click="openStatusDetail(status.statusId,status.name)">{{ status.name }}</p>
+                        <p @click="openStatusDetail(status.statusId,status.name)"
+                        class=""
+                            :class="{
+                                'italic text-gray-400': !status.description,
+                                'itbkk-assignees': !status.description,
+                            }"
+            
+                        >{{!status.description ? "No description provided" : status.description}}</p>
                         <div class="flex justify-between">
                             <p> ({{ findUsageStatus(status.name) }})</p>
                             <svg

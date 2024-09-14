@@ -13,77 +13,82 @@ const props = defineProps({
   errorLoginStatus: { type: Boolean },
 });
 const Store = useStore();
-const message = ref({ header: '', detail: '' });
-let successAddTask = ref(Store.successAddTask);
-let errorUpdateTask = ref(Store.errorUpdateTask);
-let successUpdateTask = ref(Store.successUpdateTask);
-let errorDelete = ref(props.errorDelete);
-let successDelete = ref(props.successDelete);
-let successAddStatus = ref(Store.successAddStatus);
-let successUpdateStatus = ref(Store.successUpdateStatus);
-let errorUpdateStatus = ref(Store.errorUpdateStatus);
-let successDeleteStatus = ref(props.successDeleteStatus);
-let errorDeleteStatus = ref(props.errorDeleteStatus);
+const message = ref({ header: '', detail: '' })
+let successAddTask = ref(Store.successAddTask)
+let errorUpdateTask = ref(Store.errorUpdateTask)
+let successUpdateTask = ref(Store.successUpdateTask)
+let errorDelete = ref(props.errorDelete)
+let successDelete = ref(props.successDelete)
+let successAddStatus = ref(Store.successAddStatus)
+let successUpdateStatus = ref(Store.successUpdateStatus)
+let errorUpdateStatus = ref(Store.errorUpdateStatus)
+let successDeleteStatus = ref(props.successDeleteStatus)
+let errorDeleteStatus = ref(props.errorDeleteStatus)
 let errorDeleteNoStatus = ref(Store.errorDeleteNoStatus)
+let errorEditDefaultStatus = ref(Store.errorEditDefaultStatus)
 
 // login by ch
-let errorLoginStatus = ref(props.errorLoginStatus);
+let errorLoginStatus = ref(props.errorLoginStatus)
 
 watchEffect(() => {
-  errorDelete.value = props.errorDelete;
-  successDelete.value = props.successDelete;
-  successAddTask.value = Store.successAddTask;
-  errorUpdateTask.value = Store.errorUpdateTask;
-  successUpdateTask.value = Store.successUpdateTask;
-  successAddStatus.value = Store.successAddStatus;
-  successUpdateStatus.value = Store.successUpdateStatus;
-  errorUpdateStatus.value = Store.errorUpdateStatus;
-  successDeleteStatus.value = props.successDeleteStatus;
-  errorDeleteStatus.value = props.errorDeleteStatus;
+  errorDelete.value = props.errorDelete
+  successDelete.value = props.successDelete
+  successAddTask.value = Store.successAddTask
+  errorUpdateTask.value = Store.errorUpdateTask
+  successUpdateTask.value = Store.successUpdateTask
+  successAddStatus.value = Store.successAddStatus
+  successUpdateStatus.value = Store.successUpdateStatus
+  errorUpdateStatus.value = Store.errorUpdateStatus
+  successDeleteStatus.value = props.successDeleteStatus
+  errorDeleteStatus.value = props.errorDeleteStatus
   errorDeleteNoStatus.value = Store.errorDeleteNoStatus
+  errorEditDefaultStatus.value = Store.errorEditDefaultStatus
 
   // login by ch
-  errorLoginStatus.value = props.errorLoginStatus;
+  errorLoginStatus.value = props.errorLoginStatus
   checkEvent();
 });
 
 function checkEvent() {
   //Task
   if (successAddTask.value) {
-    message.value.header = 'Success!';
-    message.value.detail = 'The task has been successfully added.';
+    message.value.header = 'Success!'
+    message.value.detail = 'The task has been successfully added.'
   } else if (errorUpdateTask.value) {
-    message.value.header = 'Error!';
-    message.value.detail = 'The task does not exist.';
+    message.value.header = 'Error!'
+    message.value.detail = 'The task does not exist.'
   } else if (errorDelete.value) {
-    message.value.header = 'Error!';
-    message.value.detail = 'An error occurred while deleting the task.';
+    message.value.header = 'Error!'
+    message.value.detail = 'An error occurred while deleting the task.'
   } else if (successDelete.value) {
-    message.value.header = 'Success!';
-    message.value.detail = 'successfully Delete.';
+    message.value.header = 'Success!'
+    message.value.detail = 'successfully Delete.'
   } else if (successUpdateTask.value) {
-    message.value.header = 'Success!';
-    message.value.detail = 'The update was successful.';
+    message.value.header = 'Success!'
+    message.value.detail = 'The update was successful.'
 
     //Status
   } else if (successAddStatus.value) {
-    message.value.header = 'Success!';
-    message.value.detail = 'The status has been added.';
+    message.value.header = 'Success!'
+    message.value.detail = 'The status has been added.'
   } else if (successUpdateStatus.value) {
-    message.value.header = 'Success!';
-    message.value.detail = 'The status has been updated.';
+    message.value.header = 'Success!'
+    message.value.detail = 'The status has been updated.'
   } else if (errorUpdateStatus.value) {
-    message.value.header = 'Error!';
-    message.value.detail = 'An error has occurred, the status does not exist.';
+    message.value.header = 'Error!'
+    message.value.detail = 'An error has occurred, the status does not exist.'
   } else if (successDeleteStatus.value) {
-    message.value.header = 'Success!';
-    message.value.detail = 'The status has been deleted.';
+    message.value.header = 'Success!'
+    message.value.detail = 'The status has been deleted.'
   } else if (errorDeleteStatus.value) {
-    message.value.header = 'Error!';
-    message.value.detail = 'An error has occurred, the status does not exist.';
+    message.value.header = 'Error!'
+    message.value.detail = 'An error has occurred, the status does not exist.'
   } else if (errorDeleteNoStatus.value) {
-    message.value.header = 'Error!';
-    message.value.detail = 'This status cannot be deleted.';
+    message.value.header = 'Error!'
+    message.value.detail = 'This status cannot be deleted.'
+  } else if (errorEditDefaultStatus.value) {
+    message.value.header = 'Error!'
+    message.value.detail = 'This status cannot be edit.'
   }
 
 
