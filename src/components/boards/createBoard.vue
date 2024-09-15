@@ -3,6 +3,7 @@ import { ref  } from "vue"
 import { addBoard } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
+import Cookies from "js-cookie";
 
 const router = useRouter()
 const route = useRoute()
@@ -11,7 +12,7 @@ const statusID = ref(0)
 const boardId = ref(route.params.id)
 
 let boardData = ref({
-    board_name: ''
+    board_name: `${Cookies.get("name")} personal Board`
 })
 
 function closeModal() {

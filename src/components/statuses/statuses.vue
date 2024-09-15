@@ -2,7 +2,7 @@
 import { ref, onMounted, watch, computed, } from "vue"
 import { useRoute, useRouter ,onBeforeRouteUpdate} from "vue-router"
 import { useStore } from "@/stores/store.js"
-import { getBoard, getTaskByBoard , removeData } from "@/libs/fetchs.js"
+import { getBoard, getTaskByBoard , removeData,clearCookies } from "@/libs/fetchs.js"
 import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalstatusDelete from "@/components/statuses/removeStatus.vue"
@@ -120,6 +120,7 @@ function closeNotificationModal() {
     removeName.value = ''
 }
 
+
 // =======================================================================================================================
 
 // ====================== Orther Fucntion ================================================================================
@@ -210,6 +211,12 @@ async function removeStatusTransfer(data) {
     transferModal.value = false;
 }
 
+async function logOut(){
+    clearCookies()
+    router.push({ name:'login'})
+
+}
+
 // =======================================================================================================================
 
 function checkVariable() {
@@ -253,11 +260,11 @@ function checkVariable() {
     </modalTransfer>
 
     <div
-        class="class name : itbkk-modal-task w-screen bg-slate-200 h-screen flex"
+        class="class name : itbkk-modal-task w-screen bg-white h-screen flex"
     >
         <header
             name="header"
-            class="top-0 z-10 h-full w-20% border-orange-400 bg-slate-100 shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
+            class="top-0 z-10 h-full w-20% border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
         >
             <div class="flex">
                 <div
@@ -427,7 +434,7 @@ function checkVariable() {
                 </div>
             </div>
 
-            <div class="bg-orange-400 p-2 flex my-14 justify-between w-3/4">
+            <div class="bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer">
                 <div class="flex items-center space-x-2 p-1">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -447,7 +454,7 @@ function checkVariable() {
                 <p class="itbkk-fullname text-sm font-medium p-1">
                     {{ username }}
                 </p>
-                <div class="flex items-center justify-center right-0">
+                <div class="flex items-center justify-center right-0" @click="logOut()">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -464,28 +471,6 @@ function checkVariable() {
                     </svg>
                 </div>
             </div>
-            <div
-                class="fixed right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-6"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                </svg>
-                <p @click="openCreateStatus" class="pl-2 cursor-pointer">
-                    Create Status
-                </p>
-            </div>
-
             <!-- back button -->
             <div
                 class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-20 rounded-xl"
@@ -511,7 +496,8 @@ function checkVariable() {
 
         <!-- Table สำหรับแสดงข้อมูลของ board -->
         <main class="h-full w-full overflow-y-scroll">
-            <div class="text-3xl font-bold text-black flex w-auto ml-16 mt-10">
+            <div class="flex justify-between text-white">
+            <div class="text-2xl font-bold text-black flex w-auto ml-16 mt-10">
                 <h1>{{ username }}</h1>
                 <div class="flex items-center justify-center">
                     <svg
@@ -549,6 +535,28 @@ function checkVariable() {
 
                 <p>Statuses Lists</p>
             </div>
+            <div
+                class="right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-6"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                    />
+                </svg>
+                <p @click="openCreateTask" class="pl-2 cursor-pointer">
+                    Create Task
+                </p>
+            </div>
+        </div>
 
             <div class="flex flex-col mt-10 ml-16 w-5/6">
                 <!-- Table Header -->
@@ -568,9 +576,9 @@ function checkVariable() {
                 >
                     <div class="grid grid-cols-4 gap-4 p-4">
                         <p @click="openStatusDetail(status.statusId,status.name)">{{ index + 1 }}({{ status.statusId }})</p>
-                        <p @click="openStatusDetail(status.statusId,status.name)">{{ status.name }}</p>
+                        <p class="break-words" @click="openStatusDetail(status.statusId,status.name)">{{ status.name }}</p>
                         <p @click="openStatusDetail(status.statusId,status.name)"
-                        class=""
+                        class="break-words"
                             :class="{
                                 'italic text-gray-400': !status.description,
                                 'itbkk-assignees': !status.description,

@@ -2,10 +2,10 @@
 import { ref, onMounted, watch, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
-import { getBoard,getTaskByBoard, removeData } from "@/libs/fetchs.js"
+import { getBoard, getTaskByBoard, removeData,clearCookies } from "@/libs/fetchs.js"
 import Cookies from "js-cookie"
-import modalNotification from '@/components/modals/modalNotification.vue'
-import modalconfirmed from '@/components/modals/modalConfirmed.vue'
+import modalNotification from "@/components/modals/modalNotification.vue"
+import modalconfirmed from "@/components/modals/modalConfirmed.vue"
 
 const Store = useStore()
 const router = useRouter()
@@ -17,12 +17,14 @@ const boardName = ref("")
 const errorDelete = ref(false)
 const successDelete = ref(false)
 const openConfirmed = ref(false)
-const taskTitle = ref('')
-const taskID = ref('')
+const taskTitle = ref("")
+const taskID = ref("")
 const username = ref(Cookies.get("name"))
 
-
-
+const sortStatus = ref(0)
+const newFilterString = ref("")
+const filterList = ref([])
+const showStatusList = ref(false)
 
 const isBoardPage = computed(() => route.path.startsWith("/board"))
 const isStatusPage = computed(() =>
@@ -42,11 +44,62 @@ watch(
 )
 
 async function fetchData() {
-    console.log(`Fetching data for board ID: ${boardId.value}`)
-    const endpoint = `${boardId.value}/tasks`
+    let endpoint = `${boardId.value}/tasks`
+    if (filterList.value.length > 0) {
+        endpoint = `${
+            boardId.value
+        }/tasks?sortBy=statusName&FilterStatuses=${filterList.value
+            .map((status) => status.trim())
+            .join("&FilterStatuses=")}`
+    }
     Store.tasks = await getTaskByBoard(endpoint)
     Store.statuses = await getTaskByBoard(`${boardId.value}/statuses`)
     Store.boards = await getBoard("boards")
+}
+
+function toggleSort() {
+    sortStatus.value = (sortStatus.value + 1) % 3
+
+    if (sortStatus.value === 1) {
+        Store.tasks.sort((a, b) => a.statusName.localeCompare(b.statusName))
+    } else if (sortStatus.value === 2) {
+        Store.tasks
+            .sort((a, b) => a.statusName.localeCompare(b.statusName))
+            .reverse()
+    } else {
+        Store.tasks.sort((a, b) => a.id - b.id)
+    }
+}
+
+function filteredStatuses() {
+    return Store.statuses.filter((status) =>
+        status.name.toLowerCase().includes(newFilterString.value.toLowerCase())
+    )
+}
+
+function addFilter() {
+    const trimmedFilter = newFilterString.value.trim()
+    if (trimmedFilter && !filterList.value.includes(trimmedFilter)) {
+        filterList.value.push(trimmedFilter)
+        newFilterString.value = ""
+        fetchData()
+        showStatusList.value = false
+        // Optional: Reset sort status if needed
+        // sortStatus.value = 1;
+    } else {
+        window.alert(`${trimmedFilter} is already in the filter list.`)
+        showStatusList.value = false
+    }
+}
+
+function removeFilter(index) {
+    filterList.value.splice(index, 1)
+    fetchData()
+}
+
+function removeAllFilter() {
+    filterList.value = []
+    fetchData()
 }
 
 function openBoards() {
@@ -82,7 +135,6 @@ function getBoardName() {
     }
 }
 
-
 function openTaskDetail(taskId) {
     router.push({
         name: "editTask",
@@ -93,7 +145,9 @@ function openTaskDetail(taskId) {
 async function removeTask() {
     openConfirmed.value = false
     console.log(taskID.value)
-    let result = await removeData(`boards/${route.params.id}/tasks/${taskID.value}`)
+    let result = await removeData(
+        `boards/${route.params.id}/tasks/${taskID.value}`
+    )
     console.log("result", result)
     if (result.status === 401) {
         console.log("result :", result.status)
@@ -105,36 +159,40 @@ async function removeTask() {
 }
 
 function closeNotificationModal() {
-  errorDelete.value = false
-  successDelete.value = false
-  Store.successUpdateTask = false
-  Store.errorUpdateTask = false
-  Store.successAddTask = false
-  openConfirmed.value = false
-  taskTitle.value = ''
-  taskID.value = ''
+    errorDelete.value = false
+    successDelete.value = false
+    Store.successUpdateTask = false
+    Store.errorUpdateTask = false
+    Store.successAddTask = false
+    openConfirmed.value = false
+    taskTitle.value = ""
+    taskID.value = ""
 }
 
 function checkVariable() {
-  if (
-    Store.successAddTask == true ||
-    Store.errorUpdateTask == true ||
-    Store.successUpdateTask == true ||
-    errorDelete.value === true ||
-    successDelete.value === true 
-    
-  ) {
-    return true
-  }
-  return false
+    if (
+        Store.successAddTask == true ||
+        Store.errorUpdateTask == true ||
+        Store.successUpdateTask == true ||
+        errorDelete.value === true ||
+        successDelete.value === true
+    ) {
+        return true
+    }
+    return false
 }
 
 function openConfirmModal(id, title) {
-  openConfirmed.value = true
-  taskTitle.value = title
-  taskID.value = id
+    openConfirmed.value = true
+    taskTitle.value = title
+    taskID.value = id
 }
 
+async function logOut(){
+    clearCookies()
+    router.push({ name:'login'})
+
+}
 onMounted(() => {
     fetchData()
     getBoardName()
@@ -143,25 +201,23 @@ onMounted(() => {
 
 <template>
     <modalNotification
-    :errorDelete="errorDelete"
-    :successDelete="successDelete"
-    @closemodal="closeNotificationModal()"
-    v-show="checkVariable()"
-    class="z-30"
-  />
-  <modalconfirmed
-    v-show="openConfirmed"
-    :taskTitle="taskTitle"
-    @closemodal="closeNotificationModal()"
-    @confirmed="removeTask()"
-    class="z-40"
-  />
-    <div
-        class="class name : itbkk-modal-task w-screen bg-slate-200 h-screen flex"
-    >
+        :errorDelete="errorDelete"
+        :successDelete="successDelete"
+        @closemodal="closeNotificationModal()"
+        v-show="checkVariable()"
+        class="z-30"
+    />
+    <modalconfirmed
+        v-show="openConfirmed"
+        :taskTitle="taskTitle"
+        @closemodal="closeNotificationModal()"
+        @confirmed="removeTask()"
+        class="z-40"
+    />
+    <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
         <header
             name="header"
-            class="top-0 z-10 h-full w-20% border-orange-400 bg-slate-100 shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
+            class="top-0 z-10 h-full w-20% border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
         >
             <div class="flex">
                 <div
@@ -331,7 +387,7 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div class="bg-orange-400 p-2 flex my-14 justify-between w-3/4">
+            <div class="bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer">
                 <div class="flex items-center space-x-2 p-1">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -351,7 +407,7 @@ onMounted(() => {
                 <p class="itbkk-fullname text-sm font-medium p-1">
                     {{ username }}
                 </p>
-                <div class="flex items-center justify-center right-0">
+                <div class="flex items-center justify-center right-0" @click="logOut()">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -367,27 +423,6 @@ onMounted(() => {
                         />
                     </svg>
                 </div>
-            </div>
-            <div
-                class="fixed right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-6"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                </svg>
-                <p @click="openCreateTask" class="pl-2 cursor-pointer">
-                    Create Task
-                </p>
             </div>
 
             <!-- back button -->
@@ -415,46 +450,223 @@ onMounted(() => {
 
         <!-- Table สำหรับแสดงข้อมูลของ board -->
         <main class="h-full w-full overflow-y-scroll">
-            <div class="text-3xl font-bold text-black flex w-auto ml-16 mt-10">
-                <h1>{{ username }}</h1>
-                <div class="flex items-center justify-center">
+            <!--TOPIC-->
+            <div class="flex justify-between text-white">
+                <div
+                    class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
+                >
+                    <h1>{{ username }}</h1>
+                    <div class="flex items-center justify-center">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-8"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
+                            />
+                        </svg>
+                    </div>
+                    <h1>{{ boardName }}</h1>
+                    <div class="flex items-center justify-center">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-8"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
+                            />
+                        </svg>
+                    </div>
+                    <p>Tasks Lists</p>
+                </div>
+                <div
+                    class="right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
+                >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke-width="1.5"
                         stroke="currentColor"
-                        class="size-8"
+                        class="size-6"
                     >
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
+                            d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                         />
                     </svg>
+                    <p @click="openCreateTask" class="pl-2 cursor-pointer">
+                        Create Task
+                    </p>
                 </div>
-                <h1>{{ boardName }}</h1>
-                <div class="flex items-center justify-center">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="size-8"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
-                        />
-                    </svg>
-                </div>
-
-                <p>Tasks Lists</p>
             </div>
 
-            <div class="flex flex-col mt-10 ml-16 w-5/6">
+            <div class="flex justify-between">
+                <!--Search Box-->
+                <div class="flex items-center">
+                    <div>
+                        <div
+                            class="flex items-center justify-between input input-bordered w-auto h-10 ml-16 mt-5"
+                        >
+                            <input
+                                @input="showStatusList = !showStatusList"
+                                type="text"
+                                placeholder="Search Filter something . . ."
+                                v-model="newFilterString"
+                                @keyup.enter="addFilter"
+                                class="itbkk-status-filter w-auto"
+                            />
+                            <img
+                                src="https://www.svgrepo.com/show/46113/magnifying-glass.svg"
+                                alt=""
+                                class="ml-2 cursor-pointer w-4 h-4"
+                                @click="addFilter"
+                            />
+                        </div>
+                        <div
+                            class="fixed z-10 bg-white rounded-lg p-2"
+                            v-show="showStatusList"
+                        >
+                            <div
+                                v-for="(status, index) in filteredStatuses()"
+                                :key="index"
+                            >
+                                <p
+                                    @click="
+                                        addFilter(
+                                            (newFilterString = status.name)
+                                        )
+                                    "
+                                    class="hover:bg-slate-200 p-2"
+                                >
+                                    {{ status.name }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="p-4 mt-5">Filter Status By :</p>
+                    <div
+                        v-show="filterList.length === 0"
+                        class="italic text-gray-400 mt-5 "
+                    >
+                        No filter yet . . .
+                    </div>
+                    <div
+                        v-show="filterList.length > 0"
+                        v-for="(filter, index) in filterList"
+                        :key="index"
+                        class="flex justify-center items-center rounded-3xl bg-slate-100 w-auto mt-5 ml-2 p-2"
+                    >
+                        <p class="itbkk-filter-item">{{ filter }}</p>
+                        <img
+                            src="https://www.svgrepo.com/show/21045/delete-button.svg"
+                            alt="Delete"
+                            class="itbkk-filter-item-clear ml-2 cursor-pointer w-3 h-3"
+                            @click="removeFilter(index)"
+                        />
+                    </div>
+                    <div
+                        v-show="filterList.length > 0"
+                        @click="removeAllFilter()"
+                        class="itbkk-filter-item-clear"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-6 cursor-pointer text-red-500 mt-5 ml-2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                            />
+                        </svg>
+                    </div>
+                </div>
+
+                <!--Sort-->
+                <div
+                    class="itbkk-status-sort cursor-pointer pt-1 flex items-center mr-[12%] mt-3"
+                    @click="toggleSort"
+                >
+                    <template v-if="sortStatus === 0">
+                        <div class="flex">
+                            <span>Sort DEF</span>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="w-6 h-6"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"
+                                />
+                            </svg>
+                        </div>
+                    </template>
+                    <template v-else-if="sortStatus === 1">
+                        <div class="flex">
+                            <span>Sort ACS</span>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="w-6 h-6"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12"
+                                />
+                            </svg>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="flex">
+                            <span>Sort DCS</span>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="w-6 h-6"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25"
+                                />
+                            </svg>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!--Table-->
+            <div class="flex flex-col mt-5 ml-16 w-5/6">
                 <!-- Table Header -->
                 <div class="bg-gray-100 p-4 rounded-t-lg shadow-md">
                     <div class="grid grid-cols-4 gap-4">
@@ -471,10 +683,14 @@ onMounted(() => {
                     class="bg-white rounded-b-lg shadow-md mb-2"
                 >
                     <div class="grid grid-cols-4 gap-4 p-4">
-                        <p @click="openTaskDetail(task.id)">{{ index + 1 }}({{ task.id }})</p>
-                        <p @click="openTaskDetail(task.id)">{{ task.title }}</p>
+                        <p @click="openTaskDetail(task.id)">
+                            {{ index + 1 }}({{ task.id }})
+                        </p>
+                        <p class="break-words" @click="openTaskDetail(task.id)">
+                            {{ task.title }}
+                        </p>
                         <span
-                            class=""
+                            class="break-words"
                             :class="{
                                 'italic text-gray-400': !task.assignees,
                                 'itbkk-assignees': !route.params.id,
@@ -485,7 +701,9 @@ onMounted(() => {
                             }}</span
                         >
                         <div class="flex justify-between">
-                            <p @click="openTaskDetail(task.id)">{{ task.statusName }}</p>
+                            <p @click="openTaskDetail(task.id)">
+                                {{ task.statusName }}
+                            </p>
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
