@@ -87,11 +87,13 @@ function clearData() {
             <div class=" mt-3 ml-7">
 
                     <div class=" font-bold">Name</div>
-                    <input v-model="statusData.name" class="itbkk-status-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
+                 
+                    <input v-model="statusData.name" maxlength="50" class="itbkk-status-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2" />
+                    <p class=" flex justify-end pr-28 text-[10px]">{{ statusData.name.length}}/50</p>
 
                     <div class=" font-bold">Description</div>
-                    <textarea v-model="statusData.description" class="itbkk-status-description  w-[90%] h-44 resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-2 overflow-hidden hover:overflow-y-scroll border-2"></textarea>
-
+                    <textarea v-model="statusData.description" maxlength="200" class="itbkk-status-description  w-[90%] h-44 resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-2 overflow-hidden hover:overflow-y-scroll border-2"></textarea>
+                    <p class=" flex justify-end pr-28 text-[10px]">{{ statusData.description === null ? "0" : statusData.description.length}}/200</p>
             </div>
 
 

@@ -2,12 +2,13 @@
 import { ref, onMounted,computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
-import { removeById, getData ,getBoard} from '@/libs/fetchs.js'
+import { getBoard,clearCookies} from '@/libs/fetchs.js'
 
 
 import modalNotification from '@/components/modals/modalNotification.vue'
 import modalconfirmed from '@/components/modals/modalConfirmed.vue'
 import Cookies from 'js-cookie'
+
 
 
 const Store = useStore()
@@ -63,7 +64,11 @@ function toggleStatusDropdown() {
 function toggleTaskDropdown() {
     isTaskDropdownOpen.value = !isTaskDropdownOpen.value;
 }
+async function logOut(){
+    clearCookies()
+    router.push({ name:'login'})
 
+}
 
 onMounted(() => {
     fetchData()
@@ -73,11 +78,11 @@ onMounted(() => {
 
 <template>
   
-    <div class="class name : itbkk-modal-task w-screen  bg-slate-200  h-screen flex">
+    <div class="class name : itbkk-modal-task w-screen  bg-white  h-screen flex">
 
     <header
     name="header"
-    class=" top-0 z-10 h-full w-[25%] border-orange-400  bg-slate-100 shadow-lg flex flex-col items-center justify-between  px-6  text-white rounded-r-3xl"
+    class=" top-0 z-10 h-full w-[25%] border-orange-400  bg-white shadow-lg flex flex-col items-center justify-between  px-6  text-white rounded-r-3xl"
   >
     <div class="flex ">
         <div class="flex flex-col items-start justify-start first-letter:mx-auto space-x-4 pt-5">
@@ -162,7 +167,7 @@ onMounted(() => {
     </div>
 
 
-    <div class="bg-orange-400 p-2 flex my-14 justify-between w-3/4">
+    <div class="bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer">
         
         <div class="flex items-center space-x-2 p-1 ">
             <svg
@@ -181,26 +186,29 @@ onMounted(() => {
             </svg>    
         </div>
         <p class="itbkk-fullname text-sm font-medium p-1">
-            {{ Store.username }}
+            {{ username }}
         </p>
-        <div class="flex items-center justify-center right-0">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+        <div class="flex items-center justify-center right-0 " @click="logOut()">
+            <svg  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
             </svg>
         </div>
-    </div>
-    <div class="fixed right-0 mt-3 flex  bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
-        @click="openCreateBoard()">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        <p class="pl-2">Create Board</p>
     </div>
   </header>
 
   <!-- Table สำหรับแสดงข้อมูลของ board -->
   <main class="w-auto h-full overflow-y-scroll">
-    <h1 class="text-3xl font-bold text-black ml-10 mt-10">{{Store.username}} Personal Board</h1>
+    <div class="flex justify-between text-white">
+        <h1 class="text-3xl font-bold text-black ml-10 mt-10">{{Store.username}} Personal Board</h1>
+        <div class="right-0 mt-3 flex  bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
+            @click="openCreateBoard()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <p class="pl-2 ">Create Board</p>
+        </div>
+    </div>
+    
     <div class=" h-screen p-8">
     <div class="flex flex-wrap gap-4 ">
       <div v-for="(board ,index) in Store.boards" :key="index" 

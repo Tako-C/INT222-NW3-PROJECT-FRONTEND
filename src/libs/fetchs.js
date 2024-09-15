@@ -1,95 +1,124 @@
 import Cookies from "js-cookie"
-
+import { jwtDecode } from "jwt-decode";
+import { ref } from "vue";
 // Path URL
 const url = import.meta.env.VITE_BASE_URL
-
+let token = ref('')
 function getAuthToken() {
-    return Cookies.get("token") // Assuming the token is stored under 'token'
+    return token.value = Cookies.get("token")
 }
 
-const token = getAuthToken()
 
+
+function setAuthToken(result) {
+    const token_raw = JSON.parse(result);  // Parse result into JSON before using
+    const decodedToken = jwtDecode(token_raw.access_token);  // Decode access_token
+    const now = Math.floor(Date.now() / 1000);
+    const exp = decodedToken.exp;
+
+    const cookieExpiresInSeconds = exp - now;
+    const cookieExpiresInDays = cookieExpiresInSeconds / (60 * 60 * 24);
+
+    Cookies.set("token", token_raw.access_token, { expires: cookieExpiresInDays });
+    // Store the decoded claims in cookies
+    Cookies.set("name", decodedToken.name, { expires: cookieExpiresInDays });
+    Cookies.set("oid", decodedToken.oid, { expires: cookieExpiresInDays });
+    Cookies.set("iss", decodedToken.iss, { expires: cookieExpiresInDays });
+    Cookies.set("email", decodedToken.email, {expires: cookieExpiresInDays,});
+    Cookies.set("role", decodedToken.role, { expires: cookieExpiresInDays });
+    Cookies.set("iat", decodedToken.iat, { expires: cookieExpiresInDays });
+    Cookies.set("exp", decodedToken.exp, { expires: cookieExpiresInDays });
+
+}
+
+function clearCookies() {
+
+    const cookieNames = ["token", "name", "oid", "iss", "email", "role", "iat", "exp"];
+    cookieNames.forEach(name => {
+        Cookies.remove(name);
+    });
+}
 // GetData
-async function getData(path) {
-    try {
-        // const res = await fetch(`http://ip23nw3.sit.kmutt.ac.th:8080/v2/${path}`)
-        const res = await fetch(`${url}/v2/${path}`)
+// async function getData(path) {
+//     try {
+//         // const res = await fetch(`http://ip23nw3.sit.kmutt.ac.th:8080/v2/${path}`)
+//         const res = await fetch(`${url}/v2/${path}`)
 
-        if (!res.ok) {
-            throw new Error("Failed to fetch data")
-        }
-        const data = await res.json()
-        return data
-    } catch (error) {
-        console.error("Error fetching data:", error)
-        throw error
-    }
-}
+//         if (!res.ok) {
+//             throw new Error("Failed to fetch data")
+//         }
+//         const data = await res.json()
+//         return data
+//     } catch (error) {
+//         console.error("Error fetching data:", error)
+//         throw error
+//     }
+// }
 
-async function removeById(path, id) {
-    try {
-        const res = await fetch(`${url}/v2/${path}/${id}`, {
-            method: "DELETE",
-        })
-        if (!res.ok) {
-            if (res.status === 404) {
-                // Handle 404 error
-                return res
-            } else {
-                throw new Error("Failed to delete task")
-            }
-        }
-        console.log("Task deleted successfully")
-        return res
-    } catch (error) {
-        console.error("Error deleting task:", error)
-        throw error
-    }
-}
+// async function removeById(path, id) {
+//     try {
+//         const res = await fetch(`${url}/v2/${path}/${id}`, {
+//             method: "DELETE",
+//         })
+//         if (!res.ok) {
+//             if (res.status === 404) {
+//                 // Handle 404 error
+//                 return res
+//             } else {
+//                 throw new Error("Failed to delete task")
+//             }
+//         }
+//         console.log("Task deleted successfully")
+//         return res
+//     } catch (error) {
+//         console.error("Error deleting task:", error)
+//         throw error
+//     }
+// }
 
-async function editData(path, taskId, data) {
-    try {
-        const response = await fetch(`${url}/v2/${path}/${taskId}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        })
+// async function editData(path, taskId, data) {
+//     try {
+//         const response = await fetch(`${url}/v2/${path}/${taskId}`, {
+//             method: "PUT",
+//             headers: {
+//                 "Content-Type": "application/json",
+//             },
+//             body: JSON.stringify(data),
+//         })
 
-        if (!response.ok) {
-            const errorMessage = await response.text()
-            throw new Error(errorMessage)
-        }
-        const result = await response.json()
-        console.log("Success:", result)
-        return result
-    } catch (error) {
-        console.error("Error:", error.message)
-        throw error
-    }
-}
+//         if (!response.ok) {
+//             const errorMessage = await response.text()
+//             throw new Error(errorMessage)
+//         }
+//         const result = await response.json()
+//         console.log("Success:", result)
+//         return result
+//     } catch (error) {
+//         console.error("Error:", error.message)
+//         throw error
+//     }
+// }
 
-async function removeAndTransfer(path, removeId, transferId) {
-    try {
-        const res = await fetch(`${url}/v2/${path}/${removeId}/${transferId}`, {
-            method: "DELETE",
-        })
-        if (!res.ok) {
-            if (res.status === 404) {
-                // Handle 404 error
-                return res
-            } else {
-                throw new Error("Failed to delete task")
-            }
-        }
-        console.log("Status removed and tasks transferred successfully")
-        return res
-    } catch (error) {
-        console.error("Error removing status and transferring tasks:", error)
-        throw error
-    }
-}
+// async function removeAndTransfer(path, removeId, transferId) {
+//     try {
+//         const res = await fetch(`${url}/v2/${path}/${removeId}/${transferId}`, {
+//             method: "DELETE",
+//         })
+//         if (!res.ok) {
+//             if (res.status === 404) {
+//                 // Handle 404 error
+//                 return res
+//             } else {
+//                 throw new Error("Failed to delete task")
+//             }
+//         }
+//         console.log("Status removed and tasks transferred successfully")
+//         return res
+//     } catch (error) {
+//         console.error("Error removing status and transferring tasks:", error)
+//         throw error
+//     }
+// }
 
 
 
@@ -108,7 +137,14 @@ async function login(username, password) {
     })
 
     if (res.ok) {
-        const result = await res.text()
+        const result = await res.text();
+        if (result) {
+            setAuthToken(result)
+
+            console.log("Login successful:", result);
+        } else {
+            console.error("Token not found in response");
+        }
         console.log("Login successful:")
         return result
     } else {
@@ -118,6 +154,7 @@ async function login(username, password) {
 }
 
 async function getBoard(path) {
+    getAuthToken()
     try {
         // const res = await fetch(`http://ip23nw3.sit.kmutt.ac.th:8080/v2/${path}`)
 
@@ -128,7 +165,7 @@ async function getBoard(path) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${getAuthToken()}`, // Add the token in Authorization header
+                "Authorization": `Bearer ${token.value}`, // Add the token in Authorization header
             },
         })
 
@@ -145,12 +182,13 @@ async function getBoard(path) {
 
 async function getTaskByBoard(path) {
     // console.log(url,path);
-
+    // console.log(token);
+    getAuthToken()
     try {
         const res = await fetch(`${url}/v3/boards/${path}`, {
             method: "GET",
             headers: {
-                "Authorization": `Bearer ${token}`,
+                "Authorization": `Bearer ${token.value}`,
                 "Content-Type": "application/json",
             },
         })
@@ -159,6 +197,7 @@ async function getTaskByBoard(path) {
             throw new Error("Failed to fetch data")
         }
         const data = await res.json()
+        
         return data
     } catch (error) {
         console.error("Error fetching data:", error)
@@ -167,11 +206,12 @@ async function getTaskByBoard(path) {
 }
 
 async function createStatus(data, path) {
+    getAuthToken()
     try {
         const response = await fetch(`${url}/v3/boards/${path}`, {
             method: "POST", // or 'PUT'
             headers: {
-                "Authorization": `Bearer ${token}`,
+                "Authorization": `Bearer ${token.value}`,
                 "Content-Type": "application/json",
             },
 
@@ -186,12 +226,13 @@ async function createStatus(data, path) {
 }
 
 async function addData(data, path) {
+    getAuthToken()
     try {
         const response = await fetch(`${url}/v3/boards/${path}`, {
             method: "POST", // or 'PUT'
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
+                "Authorization": `Bearer ${token.value}`,
             },
 
             body: JSON.stringify(data),
@@ -205,12 +246,11 @@ async function addData(data, path) {
 }
 
 async function editDatas(path, data) {
-    const token = getAuthToken()
-
+    getAuthToken()
     return fetch(`${url}/v3/${path}`, {
         method: "PUT",
         headers: {
-            "Authorization": `Bearer ${token}`,
+            "Authorization": `Bearer ${token.value}`,
             "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
@@ -234,12 +274,13 @@ async function editDatas(path, data) {
 }
 
 async function addBoard(data, path) {
+    getAuthToken()
     try {
         const response = await fetch(`${url}/v3/${path}`, {
             method: "POST", // or 'PUT'
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
+                "Authorization": `Bearer ${token.value}`,
             },
 
             body: JSON.stringify(data),
@@ -253,11 +294,12 @@ async function addBoard(data, path) {
 }
 
 async function removeData(path) {
+    getAuthToken()
     try {
         const res = await fetch(`${url}/v3/${path}`, {
             method: "DELETE",
             headers: {
-                "Authorization": `Bearer ${getAuthToken()}`,
+                "Authorization": `Bearer ${token.value}`,
             },
         })
         if (!res.ok) {
@@ -328,11 +370,11 @@ async function removeData(path) {
 // }
 
 export {
-    getData,
-    removeById,
+    // getData,
+    // removeById,
     addData,
-    editData,
-    removeAndTransfer,
+    // editData,
+    // removeAndTransfer,
     login,
     getBoard,
     getTaskByBoard,
@@ -340,4 +382,5 @@ export {
     editDatas,
     addBoard,
     removeData,
+    clearCookies
 }
