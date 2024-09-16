@@ -37,10 +37,16 @@ async function saveBoardData() {
         else{
             boardData.value.boards = boardId.value
             let result = await addBoard(boardData.value, `boards`)
-        
+
+            if(result.status === 401){
+                router.push({name: 'login'})
+                Store.errorToken = true;
+            } else {
             console.log(result)
             addToStore(result)
-            closeModal()           
+            closeModal()                  
+            }
+            
     }
 }
 
@@ -62,7 +68,7 @@ function clearData() {
         >
         </div>
         <div
-            class=" itbkk-modal-status fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-white shadow-2xl "
+            class=" itbkk-modal-status fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
         >
             <div class=" rounded-2xl ">
                 <h1 class=" break-words w-[79%]">

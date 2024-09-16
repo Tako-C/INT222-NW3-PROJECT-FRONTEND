@@ -10,10 +10,8 @@ import modalconfirmed from '@/components/modals/modalConfirmed.vue'
 import Cookies from 'js-cookie'
 
 
-
 const Store = useStore()
 let boardData = ref([])
-let statusData = ref([])
 const router = useRouter()
 const route = useRoute()
 
@@ -43,9 +41,17 @@ function getImageUrl(index){
 
 async function fetchData() {
   let endpoint = 'boards'
-      boardData.value = await getBoard(endpoint)
-  Store.boards = boardData.value
-  console.log(boardData.value)
+    //   boardData.value = await getBoard(endpoint)
+        let result = await getBoard(endpoint)
+      
+  if(result.status === 401){
+    router.push({name: 'login'})
+    Store.errorToken = true;
+  } else {
+    Store.boards = result
+    console.log(boardData.value)
+  }
+
 }
 function openBoardDetailModal(boardId) {
   router.push({ name:'BoardDetail', params: { id: boardId } })
@@ -96,22 +102,6 @@ onMounted(() => {
             </h3>
         </div>
     </div>
-    <!-- <div class="flex flex-col">
-        <div class="w-60 p-5 flex " :class="['rounded-md' ,{ 'bg-orange-400': isBoardPage }]">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="gray"  :style="{ stroke: isBoardPage ? 'white' : 'gray' }" class="size-6" >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6.878V6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 0 0 4.5 9v.878m13.5-3A2.25 2.25 0 0 1 19.5 9v.878m0 0a2.246 2.246 0 0 0-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0 1 21 12v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6c0-.98.626-1.813 1.5-2.122" />
-            </svg>
-            <p class="pl-3" :class="{ 'text-white': isBoardPage, 'text-slate-400': !isBoardPage }">Board</p>
-        </div>
-        <div class="w-60 p-5 flex " :class="['rounded-md' ,{ 'bg-orange-400': isStatusPage }]">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="gray"  :style="{ stroke: isStatusPage ? 'white' : 'gray' }" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008Z" />
-            </svg>
-
-            <p class="pl-3" :class="{ 'text-white': isStatusPage, 'text-slate-400': !isStatusPage } " @click="openStatuses()">Statuses</p>
-        </div>
-        
-    </div> -->
 
     <div class="flex flex-col">
     <!-- Board Section -->

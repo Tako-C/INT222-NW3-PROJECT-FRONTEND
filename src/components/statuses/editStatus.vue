@@ -22,17 +22,35 @@ if (route.params.id == 1) {
   window.alert('You can not edit this Status.')
   router.push({ name: 'StatusTable' })
 }
+// async function fetchData() {
+//   try {
+//     statusData.value = await getBoard(`boards/${route.params.id}/statuses/${route.params.statusId}`)
+//     console.log(originalStatusData.value)
+//     originalStatusData.value = { ...statusData.value }
+    
+//   } catch (error) {
+//     Store.errorUpdateStatus = true
+//     console.log( Store.errorUpdateStatus);
+    
+//     router.push({ name: "Status", params: { id: route.params.id } })
+//   }
+// }
+
 async function fetchData() {
-  try {
-    statusData.value = await getBoard(`boards/${route.params.id}/statuses/${route.params.statusId}`)
-    console.log(originalStatusData.value)
-    originalStatusData.value = { ...statusData.value }
-    
-  } catch (error) {
-    Store.errorUpdateStatus = true
-    console.log( Store.errorUpdateStatus);
-    
+    let result = await getBoard(`boards/${route.params.id}/statuses/${route.params.statusId}`)
+
+  if(result.status === 404)  {
     router.push({ name: "Status", params: { id: route.params.id } })
+    Store.errorUpdateStatus = true
+  } 
+  if(result.status === 401){
+    router.push({name: 'login'})
+    Store.errorToken = true;
+  }
+  else {
+    statusData.value = result
+    originalStatusData.value = { ...statusData.value }    
+    console.log( Store.errorUpdateStatus);
   }
 }
 
@@ -56,9 +74,15 @@ async function updateStatus(statusId) {
     let result = await editDatas(`boards/${route.params.id}/statuses/${route.params.statusId}`,statusData.value)
     ID.value = result.id
     Store.successUpdateStatus = true
-
+    if(result.status === 401) {
+      router.push({name: 'login'});
+      Store.errorToken = true;
+    } else {
     addToStore()
-    closeModal()
+    closeModal()      
+    }
+
+
   }
 }
 
@@ -115,7 +139,7 @@ onUpdated(() => {
       @click="closeModal()"
     ></div>
     <div
-      class="fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl shadow-white"
+      class="fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
     >
       <div class="rounded-2xl">
         <h1 class="break-words w-[79%]">
@@ -131,12 +155,15 @@ onUpdated(() => {
           <textarea
             v-model="statusData.name"
             v-if="statusData.name !== null"
+            maxlength="50"
             class="itbkk-status-name text-black w-[90%] h-auto resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3 border-2 overflow-hidden hover:overflow-y-scroll"
             >{{ statusData.name }} </textarea
           >
+          <p class=" flex justify-end pr-20 text-[10px]">{{ statusData.name.length}}/50</p>
           <p class="font-bold mt-2">Description</p>
 
           <textarea
+          maxlength="200"
             class="itbkk-status-description border-2 w-[90%] h-44 resize-none italic pl-2 bg-opacity-15 rounded-lg"
             style=""
             v-model="statusData.description"
@@ -147,6 +174,7 @@ onUpdated(() => {
                         {{ statusData.description }}
                         </textarea
           >
+          <p class=" flex justify-end pr-16 text-[10px]">{{ statusData.description === null ? "0" : statusData.description.length}}/200</p>
         </div>
       </div>
       <div class="boxButton m-3">

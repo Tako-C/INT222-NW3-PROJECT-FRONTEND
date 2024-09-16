@@ -29,6 +29,7 @@ let errorEditDefaultStatus = ref(Store.errorEditDefaultStatus)
 
 // login by ch
 let errorLoginStatus = ref(props.errorLoginStatus)
+let errorToken = ref(Store.errorToken)
 
 watchEffect(() => {
   errorDelete.value = props.errorDelete
@@ -46,6 +47,7 @@ watchEffect(() => {
 
   // login by ch
   errorLoginStatus.value = props.errorLoginStatus
+  errorToken.value = Store.errorToken
   checkEvent();
 });
 
@@ -96,6 +98,9 @@ function checkEvent() {
   else if (errorLoginStatus.value) {
     message.value.header = 'Error!';
     message.value.detail = 'Username or Password is incorrect';
+  } else if (errorToken.value) {
+    message.value.header = 'Error!';
+    message.value.detail = 'Something went wrong, Please try again later.';
   }
 }
 

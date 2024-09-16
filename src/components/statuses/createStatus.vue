@@ -48,11 +48,15 @@ async function saveTaskData() {
             statusData.value.boards = boardId.value
             let result = await createStatus(statusData.value, `${boardId.value}/statuses`)
             console.log(result.statusId);
-            
+            if (result.status === 401) {
+                router.push({name: 'login'});
+                Store.errorToken = true;
+            } else {
             statusID.value = result.statusId
             console.log(result)
             addToStore()
-            closeModal()           
+            closeModal()                  
+            }
     }
 }
 
@@ -75,7 +79,7 @@ function clearData() {
         >
         </div>
         <div
-            class=" itbkk-modal-status fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-white shadow-2xl "
+            class=" itbkk-modal-status fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
         >
             <div class=" rounded-2xl ">
                 <h1 class=" break-words w-[79%]">
@@ -89,11 +93,11 @@ function clearData() {
                     <div class=" font-bold">Name</div>
                  
                     <input v-model="statusData.name" maxlength="50" class="itbkk-status-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2" />
-                    <p class=" flex justify-end pr-28 text-[10px]">{{ statusData.name.length}}/50</p>
+                    <p class=" flex justify-end pr-20 text-[10px]">{{ statusData.name.length}}/50</p>
 
                     <div class=" font-bold">Description</div>
                     <textarea v-model="statusData.description" maxlength="200" class="itbkk-status-description  w-[90%] h-44 resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-2 overflow-hidden hover:overflow-y-scroll border-2"></textarea>
-                    <p class=" flex justify-end pr-28 text-[10px]">{{ statusData.description === null ? "0" : statusData.description.length}}/200</p>
+                    <p class=" flex justify-end pr-20 text-[10px]">{{ statusData.description === null ? "0" : statusData.description.length}}/200</p>
             </div>
 
 

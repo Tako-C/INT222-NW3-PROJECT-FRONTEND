@@ -51,10 +51,20 @@ async function fetchData() {
         }/tasks?sortBy=statusName&FilterStatuses=${filterList.value
             .map((status) => status.trim())
             .join("&FilterStatuses=")}`
+    } 
+    let resTasks = await getTaskByBoard(endpoint)
+    let resStatuses = await getTaskByBoard(`${boardId.value}/statuses`)
+    let resBoards = await getBoard("boards")
+    if(resTasks.status === 401 || resStatuses.status === 401 || resBoards.status === 401){
+        router.push({name: 'login'});
+        Store.errorToken = true;
+    } else {
+    Store.tasks = resTasks
+    Store.statuses = resStatuses
+    Store.boards = resBoards        
     }
-    Store.tasks = await getTaskByBoard(endpoint)
-    Store.statuses = await getTaskByBoard(`${boardId.value}/statuses`)
-    Store.boards = await getBoard("boards")
+
+
 }
 
 function toggleSort() {
@@ -149,13 +159,19 @@ async function removeTask() {
         `boards/${route.params.id}/tasks/${taskID.value}`
     )
     console.log("result", result)
-    if (result.status === 401) {
+    if (result.status === 404) {
         console.log("result :", result.status)
         errorDelete.value = true
     }
-    Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
-    successDelete.value = true
-    console.log(successDelete.value)
+    if (result.status === 401) {
+        router.push({name: 'login'});
+        Store.errorToken = true;
+    } else {
+        Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
+        successDelete.value = true
+        console.log(successDelete.value)
+    }
+
 }
 
 function closeNotificationModal() {
@@ -217,7 +233,7 @@ onMounted(() => {
     <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
         <header
             name="header"
-            class="top-0 z-10 h-full w-20% border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
+            class="top-0 z-10 h-full w-[20%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
         >
             <div class="flex">
                 <div
