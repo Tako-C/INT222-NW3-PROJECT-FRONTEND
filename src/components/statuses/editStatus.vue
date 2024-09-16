@@ -159,7 +159,7 @@ onUpdated(() => {
             class="itbkk-status-name text-black w-[90%] h-auto resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3 border-2 overflow-hidden hover:overflow-y-scroll"
             >{{ statusData.name }} </textarea
           >
-          <p class=" flex justify-end pr-20 text-[10px]">{{ statusData.name.length}}/50</p>
+          <p class=" flex justify-end pr-16 text-[10px]">{{ statusData.name.length}}/50</p>
           <p class="font-bold mt-2">Description</p>
 
           <textarea
