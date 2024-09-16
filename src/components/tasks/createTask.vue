@@ -64,9 +64,15 @@ async function saveTaskData() {
   console.log(taskData.value);
   
   let result = await addData(taskData.value, `${boardId.value}/tasks`)
+  if(result.status === 401){
+    router.push({name: 'login'});
+    Store.errorToken = true;
+  } else {
   console.log(result)
   TaskID.value = result.id
-  addToStore()
+  addToStore()    
+  }
+
 }
 
 function clearData() {
@@ -90,7 +96,7 @@ console.log(DefualtStatus.value);
       @click="closeModal()"
     ></div>
     <div
-      class="fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl shadow-white"
+      class="fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
     >
       <div class="rounded-2xl">
         <h1 class="break-words w-[79%]">

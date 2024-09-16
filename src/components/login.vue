@@ -31,6 +31,7 @@ function switchToTaskBoard() {
 
 function closeNotificationModal() {
   Store.errorLoginStatus = false;
+  Store.errorToken = false;
   usernameCount.value = "";
   passwordCount.value = "";
 }
@@ -79,6 +80,12 @@ watch([usernameCount, passwordCount], ([username, password]) => {
     :errorLoginStatus="Store.errorLoginStatus"
     @closemodal="closeNotificationModal"
     v-show="Store.errorLoginStatus"
+    class="z-30"
+  />
+  <modalNotification
+    :errorToken="Store.errorToken"
+    @closemodal="closeNotificationModal"
+    v-show="Store.errorToken"
     class="z-30"
   />
   

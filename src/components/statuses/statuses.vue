@@ -1,8 +1,13 @@
 <script setup>
-import { ref, onMounted, watch, computed, } from "vue"
-import { useRoute, useRouter ,onBeforeRouteUpdate} from "vue-router"
+import { ref, onMounted, watch, computed } from "vue"
+import { useRoute, useRouter, onBeforeRouteUpdate } from "vue-router"
 import { useStore } from "@/stores/store.js"
-import { getBoard, getTaskByBoard , removeData,clearCookies } from "@/libs/fetchs.js"
+import {
+    getBoard,
+    getTaskByBoard,
+    removeData,
+    clearCookies,
+} from "@/libs/fetchs.js"
 import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalstatusDelete from "@/components/statuses/removeStatus.vue"
@@ -18,8 +23,6 @@ const username = ref(Cookies.get("name"))
 const boardName = ref("")
 const removeName = ref("")
 const removeId = ref("")
-
-
 
 const openConfirmed = ref(false)
 const transferModal = ref(false)
@@ -49,10 +52,10 @@ onMounted(() => {
 
 // Fetch data every time the route changes (but the same component remains active)
 onBeforeRouteUpdate((to, from, next) => {
-  fetchData(); // Re-fetch data when navigating within the same component
-  console.log(Store.statuses);
-  next();
-});
+    fetchData() // Re-fetch data when navigating within the same component
+    console.log(Store.statuses)
+    next()
+})
 
 // console.log(Store.statuses)
 
@@ -61,8 +64,6 @@ async function fetchData() {
     Store.statuses = await getTaskByBoard(endpoint)
     Store.tasks = await getTaskByBoard(`${boardId.value}/tasks`)
     Store.boards = await getBoard("boards")
-
-    
 }
 
 // ================= Open/Close Page Function ===========================================================================
@@ -85,29 +86,28 @@ function openStatuses(id) {
     boardId.value = id
 }
 
-function openStatusDetail(statusId,statusName) {
-    if (statusName === "No Status" ||  statusName ==="Done") {
-         Store.errorEditDefaultStatus = true
-    }else{
+function openStatusDetail(statusId, statusName) {
+    if (statusName === "No Status" || statusName === "Done") {
+        Store.errorEditDefaultStatus = true
+    } else {
         router.push({
-        name: "editStatus",
-        params: { id: boardId.value, statusId: statusId }
+            name: "editStatus",
+            params: { id: boardId.value, statusId: statusId },
         })
         // window.alert('You can not edit this Status.')
     }
-   
-}    
+}
 
 function openConfirmModal(id, name) {
-  openConfirmed.value = true
-  removeName.value = name
-  removeId.value = id  
+    openConfirmed.value = true
+    removeName.value = name
+    removeId.value = id
 }
 
 function closeNotificationModal() {
     Store.successAddStatus = false
     Store.successUpdateStatus = false
-    Store.errorUpdateStatus = false 
+    Store.errorUpdateStatus = false
     successDeleteStatus.value = false
     errorDeleteStatus.value = false
     Store.successUpdateTask = false
@@ -116,10 +116,9 @@ function closeNotificationModal() {
     transferModal.value = false
     Store.errorDeleteNoStatus = false
     Store.errorEditDefaultStatus = false
-    removeId.value = ''
-    removeName.value = ''
+    removeId.value = ""
+    removeName.value = ""
 }
-
 
 // =======================================================================================================================
 
@@ -139,82 +138,119 @@ function getBoardName() {
     }
 }
 
-
 function findUsageStatus(name) {
-    let usageCount = 0;  
+    let usageCount = 0
     for (const task of Store.tasks) {
-        if (task.statusName == name) {         
-            usageCount++;
+        if (task.statusName == name) {
+            usageCount++
         }
     }
-    return usageCount;
+    return usageCount
 }
 
 // =======================================================================================================================
 
 // ======================= Remove function ===============================================================================
+// async function removeStatus() {
+//   openConfirmed.value = false
+//   const checkTaskUseStatus = Store.tasks.filter(
+//     (task) => task.statusName == removeName.value
+//   )
+
+//   if (checkTaskUseStatus.length == 0) {
+//     Store.statuses = Store.statuses.filter(
+//       (status) => status.statusId !== removeId.value
+//     )
+
+//     let result = await removeData(`boards/${route.params.id}/statuses/${removeId.value}`)
+//     if (result.status === 401) {
+//         errorDeleteStatus.value = true
+//     } else {
+//       successDeleteStatus.value = true
+//     }
+//   } else if (removeName.value == "No Status" || removeName.value == "Done") {
+//     Store.errorDeleteNoStatus = true
+//     console.log(removeName.value);
+
+//     openStatuses(route.params.id)
+//   }  else {
+//     transferModal.value = true
+//   }
+
+//   openConfirmed.value = false
+// }
 async function removeStatus() {
-  openConfirmed.value = false
-  const checkTaskUseStatus = Store.tasks.filter(
-    (task) => task.statusName == removeName.value
-  )
-    
-  if (checkTaskUseStatus.length == 0) {
-    Store.statuses = Store.statuses.filter(
-      (status) => status.statusId !== removeId.value
+    openConfirmed.value = false;
+
+    const checkTaskUseStatus = Store.tasks.filter(
+        (task) => task.statusName === removeName.value
     )
 
-    let result = await removeData(`boards/${route.params.id}/statuses/${removeId.value}`)  
-    if (result.status === 401) {
-        errorDeleteStatus.value = true
-    } else {
-      successDeleteStatus.value = true
+    if (removeName.value === "No Status" || removeName.value === "Done") {
+        Store.errorDeleteNoStatus = true
+        console.log(removeName.value)
+        openStatuses(route.params.id)
+        return
     }
-  } else if (removeName.value == "No Status" || removeName.value == "Done") {
-    Store.errorDeleteNoStatus = true
-    console.log(removeName.value);
+    if (checkTaskUseStatus.length === 0) {
 
-    openStatuses(route.params.id)
-  }  else {
-    transferModal.value = true
-  }
+        Store.statuses = Store.statuses.filter(
+            (status) => status.statusId !== removeId.value
+        );
 
-  openConfirmed.value = false
+        const result = await removeData(
+            `boards/${route.params.id}/statuses/${removeId.value}`
+        );
+        console.log(result);
+
+        if (result.status === 404) {
+            errorDeleteStatus.value = true;
+        } else if (result.status === 401) {
+            router.push({ name: "login" })
+            Store.errorToken = true
+        } else {
+            successDeleteStatus.value = true
+        }
+    } else {
+        transferModal.value = true
+    }
+    openConfirmed.value = false; // Reset confirmation modal
 }
 
 async function removeStatusTransfer(data) {
-    const { removeStatus, transferStatus } = data;
+    const { removeStatus, transferStatus } = data
     const transferStatusId = Store.statuses.find(
         (status) => status.name === transferStatus
-    ).statusId;
+    ).statusId
 
     // ลบข้อมูลสถานะที่ถูกโอนย้าย
-    let removedStatus = await removeData(`boards/${route.params.id}/statuses/${removeId.value}/${transferStatusId}`);
+    let removedStatus = await removeData(
+        `boards/${route.params.id}/statuses/${removeId.value}/${transferStatusId}`
+    )
 
     // อัปเดตสถานะของ tasks
     const tasksToTransfer = Store.tasks.filter(
         (task) => task.statusName === removeStatus
-    );
+    )
 
     if (tasksToTransfer.length > 0) {
         for (const task of tasksToTransfer) {
-            task.statusName = transferStatus;
+            task.statusName = transferStatus
         }
     }
 
     // ลบสถานะจาก Store
     Store.statuses = Store.statuses.filter(
         (status) => status.statusId !== removeId.value
-    );
+    )
 
     // อัปเดตหน้าจอ
-    transferModal.value = false;
+    transferModal.value = false
 }
 
-async function logOut(){
+async function logOut() {
     clearCookies()
-    router.push({ name:'login'})
-
+    router.push({ name: "login" })
 }
 
 // =======================================================================================================================
@@ -233,7 +269,6 @@ function checkVariable() {
     }
     return false
 }
-
 </script>
 
 <template>
@@ -259,9 +294,7 @@ function checkVariable() {
     >
     </modalTransfer>
 
-    <div
-        class="class name : itbkk-modal-task w-screen bg-white h-screen flex"
-    >
+    <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
         <header
             name="header"
             class="top-0 z-10 h-full w-20% border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
@@ -434,7 +467,9 @@ function checkVariable() {
                 </div>
             </div>
 
-            <div class="bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer">
+            <div
+                class="bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer"
+            >
                 <div class="flex items-center space-x-2 p-1">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -454,7 +489,10 @@ function checkVariable() {
                 <p class="itbkk-fullname text-sm font-medium p-1">
                     {{ username }}
                 </p>
-                <div class="flex items-center justify-center right-0" @click="logOut()">
+                <div
+                    class="flex items-center justify-center right-0"
+                    @click="logOut()"
+                >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -497,66 +535,68 @@ function checkVariable() {
         <!-- Table สำหรับแสดงข้อมูลของ board -->
         <main class="h-full w-full overflow-y-scroll">
             <div class="flex justify-between text-white">
-            <div class="text-2xl font-bold text-black flex w-auto ml-16 mt-10">
-                <h1>{{ username }}</h1>
-                <div class="flex items-center justify-center">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="size-8"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
-                        />
-                    </svg>
-                </div>
-                <h1>{{ boardName }}</h1>
-                <div class="flex items-center justify-center">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="size-8"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
-                        />
-                    </svg>
-                </div>
-
-                <p>Statuses Lists</p>
-            </div>
-            <div
-                class="right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-6"
+                <div
+                    class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
                 >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                </svg>
-                <p @click="openCreateTask" class="pl-2 cursor-pointer">
-                    Create Task
-                </p>
+                    <h1>{{ username }}</h1>
+                    <div class="flex items-center justify-center">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-8"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
+                            />
+                        </svg>
+                    </div>
+                    <h1>{{ boardName }}</h1>
+                    <div class="flex items-center justify-center">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-8"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
+                            />
+                        </svg>
+                    </div>
+
+                    <p>Statuses Lists</p>
+                </div>
+                <div
+                    class="right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-6"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                        />
+                    </svg>
+                    <p @click="openCreateStatus" class="pl-2 cursor-pointer">
+                        Create Status
+                    </p>
+                </div>
             </div>
-        </div>
 
             <div class="flex flex-col mt-10 ml-16 w-5/6">
                 <!-- Table Header -->
@@ -575,25 +615,51 @@ function checkVariable() {
                     class="bg-white rounded-b-lg shadow-md mb-2"
                 >
                     <div class="grid grid-cols-4 gap-4 p-4">
-                        <p @click="openStatusDetail(status.statusId,status.name)">{{ index + 1 }}({{ status.statusId }})</p>
-                        <p class="break-words" @click="openStatusDetail(status.statusId,status.name)">{{ status.name }}</p>
-                        <p @click="openStatusDetail(status.statusId,status.name)"
-                        class="break-words"
+                        <p
+                            @click="
+                                openStatusDetail(status.statusId, status.name)
+                            "
+                        >
+                            {{ index + 1 }}({{ status.statusId }})
+                        </p>
+                        <p
+                            class="break-words"
+                            @click="
+                                openStatusDetail(status.statusId, status.name)
+                            "
+                        >
+                            {{ status.name }}
+                        </p>
+                        <p
+                            @click="
+                                openStatusDetail(status.statusId, status.name)
+                            "
+                            class="break-words"
                             :class="{
                                 'italic text-gray-400': !status.description,
                                 'itbkk-assignees': !status.description,
                             }"
-            
-                        >{{!status.description ? "No description provided" : status.description}}</p>
+                        >
+                            {{
+                                !status.description
+                                    ? "No description provided"
+                                    : status.description
+                            }}
+                        </p>
                         <div class="flex justify-between">
-                            <p> ({{ findUsageStatus(status.name) }})</p>
+                            <p>({{ findUsageStatus(status.name) }})</p>
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke-width="1.5"
                                 stroke="currentColor"
-                                @click="openConfirmModal(status.statusId, status.name)"
+                                @click="
+                                    openConfirmModal(
+                                        status.statusId,
+                                        status.name
+                                    )
+                                "
                                 class="size-6 text-red-500 cursor-pointer"
                             >
                                 <path

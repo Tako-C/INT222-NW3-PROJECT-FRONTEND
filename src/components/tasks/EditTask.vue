@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted, onUpdated } from 'vue'
-import { getBoard, editDatas } from '@/libs/fetchs.js'
-import { useRoute, useRouter } from 'vue-router'
-import { useStore } from '@/stores/store.js'
-import { validateTask } from '@/libs/varidateTask.js'
+import { ref, onMounted, onUpdated } from "vue"
+import { getBoard, editDatas } from "@/libs/fetchs.js"
+import { useRoute, useRouter } from "vue-router"
+import { useStore } from "@/stores/store.js"
+import { validateTask } from "@/libs/varidateTask.js"
+
 let createTimeInBrowserTimezone = ref(null)
 let updateTimeInBrowserTimezone = ref(null)
 let browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -15,322 +16,351 @@ const isEdited = ref(false)
 const DefualtStatus = 3
 
 let taskData = ref({
-  id: '',
-  title: '',
-  description: '',
-  assignees: '',
-  status: DefualtStatus,
+    id: "",
+    title: "",
+    description: "",
+    assignees: "",
+    status: DefualtStatus,
 })
 const originalTaskData = ref({
-  id: '',
-  title: '',
-  description: '',
-  assignees: '',
-  status: DefualtStatus,
+    id: "",
+    title: "",
+    description: "",
+    assignees: "",
+    status: DefualtStatus,
 })
 
 //Option datetime
 const options = {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
 }
 
 const boardId = ref(route.params.id)
 let statusObject = ref()
 
-
 function convertToBrowserTimezone(utcTime) {
-  let date = new Date(utcTime)
-  const browserTime = date.toLocaleString('en-AU', options)
-  return browserTime
+    let date = new Date(utcTime)
+    const browserTime = date.toLocaleString("en-AU", options)
+    return browserTime
 }
- console.log(route.params.taskId);
- 
-async function fetchData() {
-  try {
-    taskData.value = await getBoard(`boards/${route.params.id}/tasks/${route.params.taskId}`)
-    console.log(taskData.value);
-    
-    statusObject = Store.statuses.find(
-      (status) => status.name === taskData.value.statusName
-    )
-    console.log(statusObject.statusId);
-    
-    taskData.value.status = statusObject.statusId
+console.log(route.params.taskId)
 
-    createTimeInBrowserTimezone = convertToBrowserTimezone(
-      taskData.value.createdOn
-    )
-    updateTimeInBrowserTimezone = convertToBrowserTimezone(
-      taskData.value.updatedOn
-    )
-    originalTaskData.value = { ...taskData.value }
-  } catch (error) {
-    Store.errorUpdateTask = true
-    router.push({ name: "BoardDetail", params: { id: route.params.id } })
-  }
+async function fetchData() {
+    // taskData.value = await getBoard(`boards/${route.params.id}/tasks/${route.params.taskId}`)
+    let result = await getBoard(
+        `boards/${route.params.id}/tasks/${route.params.taskId}`
+    )    
+    if (result.status === 404) {
+        router.push({ name: "BoardDetail", params: { id: route.params.id } })
+        Store.errorUpdateTask = true
+    }
+    if (result.status === 401) {
+        router.push({ name: "login" })
+        Store.errorToken = true
+
+    } else {
+        statusObject = Store.statuses.find(
+            (status) => status.name === result.statusName
+        )
+        result.status = statusObject.statusId
+        taskData.value = result
+        originalTaskData.value = { ...taskData.value }
+        createTimeInBrowserTimezone = convertToBrowserTimezone(result.createdOn)
+        updateTimeInBrowserTimezone = convertToBrowserTimezone(result.updatedOn)
+    }
 }
 
 async function updateTask() {
-  if (!validateTask(taskData.value)) {
-    return
-  }
-  const statusObject = Store.statuses.find(
-    (status) => status.statusId === taskData.value.status
-  )
-  taskData.value.status = statusObject.statusId
-  let result = await editDatas(`boards/${route.params.id}/tasks/${route.params.taskId}`, taskData.value)
-  // TaskID.value = result.id
-  Store.successUpdateTask = true
-  addToStore()
+    if (!validateTask(taskData.value)) {
+        return
+    }
+    const statusObject = Store.statuses.find(
+        (status) => status.statusId === taskData.value.status
+    )
+    taskData.value.status = statusObject.statusId
+    let result = await editDatas(
+        `boards/${route.params.id}/tasks/${route.params.taskId}`,
+        taskData.value
+    )
+
+    if (result.status === 401) {
+        router.push({ name: "login" })
+        Store.errorToken = true
+    } else {
+        // TaskID.value = result.id
+        Store.successUpdateTask = true
+        addToStore()
+    }
 }
 
 function addToStore() {
-  let indexToUpdate = -1
-  const ConvertTostatusName = Store.statuses.find(
-    (status) => status.statusId === taskData.value.status
-  )
-  taskData.value.statusName = ConvertTostatusName.name
+    let indexToUpdate = -1
+    const ConvertTostatusName = Store.statuses.find(
+        (status) => status.statusId === taskData.value.status
+    )
+    taskData.value.statusName = ConvertTostatusName.name
 
-  for (let i = 0; i < Store.tasks.length; i++) {
-    if (Store.tasks[i].id === taskData.value.id) {
-      indexToUpdate = i
-      break
+    for (let i = 0; i < Store.tasks.length; i++) {
+        if (Store.tasks[i].id === taskData.value.id) {
+            indexToUpdate = i
+            break
+        }
     }
-  }
-  if (indexToUpdate !== -1) {
-    Store.tasks[indexToUpdate] = taskData.value
-  } else {
-    Store.tasks.push(taskData.value)
-  }
-  console.log(Store.tasks);
-  
-  closeModal()
+    if (indexToUpdate !== -1) {
+        Store.tasks[indexToUpdate] = taskData.value
+    } else {
+        Store.tasks.push(taskData.value)
+    }
+    console.log(Store.tasks)
+
+    closeModal()
 }
 
 function closeModal() {
-  router.push({ name: "BoardDetail", params: { id: route.params.id } })
+    router.push({ name: "BoardDetail", params: { id: route.params.id } })
 }
 
 onMounted(fetchData)
 
 onUpdated(() => {
-  if (
-    originalTaskData.value.title !== taskData.value.title ||
-    originalTaskData.value.description !== taskData.value.description ||
-    originalTaskData.value.assignees !== taskData.value.assignees ||
-    originalTaskData.value.status !== taskData.value.status
-  ) {
-    isEdited.value = true
-  } else {
-    isEdited.value = false
-  }
+    if (
+        originalTaskData.value.title !== taskData.value.title ||
+        originalTaskData.value.description !== taskData.value.description ||
+        originalTaskData.value.assignees !== taskData.value.assignees ||
+        originalTaskData.value.status !== taskData.value.status
+    ) {
+        isEdited.value = true
+    } else {
+        isEdited.value = false
+    }
 })
-
 </script>
 <template>
-  <div
-    class="class name : itbkk-* fixed z-10 w-screen h-screen top-0 left-0 flex justify-center items-center"
-  >
     <div
-      class="bg-black bg-opacity-50 w-screen h-screen"
-      @click="closeModal()"
-    ></div>
-    <div
-      class="fixed bg-white w-[55%] h-auto indicator flex flex-col rounded-2xl shadow-2xl shadow-white"
+        class="class name : itbkk-* fixed z-10 w-screen h-screen top-0 left-0 flex justify-center items-center"
     >
-      <div class="rounded-2xl">
-        <h1 class="itbkk-title break-words w-[79%]">
-          <span class="font-serif text-[100%]">Edit </span
-          ><span class="text-[70%] opacity-[60%] font-serif">Task</span>
-        </h1>
-        <p class="border-b mt-2"></p>
-      </div>
+        <div
+            class="bg-black bg-opacity-50 w-screen h-screen"
+            @click="closeModal()"
+        ></div>
+        <div
+            class="fixed bg-white w-[55%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
+        >
+            <div class="rounded-2xl">
+                <h1 class="itbkk-title break-words w-[79%]">
+                    <span class="font-serif text-[100%]">Edit </span
+                    ><span class="text-[70%] opacity-[60%] font-serif"
+                        >Task</span
+                    >
+                </h1>
+                <p class="border-b mt-2"></p>
+            </div>
 
-      <div class="flex mt-3 mb-20 ml-7">
-        <div class="w-1/2">
-          <p class="font-bold">Title</p>
-            <textarea
-            v-model="taskData.title"
-            v-if="taskData.title !== null"
-            maxlength="100"
-            class="itbkk-title text-black w-[90%] h-auto resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3 border-2 overflow-hidden hover:overflow-y-scroll"
-            > {{ taskData.title }}  
-            </textarea>
-          <p class=" flex justify-end pr-14 text-[10px]">{{ taskData.title.length }}/100</p>
-          
-          
-          <p class="font-bold mt-2">Description</p>
-          <textarea
-            maxlength="500"
-            class="itbkk-description border-2 w-[90%] h-[105%] resize-none italic bg-gray-400 bg-opacity-15 rounded-lg"
-            style=""
-            v-model="taskData.description"
-            :placeholder="taskData.description ? '' : 'No Description Provided'"
-          >
+            <div class="flex mt-3 mb-20 ml-7">
+                <div class="w-1/2">
+                    <p class="font-bold">Title</p>
+                    <textarea
+                        v-model="taskData.title"
+                        v-if="taskData.title !== null"
+                        maxlength="100"
+                        class="itbkk-title text-black w-[90%] h-auto resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3 border-2 overflow-hidden hover:overflow-y-scroll"
+                    >
+ {{ taskData.title }}  
+            </textarea
+                    >
+                    <p class="flex justify-end pr-14 text-[10px]">
+                        {{ taskData.title.length }}/100
+                    </p>
+
+                    <p class="font-bold mt-2">Description</p>
+                    <textarea
+                        maxlength="500"
+                        class="itbkk-description border-2 w-[90%] h-[105%] resize-none italic bg-gray-400 bg-opacity-15 rounded-lg"
+                        style=""
+                        v-model="taskData.description"
+                        :placeholder="
+                            taskData.description
+                                ? ''
+                                : 'No Description Provided'
+                        "
+                    >
                         {{ taskData.description }}
-          </textarea>
-          <p class=" flex justify-end pr-14 text-[10px]">{{ taskData.description === null ? "0" : taskData.description.length}}/500</p>
-        </div>
+          </textarea
+                    >
+                    <p class="flex justify-end pr-14 text-[10px]">
+                        {{
+                            taskData.description === null
+                                ? "0"
+                                : taskData.description.length
+                        }}/500
+                    </p>
+                </div>
 
-        <div class="w-1/2">
-          <div class="font-bold">Assignees</div>
-          <textarea
-            maxlength="30"
-            class="itbkk-assignees border-2 w-[80%] h-[30%] resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3"
-            :class="{ 'italic text-gray-400': !taskData.assignees }"
-            type="text"
-            v-model="taskData.assignees"
-            :placeholder="taskData.assignees ? '' : 'Unassigned'"
-            >{{ taskData.assignees }}
+                <div class="w-1/2">
+                    <div class="font-bold">Assignees</div>
+                    <textarea
+                        maxlength="30"
+                        class="itbkk-assignees border-2 w-[80%] h-[30%] resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3"
+                        :class="{ 'italic text-gray-400': !taskData.assignees }"
+                        type="text"
+                        v-model="taskData.assignees"
+                        :placeholder="taskData.assignees ? '' : 'Unassigned'"
+                        >{{ taskData.assignees }}
                         </textarea
-          >
-          <p class=" flex justify-end pr-20 text-[10px]">{{ taskData.assignees === null ? "0" : taskData.assignees.length }}/30</p>
+                    >
+                    <p class="flex justify-end pr-20 text-[10px]">
+                        {{
+                            taskData.assignees === null
+                                ? "0"
+                                : taskData.assignees.length
+                        }}/30
+                    </p>
 
-          <div class="font-bold">Status</div>
-          <select
-            v-model="taskData.status"
-            class="itbkk-status w-[30%] h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
-          >
-            <option
-              v-for="(status,index) in Store.statuses"
-              :key="index"
-              :value="status.statusId"
-            >
-              {{ status.name }}
-            </option>
-          </select>
+                    <div class="font-bold">Status</div>
+                    <select
+                        v-model="taskData.status"
+                        class="itbkk-status w-[30%] h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
+                    >
+                        <option
+                            v-for="(status, index) in Store.statuses"
+                            :key="index"
+                            :value="status.statusId"
+                        >
+                            {{ status.name }}
+                        </option>
+                    </select>
 
-          <div class="font-bold pt-1">TimeZone</div>
-          <p
-            class="itbkk-timezone border-2 w-[80%] h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
-          >
-            {{ browserTimeZone }}
-          </p>
-          <div class="font-bold pt-1">Created On</div>
-          <p
-            class="itbkk-created-on border-2 w-[80%] h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
-          >
-            {{ createTimeInBrowserTimezone }}
-          </p>
-          <div class="font-bold pt-1">Updated On</div>
-          <p
-            class="itbkk-updated-on border-2 w-[80%] h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
-          >
-            {{ updateTimeInBrowserTimezone }}
-          </p>
+                    <div class="font-bold pt-1">TimeZone</div>
+                    <p
+                        class="itbkk-timezone border-2 w-[80%] h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
+                    >
+                        {{ browserTimeZone }}
+                    </p>
+                    <div class="font-bold pt-1">Created On</div>
+                    <p
+                        class="itbkk-created-on border-2 w-[80%] h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
+                    >
+                        {{ createTimeInBrowserTimezone }}
+                    </p>
+                    <div class="font-bold pt-1">Updated On</div>
+                    <p
+                        class="itbkk-updated-on border-2 w-[80%] h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
+                    >
+                        {{ updateTimeInBrowserTimezone }}
+                    </p>
+                </div>
+            </div>
+            <div class="boxButton m-3">
+                <button
+                    type="submit"
+                    class="itbkk-button button buttonClose btn"
+                    @click="closeModal()"
+                >
+                    Close
+                </button>
+
+                <button
+                    type="submit"
+                    class="itbkk-button button buttonOK btn"
+                    @click="
+                        updateTask(route.params.id, {
+                            title: taskData.title,
+                            description: taskData.description,
+                            assignees: taskData.assignees,
+                            status: taskData.status,
+                        })
+                    "
+                    :disabled="!isEdited"
+                >
+                    Update
+                </button>
+            </div>
         </div>
-      </div>
-      <div class="boxButton m-3">
-        <button
-          type="submit"
-          class="itbkk-button button buttonClose btn"
-          @click="closeModal()"
-        >
-          Close
-        </button>
-
-        <button
-          type="submit"
-          class="itbkk-button button buttonOK btn"
-          @click="
-            updateTask(route.params.id, {
-              title: taskData.title,
-              description: taskData.description,
-              assignees: taskData.assignees,
-              status: taskData.status,
-            })
-          "
-          :disabled="!isEdited"
-        >
-          Update
-        </button>
-      </div>
     </div>
-  </div>
 </template>
 <style scoped>
 .boxButton {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 70px;
-  margin-right: 30px;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 70px;
+    margin-right: 30px;
 }
 .button {
-  margin-top: auto;
-  background-color: #04aa6d;
-  border: none;
-  color: white;
-  padding: 10px 50px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  transition-duration: 0.4s;
-  cursor: pointer;
+    margin-top: auto;
+    background-color: #04aa6d;
+    border: none;
+    color: white;
+    padding: 10px 50px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
 }
 
 .buttonClose {
-  background-color: white;
-  color: black;
-  border: 2px solid red;
-  margin-right: 5px;
+    background-color: white;
+    color: black;
+    border: 2px solid red;
+    margin-right: 5px;
 }
 .buttonClose:hover {
-  background-color: red;
-  color: white;
+    background-color: red;
+    color: white;
 }
 .buttonOK {
-  background-color: white;
-  color: black;
-  border: 2px solid #04aa6d;
+    background-color: white;
+    color: black;
+    border: 2px solid #04aa6d;
 }
 .buttonOK:hover {
-  background-color: #04aa6d;
-  color: white;
+    background-color: #04aa6d;
+    color: white;
 }
 
 .box {
-  margin-right: auto;
+    margin-right: auto;
 }
 
 .modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 98;
-  background-color: rgba(0, 0, 0, 0.3);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 98;
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 h1 {
-  color: black;
-  font-size: 32px;
-  font-weight: 900;
-  margin-top: 15px;
-  margin-left: 25px;
-  font-family: sans-serif;
+    color: black;
+    font-size: 32px;
+    font-weight: 900;
+    margin-top: 15px;
+    margin-left: 25px;
+    font-family: sans-serif;
 }
 
 .modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 99;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 99;
 
-  width: 100%;
-  max-width: 400px;
-  background-color: #fff;
-  border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    background-color: #fff;
+    border-radius: 16px;
 
-  padding: 25px;
+    padding: 25px;
 }
 </style>
