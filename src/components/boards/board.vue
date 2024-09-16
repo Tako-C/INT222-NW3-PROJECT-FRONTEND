@@ -187,7 +187,7 @@ onMounted(() => {
   </header>
 
   <!-- Table สำหรับแสดงข้อมูลของ board -->
-  <main class="w-auto h-full overflow-y-scroll">
+  <main class="w-full h-full overflow-y-scroll">
     <div class="flex justify-between text-white">
         <h1 class="text-3xl font-bold text-black ml-10 mt-10">{{Store.username}} Personal Board</h1>
         <div class="right-0 mt-3 flex  bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"

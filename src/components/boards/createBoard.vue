@@ -8,7 +8,6 @@ import Cookies from "js-cookie";
 const router = useRouter()
 const route = useRoute()
 const Store = useStore()
-const statusID = ref(0)
 const boardId = ref(route.params.id)
 
 let boardData = ref({
@@ -30,24 +29,23 @@ function addToStore(newBoard) {
 
 
 async function saveBoardData() {
-    let checkStatusName = Store.statuses.filter((status) => status.name === boardData.value.name)
-        if(checkStatusName.length === 1){
-            window.alert("An error has occurred, the status could not be added.")
-        }   
-        else{
+
             boardData.value.boards = boardId.value
             let result = await addBoard(boardData.value, `boards`)
 
             if(result.status === 401){
                 router.push({name: 'login'})
                 Store.errorToken = true;
-            } else {
+            }
+            if(result.status === 400){
+                router.push({name: 'Board'})
+            }
+            else {
             console.log(result)
             addToStore(result)
             closeModal()                  
             }
             
-    }
 }
 
 function clearData() {
@@ -80,8 +78,8 @@ function clearData() {
             <div class=" mt-3 ml-7">
 
                     <div class=" font-bold">Name</div>
-                    <input v-model="boardData.board_name" class="itbkk-status-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
-
+                    <input maxlength="120" v-model="boardData.board_name" class="itbkk-status-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
+                    <p class=" flex justify-end pr-20 text-[10px]">{{ boardData.board_name.length}}/120</p>
             </div>
 
 

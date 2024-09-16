@@ -222,24 +222,32 @@ async function editDatas(path, data) {
 }
 
 async function addBoard(data, path) {
-    getAuthToken()
-    try {
-        const response = await fetch(`${url}/v3/${path}`, {
-            method: "POST", // or 'PUT'
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token.value}`,
-            },
+    getAuthToken() // Get the token from the getAuthToken function
 
-            body: JSON.stringify(data),
-        })
-        const result = await response.json()
-        console.log("Success:", result)
-        return result
-    } catch (error) {
-        console.error("Error:", error)
+    if (!token) {
+        console.error("Token not found");
+        throw new Error("Token not found");
     }
+
+    const response = await fetch(`${url}/v3/${path}`, {
+        method: "POST", // or 'PUT' if needed
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token.value}`, // Add the token in Authorization header
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        return error
+    }
+
+    const result = await response.json();
+    console.log("Success:", result);
+    return result;
 }
+
 
 async function removeData(path) {
     getAuthToken()
