@@ -194,32 +194,31 @@ async function addData(data, path) {
 }
 
 async function editDatas(path, data) {
-    getAuthToken()
-    return fetch(`${url}/v3/${path}`, {
+    getAuthToken() // Ensure token is retrieved
+
+    if (!token) {
+        throw new Error("Token not found");
+    }
+
+    const response = await fetch(`${url}/v3/${path}`, {
         method: "PUT",
         headers: {
             Authorization: `Bearer ${token.value}`,
             "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-    })
-        .then((response) => {
-            if (!response.ok) {
-                return response.text().then((errorMessage) => {
-                    throw new Error(errorMessage)
-                })
-            }
-            return response.json()
-        })
-        .then((result) => {
-            console.log("Success:", result)
-            return result
-        })
-        .catch((error) => {
-            console.error("Error:", error.message)
-            throw error
-        })
+    });
+
+    if (!response.ok) {
+        const error = await response.json()
+        return error
+    }
+
+    const result = await response.json();
+    console.log("Success:", result);
+    return result;
 }
+
 
 async function addBoard(data, path) {
     getAuthToken() // Get the token from the getAuthToken function

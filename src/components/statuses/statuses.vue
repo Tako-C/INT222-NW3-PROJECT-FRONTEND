@@ -61,9 +61,17 @@ onBeforeRouteUpdate((to, from, next) => {
 
 async function fetchData() {
     const endpoint = `${boardId.value}/statuses`
-    Store.statuses = await getTaskByBoard(endpoint)
-    Store.tasks = await getTaskByBoard(`${boardId.value}/tasks`)
-    Store.boards = await getBoard("boards")
+    let resStatus = await getTaskByBoard(endpoint)
+    let resTasks= await getTaskByBoard(`${boardId.value}/tasks`)
+    let resBoards = await getBoard("boards")
+    if(resStatus.status === 401 || resTasks.status === 401 || resBoards.status === 401) {
+        router.push({name: 'login'})
+        Store.errorToken = true;
+    } else {
+        Store.statuses = resStatus
+        Store.tasks = resTasks
+        Store.boards = resBoards        
+    }
 }
 
 // ================= Open/Close Page Function ===========================================================================

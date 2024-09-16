@@ -88,7 +88,7 @@ async function updateTask() {
         `boards/${route.params.id}/tasks/${route.params.taskId}`,
         taskData.value
     )
-
+    console.log(result)
     if (result.status === 401) {
         router.push({ name: "login" })
         Store.errorToken = true
