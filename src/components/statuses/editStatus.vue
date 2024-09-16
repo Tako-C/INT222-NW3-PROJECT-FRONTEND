@@ -74,6 +74,7 @@ async function updateStatus(statusId) {
     let result = await editDatas(`boards/${route.params.id}/statuses/${route.params.statusId}`,statusData.value)
     ID.value = result.id
     Store.successUpdateStatus = true
+    console.log(result.status)
     if(result.status === 401) {
       router.push({name: 'login'});
       Store.errorToken = true;
