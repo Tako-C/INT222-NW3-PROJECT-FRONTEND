@@ -1,57 +1,56 @@
-import Cookies from "js-cookie"
-import { jwtDecode } from "jwt-decode"
-import { ref } from "vue"
+
+
+import { getAuthToken,clearCookies,setAuthToken} from '@/libs/authToken.js'
 // Path URL
 const url = import.meta.env.VITE_BASE_URL
-let token = ref("")
 
-function getAuthToken() {
-    return (token.value = Cookies.get("token"))
-}
 
-function setAuthToken(result) {
-    const token_raw = JSON.parse(result) // Parse result into JSON before using
-    const decodedToken = jwtDecode(token_raw.access_token) // Decode access_token
-    const now = Math.floor(Date.now() / 1000)
-    const exp = decodedToken.exp
+// function getAuthToken() {
+//     return (token.value = Cookies.get("token"))
+// }
 
-    const cookieExpiresInSeconds = exp - now
-    const cookieExpiresInDays = cookieExpiresInSeconds / (60 * 60 * 24)
+// function setAuthToken(result) {
+//     const token_raw = JSON.parse(result) // Parse result into JSON before using
+//     const decodedToken = jwtDecode(token_raw.access_token) // Decode access_token
+//     const now = Math.floor(Date.now() / 1000)
+//     const exp = decodedToken.exp
 
-    Cookies.set("token", token_raw.access_token, {
-        expires: cookieExpiresInDays,
-    })
-    // Store the decoded claims in cookies
-    Cookies.set("name", decodedToken.name, { expires: cookieExpiresInDays })
-    Cookies.set("oid", decodedToken.oid, { expires: cookieExpiresInDays })
-    Cookies.set("iss", decodedToken.iss, { expires: cookieExpiresInDays })
-    Cookies.set("email", decodedToken.email, { expires: cookieExpiresInDays })
-    Cookies.set("role", decodedToken.role, { expires: cookieExpiresInDays })
-    Cookies.set("iat", decodedToken.iat, { expires: cookieExpiresInDays })
-    Cookies.set("exp", decodedToken.exp, { expires: cookieExpiresInDays })
-}
+//     const cookieExpiresInSeconds = exp - now
+//     const cookieExpiresInDays = cookieExpiresInSeconds / (60 * 60 * 24)
 
-function clearCookies() {
-    const cookieNames = [
-        "token",
-        "name",
-        "oid",
-        "iss",
-        "email",
-        "role",
-        "iat",
-        "exp",
-    ]
-    cookieNames.forEach((name) => {
-        Cookies.remove(name)
-    })
-}
+//     Cookies.set("token", token_raw.access_token, {
+//         expires: cookieExpiresInDays,
+//     })
+//     // Store the decoded claims in cookies
+//     Cookies.set("name", decodedToken.name, { expires: cookieExpiresInDays })
+//     Cookies.set("oid", decodedToken.oid, { expires: cookieExpiresInDays })
+//     Cookies.set("iss", decodedToken.iss, { expires: cookieExpiresInDays })
+//     Cookies.set("email", decodedToken.email, { expires: cookieExpiresInDays })
+//     Cookies.set("role", decodedToken.role, { expires: cookieExpiresInDays })
+//     Cookies.set("iat", decodedToken.iat, { expires: cookieExpiresInDays })
+//     Cookies.set("exp", decodedToken.exp, { expires: cookieExpiresInDays })
+// }
+
+// function clearCookies() {
+//     const cookieNames = [
+//         "token",
+//         "name",
+//         "oid",
+//         "iss",
+//         "email",
+//         "role",
+//         "iat",
+//         "exp",
+//     ]
+//     cookieNames.forEach((name) => {
+//         Cookies.remove(name)
+//     })
+// }
 
 async function login(username, password) {
     const res = await fetch(`${url}/api/login`, {
         method: "POST",
         headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -80,16 +79,16 @@ async function login(username, password) {
 async function getBoard(path) {
     getAuthToken()
 
-    if (!token) {
+    if (!getAuthToken()) {
         console.error("Token not found")
-        throw new Error("Token not found")
+       // throw new Error("Token not found")
     }
 
     const response = await fetch(`${url}/v3/${path}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token.value}`, // Add the token in the Authorization header
+            Authorization: `Bearer ${getAuthToken()}`, // Add the token in the Authorization header
         },
     })
 
@@ -109,15 +108,15 @@ async function getBoard(path) {
 
 async function getTaskByBoard(path) {
     getAuthToken()
-    if (!token) {
+    if (!getAuthToken()) {
         console.error("Token not found")
-        throw new Error("Token not found")
+       // throw new Error("Token not found")
     }
 
     const response = await fetch(`${url}/v3/boards/${path}`, {
         method: "GET",
         headers: {
-            Authorization: `Bearer ${token.value}`, // Add the token in the Authorization header
+            Authorization: `Bearer ${getAuthToken()}`, // Add the token in the Authorization header
             "Content-Type": "application/json",
         },
     })
@@ -138,15 +137,15 @@ async function getTaskByBoard(path) {
 
 async function createStatus(data, path) {
     getAuthToken()
-    if (!token) {
+    if (!getAuthToken()) {
         console.error("Token not found")
-        throw new Error("Token not found")
+       // throw new Error("Token not found")
     }
 
     const response = await fetch(`${url}/v3/boards/${path}`, {
         method: "POST", // or 'PUT' if needed
         headers: {
-            Authorization: `Bearer ${token.value}`, // Add the token in the Authorization header
+            Authorization: `Bearer ${getAuthToken()}`, // Add the token in the Authorization header
             "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
@@ -167,16 +166,16 @@ async function createStatus(data, path) {
 async function addData(data, path) {
     getAuthToken()
 
-    if (!token) {
+    if (!getAuthToken()) {
         console.error("Token not found")
-        throw new Error("Token not found")
+       // throw new Error("Token not found")
     }
 
     const response = await fetch(`${url}/v3/boards/${path}`, {
         method: "POST", // or 'PUT' if needed
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token.value}`, // Add the token in the Authorization header
+            Authorization: `Bearer ${getAuthToken()}`, // Add the token in the Authorization header
         },
         body: JSON.stringify(data),
     })
@@ -196,14 +195,14 @@ async function addData(data, path) {
 async function editDatas(path, data) {
     getAuthToken() // Ensure token is retrieved
 
-    if (!token) {
-        throw new Error("Token not found");
+    if (!getAuthToken()) {
+       // throw new Error("Token not found");
     }
 
     const response = await fetch(`${url}/v3/${path}`, {
         method: "PUT",
         headers: {
-            Authorization: `Bearer ${token.value}`,
+            Authorization: `Bearer ${getAuthToken()}`,
             "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
@@ -223,16 +222,16 @@ async function editDatas(path, data) {
 async function addBoard(data, path) {
     getAuthToken() // Get the token from the getAuthToken function
 
-    if (!token) {
+    if (!getAuthToken()) {
         console.error("Token not found");
-        throw new Error("Token not found");
+       // throw new Error("Token not found");
     }
 
     const response = await fetch(`${url}/v3/${path}`, {
         method: "POST", // or 'PUT' if needed
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token.value}`, // Add the token in Authorization header
+            Authorization: `Bearer ${getAuthToken()}`, // Add the token in Authorization header
         },
         body: JSON.stringify(data),
     });
@@ -250,15 +249,15 @@ async function addBoard(data, path) {
 
 async function removeData(path) {
     getAuthToken()
-    if (!token) {
+    if (!getAuthToken()) {
         console.error("Token not found")
-        throw new Error("Token not found")
+       // throw new Error("Token not found")
     }
 
     const response = await fetch(`${url}/v3/${path}`, {
         method: "DELETE",
         headers: {
-            Authorization: `Bearer ${token.value}`, // Add the token in the Authorization header
+            Authorization: `Bearer ${getAuthToken()}`, // Add the token in the Authorization header
         },
     })
 

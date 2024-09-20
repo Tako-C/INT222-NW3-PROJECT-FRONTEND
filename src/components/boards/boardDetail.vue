@@ -31,6 +31,7 @@ const isStatusPage = computed(() =>
     route.path.startsWith(`/board/${boardId.value}/status`)
 )
 
+
 // Watch for changes in boardId and fetch data accordingly
 watch(
     boardId,
@@ -42,6 +43,15 @@ watch(
     },
     { immediate: true }
 )
+// function checkFirstStatuses() {
+//     console.log(Store.statuses.length)
+//     let firstStatuses = Store.statuses[0]
+//     console.log(firstStatuses);
+         
+//     openStatuses(boardId.value)
+    
+    
+// }
 
 async function fetchData() {
     let endpoint = `${boardId.value}/tasks`
@@ -132,6 +142,7 @@ function openStatuses(boardId) {
 
 function toggleStatusDropdown() {
     isStatusDropdownOpen.value = !isStatusDropdownOpen.value
+    // checkFirstStatuses()
 }
 
 function toggleTaskDropdown() {
@@ -230,7 +241,7 @@ onMounted(() => {
         @confirmed="removeTask()"
         class="z-40"
     />
-    <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
+    <div class=" w-screen bg-white h-screen flex">
         <header
             name="header"
             class="top-0 z-10 h-full w-[20%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
@@ -336,7 +347,7 @@ onMounted(() => {
 
                 <!-- Statuses Section -->
                 <div
-                    class="w-60 p-5 flex items-center justify-between cursor-pointer"
+                    class="itbkk-manage-status w-60 p-5 flex items-center justify-between cursor-pointer"
                     :class="['rounded-md', { 'bg-orange-400': isStatusPage }]"
                     @click="toggleStatusDropdown()"
                 >
@@ -524,9 +535,9 @@ onMounted(() => {
                             d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                         />
                     </svg>
-                    <p @click="openCreateTask" class="pl-2 cursor-pointer">
+                    <div @click="openCreateTask" class="itbkk-button-add pl-2 cursor-pointer">
                         Create Task
-                    </p>
+                    </div>
                 </div>
             </div>
 
@@ -682,7 +693,7 @@ onMounted(() => {
             </div>
 
             <!--Table-->
-            <div class="flex flex-col mt-5 ml-16 w-5/6">
+            <div class=" flex flex-col mt-5 ml-16 w-5/6">
                 <!-- Table Header -->
                 <div class="bg-gray-100 p-4 rounded-t-lg shadow-md">
                     <div class="grid grid-cols-4 gap-4">
@@ -696,17 +707,27 @@ onMounted(() => {
                 <div
                     v-for="(task, index) in Store.tasks"
                     :key="index"
-                    class="bg-white rounded-b-lg shadow-md mb-2"
+                    class=" bg-white rounded-b-lg shadow-md mb-2"
+                    :class="{
+                                'itbkk-modal-task itbkk-item': route.path.endsWith('/task') ,
+                            }"
                 >
-                    <div class="grid grid-cols-4 gap-4 p-4">
-                        <p @click="openTaskDetail(task.id)">
-                            {{ index + 1 }}({{ task.id }})
+                    <div class="  grid grid-cols-4 gap-4 p-4"
+                    :class="{
+                                'itbkk-status': !route.params.taskId,
+                            }"
+                            >
+                        <p class="itbkk-button-action " >
+                            <div class="itbkk-button-edit" @click="openTaskDetail(task.id)">
+                                {{ index + 1 }}({{ task.id }})
+                            </div>
+                            
                         </p>
-                        <p class="break-words" @click="openTaskDetail(task.id)">
+                        <p class="itbkk-title break-words" @click="openTaskDetail(task.id)">
                             {{ task.title }}
                         </p>
                         <span
-                            class="break-words"
+                            class=" itbkk-assignees break-words"
                             :class="{
                                 'italic text-gray-400': !task.assignees,
                                 'itbkk-assignees': !route.params.id,
@@ -716,18 +737,23 @@ onMounted(() => {
                                 !task.assignees ? "Unassigned" : task.assignees
                             }}</span
                         >
-                        <div class="flex justify-between">
+                        <div class=" flex justify-between"
+                        :class="{
+                                'itbkk-status': route.path.endsWith('/task'),
+                            }"
+                        >
                             <p @click="openTaskDetail(task.id)">
                                 {{ task.statusName }}
                             </p>
-                            <svg
+                            <div class="itbkk-button-action-delete">
+<svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke-width="1.5"
                                 stroke="currentColor"
                                 @click="openConfirmModal(task.id, task.title)"
-                                class="size-6 text-red-500 cursor-pointer"
+                                class="itbkk-button-delete size-6 text-red-500 cursor-pointer"
                             >
                                 <path
                                     stroke-linecap="round"
@@ -735,6 +761,8 @@ onMounted(() => {
                                     d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
                                 />
                             </svg>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>

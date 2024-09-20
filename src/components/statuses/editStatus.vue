@@ -151,7 +151,7 @@ onUpdated(() => {
       </div>
       <div class="itbkk-modal-status mt-3 ml-7">
         <div>
-          <p class="itbkk-status-name font-bold">Name</p>
+          <p class=" font-bold">Name</p>
 
           <textarea
             v-model="statusData.name"
@@ -177,8 +177,7 @@ onUpdated(() => {
           >
           <p class=" flex justify-end pr-16 text-[10px]">{{ statusData.description === null ? "0" : statusData.description.length}}/200</p>
         </div>
-      </div>
-      <div class="boxButton m-3">
+        <div class="boxButton m-3">
         <button
           type="submit"
           class="itbkk-button-cancel button buttonClose btn"
@@ -201,6 +200,30 @@ onUpdated(() => {
           Update
         </button>
       </div>
+      </div>
+      <!-- <div class="boxButton m-3">
+        <button
+          type="submit"
+          class="itbkk-button-cancel button buttonClose btn"
+          @click="closeModal()"
+        >
+          Close
+        </button>
+
+        <button
+          type="submit"
+          class="itbkk-button-confirm button buttonOK btn"
+          @click="
+            updateStatus(route.params.id, {
+              name: statusData.name,
+              description: statusData.description,
+            })
+          "
+          :disabled="!isEdited"
+        >
+          Update
+        </button>
+      </div> -->
     </div>
   </div>
 </template>

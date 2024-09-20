@@ -151,9 +151,12 @@ onUpdated(() => {
         ></div>
         <div
             class="fixed bg-white w-[55%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
+            :class="{
+                                'itbkk-modal-task itbkk-item': route.params.taskId,
+                            }"
         >
             <div class="rounded-2xl">
-                <h1 class="itbkk-title break-words w-[79%]">
+                <h1 class="w-[79%]">
                     <span class="font-serif text-[100%]">Edit </span
                     ><span class="text-[70%] opacity-[60%] font-serif"
                         >Task</span
@@ -162,7 +165,9 @@ onUpdated(() => {
                 <p class="border-b mt-2"></p>
             </div>
 
-            <div class="flex mt-3 mb-20 ml-7">
+            <div class="flex mt-3 mb-20 ml-7"
+        
+            >
                 <div class="w-1/2">
                     <p class="font-bold">Title</p>
                     <textarea
@@ -171,8 +176,8 @@ onUpdated(() => {
                         maxlength="100"
                         class="itbkk-title text-black w-[90%] h-auto resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3 border-2 overflow-hidden hover:overflow-y-scroll"
                     >
- {{ taskData.title }}  
-            </textarea
+                        {{ taskData.title }}  
+                    </textarea
                     >
                     <p class="flex justify-end pr-14 text-[10px]">
                         {{ taskData.title.length }}/100
@@ -182,7 +187,6 @@ onUpdated(() => {
                     <textarea
                         maxlength="500"
                         class="itbkk-description border-2 w-[90%] h-[105%] resize-none italic bg-gray-400 bg-opacity-15 rounded-lg"
-                        style=""
                         v-model="taskData.description"
                         :placeholder="
                             taskData.description
@@ -190,7 +194,7 @@ onUpdated(() => {
                                 : 'No Description Provided'
                         "
                     >
-                        {{ taskData.description }}
+                        {{ taskData.description === null ? "No Description Provided" : taskData.description }}
           </textarea
                     >
                     <p class="flex justify-end pr-14 text-[10px]">
@@ -223,18 +227,18 @@ onUpdated(() => {
                     </p>
 
                     <div class="font-bold">Status</div>
-                    <select
-                        v-model="taskData.status"
-                        class="itbkk-status w-[30%] h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
-                    >
-                        <option
-                            v-for="(status, index) in Store.statuses"
-                            :key="index"
-                            :value="status.statusId"
+                    
+                        <select class="itbkk-status w-[30%] z-40 h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
+                            v-model="taskData.status"
                         >
-                            {{ status.name }}
-                        </option>
-                    </select>
+                            <option
+                                v-for="(status, index) in Store.statuses"
+                                :key="index"
+                                :value="status.statusId"
+                            >
+                                {{ status.name }}
+                            </option>
+                        </select>
 
                     <div class="font-bold pt-1">TimeZone</div>
                     <p
@@ -259,7 +263,7 @@ onUpdated(() => {
             <div class="boxButton m-3">
                 <button
                     type="submit"
-                    class="itbkk-button button buttonClose btn"
+                    class="itbkk-button-cancel button buttonClose btn"
                     @click="closeModal()"
                 >
                     Close
@@ -267,7 +271,7 @@ onUpdated(() => {
 
                 <button
                     type="submit"
-                    class="itbkk-button button buttonOK btn"
+                    class="itbkk-button-confirm button buttonOK btn"
                     @click="
                         updateTask(route.params.id, {
                             title: taskData.title,

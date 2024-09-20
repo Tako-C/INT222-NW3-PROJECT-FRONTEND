@@ -600,7 +600,11 @@ function checkVariable() {
                             d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                         />
                     </svg>
-                    <p @click="openCreateStatus" class="pl-2 cursor-pointer">
+                    <p @click="openCreateStatus" class="pl-2 cursor-pointer"
+                    :class="{
+                                'itbkk-button-add ': route.path.endsWith('/status') ,
+                            }"
+                            >
                         Create Status
                     </p>
                 </div>
@@ -620,10 +624,10 @@ function checkVariable() {
                 <div
                     v-for="(status, index) in Store.statuses"
                     :key="index"
-                    class="bg-white rounded-b-lg shadow-md mb-2"
+                    class="itbkk-item bg-white rounded-b-lg shadow-md mb-2"
                 >
-                    <div class="grid grid-cols-4 gap-4 p-4">
-                        <p
+                    <div class=" grid grid-cols-4 gap-4 p-4">
+                        <p 
                             @click="
                                 openStatusDetail(status.statusId, status.name)
                             "
@@ -631,7 +635,7 @@ function checkVariable() {
                             {{ index + 1 }}({{ status.statusId }})
                         </p>
                         <p
-                            class="break-words"
+                            class="itbkk-status-name itbkk-button-edit break-words"
                             @click="
                                 openStatusDetail(status.statusId, status.name)
                             "

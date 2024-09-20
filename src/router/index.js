@@ -7,7 +7,7 @@ import editTask from '@/components/tasks/EditTask.vue'
 import statusTable from '@/components/statuses/statuses.vue'
 import createStatus from '@/components/statuses/createStatus.vue'
 import editStatus from '@/components/statuses/editStatus.vue'
-
+import NotFound from '@/components/errorPage.vue'
 
 import login from '@/components/login.vue'
 import Cookies from 'js-cookie'
@@ -77,6 +77,12 @@ const router = createRouter({
       name: 'login', 
       component: login
     },
+
+    { path: '/404',
+      name: 'notFound',
+       component: NotFound 
+    },
+
     {
       path: '/:catchAll(.*)',
       redirect: '/login',
@@ -86,17 +92,19 @@ const router = createRouter({
 
 
 // Global navigation guard
-router.beforeEach((to, from, next) => {
-  if (to.path === '/login') {
-    // Allow navigation to the login page
-    next();
-  } else if (isAuthenticated()) {
-    // Allow navigation if authenticated
-    next();
-  } else {
-    // Redirect to login if not authenticated
-    next('/login');
-  }
-});
+// router.beforeEach((to, from, next) => {
+//   if (to.path === '/login') {
+//     // Allow navigation to the login page
+//     next();
+//   } 
+//   else if (isAuthenticated()) {
+//     // Allow navigation if authenticated
+//     next();
+//   } 
+//   else {
+//     // Redirect to login if not authenticated
+//     next('/login');
+//   }
+// });
 
 export default router
