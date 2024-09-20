@@ -137,7 +137,7 @@ watch(
             </svg>
         </div>
         <div class="p-5">
-            <h3 class="text-xl font-bold font-serif titleShadow text-center text-black">
+            <h3 class="text-xl font-bold font-serif titleShadow text-center text-red-500">
              Kradan Kanban <br>Boards
             </h3>
         </div>
