@@ -32,12 +32,12 @@ async function saveBoardData() {
 
             boardData.value.boards = boardId.value
             let result = await addBoard(boardData.value, `boards`)
-
+            console.log(result.status)
             if(result.status === 401){
-                router.push({name: 'login'})
-                Store.errorToken = true;
+                // router.push({name: 'login'})
+                // Store.errorToken = true;
             }
-            if(result.status === 400){
+            else if(result.status === 400){
                 router.push({name: 'Board'})
             }
             else {
@@ -66,7 +66,7 @@ function clearData() {
         >
         </div>
         <div
-            class=" itbkk-modal-status fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
+            class=" itbkk-modal-new fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
         >
             <div class=" rounded-2xl ">
                 <h1 class=" break-words w-[79%]">
@@ -78,7 +78,7 @@ function clearData() {
             <div class=" mt-3 ml-7">
 
                     <div class=" font-bold">Name</div>
-                    <input maxlength="120" v-model="boardData.board_name" class="itbkk-status-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
+                    <input maxlength="120" v-model="boardData.board_name" class="itbkk-board-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
                     <p class=" flex justify-end pr-20 text-[10px]">{{ boardData.board_name.length}}/120</p>
             </div>
 
@@ -93,7 +93,7 @@ function clearData() {
                     </button>
                     <button 
                         type="submit"
-                        class="itbkk-button-confirm button buttonOK btn"
+                        class="itbkk-button-ok button buttonOK btn"
                         @click="saveBoardData()"
                         :disabled="boardData.board_name.length === 0">
                         

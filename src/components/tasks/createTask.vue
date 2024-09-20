@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { addData } from '@/libs/fetchs.js'
+import { addData,getTaskByBoard } from '@/libs/fetchs.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
 import { validateTask } from '@/libs/varidateTask.js'
@@ -14,7 +14,8 @@ const DefualtStatus = ref()
 
 console.log(Store.statuses);
 
-function setDefualtStatus() {
+async function setDefualtStatus() {
+  Store.statuses = await getTaskByBoard(`${boardId.value}/statuses`)
    DefualtStatus.value = Store.statuses.find(
     (status) => status.name === "No Status"
   )
@@ -107,7 +108,7 @@ console.log(DefualtStatus.value);
         <p class="border-b mt-2"></p>
       </div>
 
-      <div class="mt-3 mb-20 ml-7">
+      <div class="itbkk-modal-task mt-3 mb-20 ml-7">
         <div class="font-bold">Title</div>
         <input
           v-model="taskData.title"
@@ -135,10 +136,10 @@ console.log(DefualtStatus.value);
         <div class="font-bold">Status</div>
         <select
           v-model="taskData.status"
-          class="w-[30%] h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
+          class="itbkk-status w-[30%] h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
         >
           <option
-            class="itbkk-status"
+            class=""
             v-for="(status, index) in Store.statuses"
             :key="index"
             :value="status.statusId"
@@ -147,9 +148,7 @@ console.log(DefualtStatus.value);
 
           </option>
         </select>
-      </div>
-
-      <div class="boxButton m-3">
+        <div class="boxButton m-3">
         <button
           type="submit"
           class="itbkk-button-cancel button buttonClose btn"
@@ -158,13 +157,15 @@ console.log(DefualtStatus.value);
           Cancel
         </button>
         <button
-          type="submit"
-          class="itbkk-button-confirm button buttonOK btn"
+          type="submit" class="itbkk-button-confirm button buttonOK btn"
           @click="saveTaskData()"
         >
           Add
         </button>
       </div>
+      </div>
+
+      
     </div>
   </div>
 </template>

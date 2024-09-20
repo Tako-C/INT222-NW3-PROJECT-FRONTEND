@@ -1,9 +1,9 @@
 <script setup>
-import { ref, onMounted,computed } from 'vue'
+import { ref, onMounted,computed,watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
 import { getBoard,clearCookies} from '@/libs/fetchs.js'
-
+import { getAuthToken,checkAuthToken} from '@/libs/authToken.js'
 
 import modalNotification from '@/components/modals/modalNotification.vue'
 import modalconfirmed from '@/components/modals/modalConfirmed.vue'
@@ -14,6 +14,10 @@ const Store = useStore()
 let boardData = ref([])
 const router = useRouter()
 const route = useRoute()
+
+// checkLoginUser
+const loadpage = ref(route.params)
+let TokenLogin = ref(false)
 
 // const optionsDropDownIndex = ref(null)
 // const errorDelete = ref(false)
@@ -27,11 +31,12 @@ const route = useRoute()
 // const showStatusList = ref(false)
 
 const username = ref(Cookies.get('name'))
-
 const isBoardPage = computed(() => route.path.startsWith('/board'))
 const isStatusPage = computed(() => route.path.endsWith('/status'));
 const isStatusDropdownOpen = ref(false)
 const isTaskDropdownOpen = ref(false)
+
+
 
 function getImageUrl(index){
 //   return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
@@ -39,20 +44,40 @@ function getImageUrl(index){
  
 }
 
+// function checkFirstBoard() {
+//     if (Store.boards.length === 1) {
+//         let firstBoard = Store.boards[0]
+//         // console.log(firstBoard.boardId)
+
+//         openBoardDetailModal(firstBoard.boardId);
+//     } 
+// }
+function checkTokenLogin() {
+    TokenLogin.value = getAuthToken()
+}
+
+
 async function fetchData() {
   let endpoint = 'boards'
     //   boardData.value = await getBoard(endpoint)
-        let result = await getBoard(endpoint)
-      
-  if(result.status === 401){
-    router.push({name: 'login'})
-    Store.errorToken = true;
-  } else {
-    Store.boards = result
-    console.log(boardData.value)
-  }
-
+    let result = await getBoard(endpoint)
+    if (!TokenLogin.value) {  
+        console.log(TokenLogin.value);
+        
+        Store.boards = []
+    } else{
+        Store.boards = result
+    }
+//   if(result.status === 401){
+//     router.push({name: 'login'})
+//     Store.errorToken = true;
+//   } else {
+//     Store.boards = result
+//     // console.log(boardData.value)
+//     // checkFirstBoard()
+//   }
 }
+
 function openBoardDetailModal(boardId) {
   router.push({ name:'BoardDetail', params: { id: boardId } })
 }
@@ -61,7 +86,12 @@ function openStatuses(boardId) {
 
 }
 function openCreateBoard(boardId) {
-  router.push({ name:'createBoard', params: { id: boardId } })
+//   router.push({ name:'createBoard', params: { id: boardId } })
+  if (!TokenLogin.value) {  
+    router.push({ name:'notFound'})
+    } else{
+        router.push({ name:'createBoard', params: { id: boardId } })
+    }
 
 }
 function toggleStatusDropdown() {
@@ -78,7 +108,17 @@ async function logOut(){
 
 onMounted(() => {
     fetchData()
+    
 })
+watch(
+    loadpage,
+    async (newloadpage) => {
+        if (newloadpage) {
+            checkTokenLogin()
+        }
+    },
+    { immediate: true }
+)
 </script>
  
 
@@ -132,7 +172,7 @@ onMounted(() => {
         </div>
 
         <!-- Statuses Section -->
-        <div class="w-60 p-5 flex items-center justify-between cursor-pointer" :class="['rounded-md', { 'bg-orange-400': isStatusPage }]" @click="toggleStatusDropdown()">
+        <div class=" w-60 p-5 flex items-center justify-between cursor-pointer" :class="['rounded-md', { 'bg-orange-400': isStatusPage }]" @click="toggleStatusDropdown()">
             <div class="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" :stroke="isStatusPage ? 'white' : 'gray'" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008Z" />
@@ -145,8 +185,8 @@ onMounted(() => {
         </div>
 
         <!-- Dropdown for statuses -->
-        <div v-show="isStatusDropdownOpen" class="w-60 mt-2 pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-20 overflow-y-auto">
-            <ul>
+        <div v-show="isStatusDropdownOpen" class=" w-60 mt-2 pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-20 overflow-y-auto">
+            <ul >
                 <li v-for="(board, index) in Store.boards" :key="index" class="py-2 text-slate-400 hover:text-black cursor-pointer"
                 @click="openStatuses(board.boardId)"
                 >
@@ -176,7 +216,7 @@ onMounted(() => {
             </svg>    
         </div>
         <p class="itbkk-fullname text-sm font-medium p-1">
-            {{ username }}
+            {{ TokenLogin ? username : "Login" }}
         </p>
         <div class="flex items-center justify-center right-0 " @click="logOut()">
             <svg  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
@@ -189,8 +229,8 @@ onMounted(() => {
   <!-- Table สำหรับแสดงข้อมูลของ board -->
   <main class="w-full h-full overflow-y-scroll">
     <div class="flex justify-between text-white">
-        <h1 class="text-3xl font-bold text-black ml-10 mt-10">{{Store.username}} Personal Board</h1>
-        <div class="right-0 mt-3 flex  bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
+        <h1 class="text-3xl font-bold text-black ml-10 mt-10">{{ TokenLogin ? `${username} Personal Board`: "Public Board"  }}</h1>
+        <div class="itbkk-button-create right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"  :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
             @click="openCreateBoard()">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -202,7 +242,7 @@ onMounted(() => {
     <div class=" h-screen p-8">
     <div class="flex flex-wrap gap-4 ">
       <div v-for="(board ,index) in Store.boards" :key="index" 
-      class="bg-white rounded-lg shadow p-6 w-10 md:w-1/5 lg:w-1/5 flex flex-col"
+      class=" bg-white rounded-lg shadow p-6 w-10 md:w-1/5 lg:w-1/5 flex flex-col"
       @click="openBoardDetailModal(board.boardId)"
       >{{ board.board }}
         <div class="mb-4">
