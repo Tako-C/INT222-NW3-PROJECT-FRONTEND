@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted, onUpdated } from 'vue'
+import { ref, onMounted, onUpdated, watch } from 'vue'
 import { getBoard, editDatas } from '@/libs/fetchs.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
+import { getAuthToken } from '@/libs/authToken.js'
 
 let statusData = ref({
   name: '',
@@ -17,11 +18,27 @@ const router = useRouter()
 const Store = useStore()
 const ID = ref(0)
 const isEdited = ref(false)
+let TokenLogin = ref(false)
 
 if (route.params.id == 1) {
   window.alert('You can not edit this Status.')
   router.push({ name: 'StatusTable' })
 }
+
+function checkTokenLogin() {
+    TokenLogin.value = getAuthToken()
+}
+
+watch(
+  route.params.id,
+    async (newBoardId) => {
+        if (newBoardId) {
+            await fetchData()
+            checkTokenLogin()
+        }
+    },
+    { immediate: true }
+)
 // async function fetchData() {
 //   try {
 //     statusData.value = await getBoard(`boards/${route.params.id}/statuses/${route.params.statusId}`)
@@ -189,13 +206,14 @@ onUpdated(() => {
         <button
           type="submit"
           class="itbkk-button-confirm button buttonOK btn"
-          @click="
+          @click="TokenLogin ? 
             updateStatus(route.params.id, {
               name: statusData.name,
               description: statusData.description,
-            })
+            }) : null
           "
-          :disabled="!isEdited"
+          :disabled="!isEdited || !TokenLogin"
+          :class="{ 'cursor-not-allowed': !TokenLogin, 'cursor-pointer': TokenLogin }"
         >
           Update
         </button>

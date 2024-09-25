@@ -35,7 +35,7 @@ let taskData = ref({
 
 
 function closeModal() {
-  router.push({ name: 'BoardDetail'})
+  router.push({ name: 'BoardTask'})
   clearData()
 }
 

@@ -2,12 +2,13 @@
 import { ref, onMounted,computed,watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
-import { getBoard,clearCookies} from '@/libs/fetchs.js'
+import { getBoard,clearCookies, updateBoard, getAllBoard} from '@/libs/fetchs.js'
 import { getAuthToken,checkAuthToken} from '@/libs/authToken.js'
 
 import modalNotification from '@/components/modals/modalNotification.vue'
-import modalconfirmed from '@/components/modals/modalConfirmed.vue'
+import modalconfirmed from "@/components/modals/modalConfirmed.vue"
 import Cookies from 'js-cookie'
+import BoardStatusConfirmation from './boardStatusConfirmation.vue'
 
 
 const Store = useStore()
@@ -35,7 +36,9 @@ const isBoardPage = computed(() => route.path.startsWith('/board'))
 const isStatusPage = computed(() => route.path.endsWith('/status'));
 const isStatusDropdownOpen = ref(false)
 const isTaskDropdownOpen = ref(false)
-
+const visibilityStatus = ref(boardData.visibility)
+const openConfirmed = ref(false)
+let visibilityBoard = ref("")
 
 
 function getImageUrl(index){
@@ -60,13 +63,15 @@ function checkTokenLogin() {
 async function fetchData() {
   let endpoint = 'boards'
     //   boardData.value = await getBoard(endpoint)
-    let result = await getBoard(endpoint)
+    let result = await getAllBoard(endpoint)
     if (!TokenLogin.value) {  
         console.log(TokenLogin.value);
         
-        Store.boards = []
-    } else{
         Store.boards = result
+    } else{
+        console.log(TokenLogin.value);
+        Store.boards = result
+
     }
 //   if(result.status === 401){
 //     router.push({name: 'login'})
@@ -78,12 +83,15 @@ async function fetchData() {
 //   }
 }
 
-function openBoardDetailModal(boardId) {
-  router.push({ name:'BoardDetail', params: { id: boardId } })
+function openBoardTaskModal(boardId) {
+  router.push({ name:'BoardTask', params: { id: boardId } })
 }
 function openStatuses(boardId) {
   router.push({ name:'Status', params: { id: boardId } })
-
+}
+function openBoardDetailModal(boardId) {
+  router.push({ name: 'BoardDetail', params: { id: boardId } })
+//   optionsDropDownIndex.value = null
 }
 function openCreateBoard(boardId) {
 //   router.push({ name:'createBoard', params: { id: boardId } })
@@ -106,6 +114,51 @@ async function logOut(){
 
 }
 
+async function updateVisibility(){
+    let result = await updateBoard(`boards/${visibilityBoard.value.boardId}`,{visibility:visibilityBoard.value.visibility})
+    console.log(result);
+    
+    if (result.status === 401) {
+        router.push({ name: "login" })
+        Store.errorToken = true
+    } else {
+        changeVisibility()
+    }
+}
+
+async function changeVisibility() {
+  // Find the board by ID
+  let board = Store.boards.find(b => b.boardId === visibilityBoard.value.boardId);
+  board.visibility = visibilityBoard.value.visibility
+
+  let indexToUpdate = -1
+
+  for(let i=0; i<Store.boards.length; i++){
+    if(Store.boards[i].boardId === board.boardId){
+        indexToUpdate = i
+        break
+    }
+  }
+  if (indexToUpdate !== -1) {
+        Store.boards[indexToUpdate].visibility = board.visibility
+    }
+
+console.log(visibilityBoard.value.boardId , board);
+console.log(Store.boards[indexToUpdate].visibility);
+closeNotificationModal()
+}
+
+function openConfirmModal(boardId) {
+    openConfirmed.value = true
+    visibilityBoard.value = boardId
+
+}
+
+function closeNotificationModal() {
+    openConfirmed.value = false
+
+}
+
 onMounted(() => {
     fetchData()
     
@@ -123,6 +176,12 @@ watch(
  
 
 <template>
+    <BoardStatusConfirmation
+        v-show="openConfirmed"
+        @closemodal="closeNotificationModal()"
+        @confirmed="updateVisibility()"
+        class="z-40"
+    />
   
     <div class="class name : itbkk-modal-task w-screen  bg-white  h-screen flex">
 
@@ -164,7 +223,7 @@ watch(
                     All
                 </li>
                 <li v-for="(board, index) in Store.boards" :key="index" class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                @click="openBoardDetailModal(board.boardId)"
+                @click="openBoardTaskModal(board.boardId)"
                 >
                     {{ board.board_name }}
                 </li>
@@ -230,26 +289,43 @@ watch(
   <main class="w-full h-full overflow-y-scroll">
     <div class="flex justify-between text-white">
         <h1 class="text-3xl font-bold text-black ml-10 mt-10">{{ TokenLogin ? `${username} Personal Board`: "Public Board"  }}</h1>
-        <div class="itbkk-button-create right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"  :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
-            @click="openCreateBoard()">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <button
+      class="itbkk-button-create right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
+      :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
+      :disabled="!TokenLogin"
+      :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
+      @click="TokenLogin ? openCreateBoard() : null"
+    >
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
-            <p class="pl-2 ">Create Board</p>
-        </div>
+      <p class="pl-2">Create Board</p>
+    </button>
     </div>
     
     <div class=" h-screen p-8">
     <div class="flex flex-wrap gap-4 ">
       <div v-for="(board ,index) in Store.boards" :key="index" 
       class=" bg-white rounded-lg shadow p-6 w-10 md:w-1/5 lg:w-1/5 flex flex-col"
-      @click="openBoardDetailModal(board.boardId)"
       >{{ board.board }}
         <div class="mb-4">
             <img :src="getImageUrl(index)" alt="bg-board" class="w-full h-full object-cover rounded-2xl">
         </div>
         <h3 class="text-lg font-bold mb-2">{{ board.board_name }}</h3>
-        
+        <div class="flex justify-between">
+        <button class="bg-green-500 border border-slate-400 p-1 rounded-md" @click="openBoardDetailModal(board.boardId)">Board Detail</button>
+        <button class="bg-green-500 border border-slate-400 p-1 rounded-md" @click="openBoardTaskModal(board.boardId)">Board Tasks</button>            
+        </div>
+        <div>
+            <!-- <input type="checkbox" class="toggle" checked="checked" @click="isVisibility = !isVisibility" />    
+            <p>{{ isVisibility }}</p> -->
+            <select v-model="board.visibility" @click="openConfirmModal(board)">
+                <option value="public" >Public</option>
+                <option value="private">Private</option>
+            </select>
+            <p>{{ board.visibility }}</p>
+        </div>
+
       </div>
     </div>
   </div>
