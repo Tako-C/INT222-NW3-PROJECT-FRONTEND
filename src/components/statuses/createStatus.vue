@@ -1,14 +1,34 @@
 <script setup>
-import { ref } from "vue"
+import { ref,watch } from "vue"
 import { createStatus } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
+import { getAuthToken } from '@/libs/authToken.js'
 
 const router = useRouter()
 const route = useRoute()
 const Store = useStore()
 const statusID = ref(0)
 const boardId = ref(route.params.id)
+let TokenLogin = ref(false)
+
+function checkTokenLogin() {
+    TokenLogin.value = getAuthToken()
+}
+
+watch(
+    boardId,
+    async (newloadpage) => {
+        if (newloadpage) {
+            checkTokenLogin()
+        }
+    },
+    { immediate: true }
+)
+
+
+
+
 let statusData = ref({
     name: '',
     description: ''
@@ -113,7 +133,9 @@ function clearData() {
                         type="submit"
                         class="itbkk-button-confirm button buttonOK btn"
                         @click="saveTaskData()"
-                        :disabled="statusData.name.length === 0">
+                        :disabled="!TokenLogin || statusData.name.length === 0"
+                        :class="{ 'cursor-not-allowed': !TokenLogin }"
+                    >
                         
                     Add
                     </button>

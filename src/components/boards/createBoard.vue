@@ -1,14 +1,30 @@
 <script setup>
-import { ref  } from "vue"
+import { ref, watch  } from "vue"
 import { addBoard } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
 import Cookies from "js-cookie";
+import { getAuthToken } from '@/libs/authToken.js'
 
 const router = useRouter()
 const route = useRoute()
 const Store = useStore()
 const boardId = ref(route.params.id)
+let TokenLogin = ref(false)
+
+function checkTokenLogin() {
+    TokenLogin.value = getAuthToken()
+}
+
+watch(
+    boardId,
+    async (newloadpage) => {
+        if (newloadpage) {
+            checkTokenLogin()
+        }
+    },
+    { immediate: true }
+)
 
 let boardData = ref({
     board_name: `${Cookies.get("name")} personal Board`
@@ -95,7 +111,9 @@ function clearData() {
                         type="submit"
                         class="itbkk-button-ok button buttonOK btn"
                         @click="saveBoardData()"
-                        :disabled="boardData.board_name.length === 0">
+                        :disabled="!TokenLogin || boardData.board_name.length === 0"
+                        :class="{ 'cursor-not-allowed': !TokenLogin }">
+                        
                         
                     Add
                     </button>

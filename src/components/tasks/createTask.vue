@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { addData,getTaskByBoard } from '@/libs/fetchs.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
 import { validateTask } from '@/libs/varidateTask.js'
+import { getAuthToken } from '@/libs/authToken.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -11,6 +12,21 @@ const Store = useStore()
 const boardId = ref(route.params.id)
 const TaskID = ref(0)
 const DefualtStatus = ref()
+let TokenLogin = ref(false)
+
+function checkTokenLogin() {
+    TokenLogin.value = getAuthToken()
+}
+
+watch(
+    boardId,
+    async (newloadpage) => {
+        if (newloadpage) {
+            checkTokenLogin()
+        }
+    },
+    { immediate: true }
+)
 
 console.log(Store.statuses);
 
@@ -159,6 +175,8 @@ console.log(DefualtStatus.value);
         <button
           type="submit" class="itbkk-button-confirm button buttonOK btn"
           @click="saveTaskData()"
+          :disabled="!TokenLogin"
+          :class="{ 'cursor-not-allowed': !TokenLogin }"
         >
           Add
         </button>

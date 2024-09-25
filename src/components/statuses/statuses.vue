@@ -553,7 +553,7 @@ function checkVariable() {
                 <div
                     class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
                 >
-                    <h1>{{ username }}</h1>
+                    <h1>{{ TokenLogin ? `${username}` : "Public Board" }}</h1>
                     <div class="flex items-center justify-center">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
