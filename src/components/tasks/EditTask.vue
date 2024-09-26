@@ -286,11 +286,27 @@ onUpdated(() => {
                     Close
                 </button>
 
+                <!-- <button
+    type="submit"
+    class="itbkk-button-confirm button buttonOK"
+    :disabled="!isEdited || !TokenLogin"
+    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin}"
+    :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
+    @click="TokenLogin ? updateTask(route.params.id, {
+        title: taskData.title,
+        description: taskData.description,
+        assignees: taskData.assignees,
+        status: taskData.status,
+    }) : null"
+>
+    Update
+</button> -->
                 <button
     type="submit"
-    class="itbkk-button-confirm button buttonOK btn"
+    class="itbkk-button-confirm button buttonOK"
     :disabled="!isEdited || !TokenLogin"
-    :class="{ 'cursor-not-allowed': !TokenLogin, 'cursor-pointer': TokenLogin }"
+    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin}"
+    :data-tip="!TokenLogin ? 'You do not have permission to use this feature.' : ''"
     @click="TokenLogin ? updateTask(route.params.id, {
         title: taskData.title,
         description: taskData.description,
@@ -324,7 +340,8 @@ onUpdated(() => {
     font-size: 16px;
     margin: 4px 2px;
     transition-duration: 0.4s;
-    cursor: pointer;
+    /* cursor: pointer; */
+    border-radius: var(--rounded-btn, 0.5rem);
 }
 
 .buttonClose {
@@ -341,11 +358,22 @@ onUpdated(() => {
     background-color: white;
     color: black;
     border: 2px solid #04aa6d;
+    pointer-events: auto;
 }
+
 .buttonOK:hover {
     background-color: #04aa6d;
     color: white;
 }
+
+/* เมื่อปุ่มถูก disabled */
+.buttonOK:disabled {
+    
+    background-color: grey;
+    color: white;
+    border: 2px solid grey;
+}
+
 
 .box {
     margin-right: auto;

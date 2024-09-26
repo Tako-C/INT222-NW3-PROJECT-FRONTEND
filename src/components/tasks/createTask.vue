@@ -173,10 +173,11 @@ console.log(DefualtStatus.value);
           Cancel
         </button>
         <button
-          type="submit" class="itbkk-button-confirm button buttonOK btn"
+          type="submit" class="itbkk-button-confirm button buttonOK"
           @click="saveTaskData()"
           :disabled="!TokenLogin"
-          :class="{ 'cursor-not-allowed': !TokenLogin }"
+          :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
+          :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
         >
           Add
         </button>
@@ -206,7 +207,8 @@ console.log(DefualtStatus.value);
   font-size: 16px;
   margin: 4px 2px;
   transition-duration: 0.4s;
-  cursor: pointer;
+  /* cursor: pointer; */
+  border-radius: var(--rounded-btn, 0.5rem);
 }
 
 .buttonClose {
@@ -219,13 +221,23 @@ console.log(DefualtStatus.value);
   color: white;
 }
 .buttonOK {
-  background-color: white;
-  color: black;
-  border: 2px solid #04aa6d;
+    background-color: white;
+    color: black;
+    border: 2px solid #04aa6d;
+    pointer-events: auto;
 }
+
 .buttonOK:hover {
-  background-color: #04aa6d;
-  color: white;
+    background-color: #04aa6d;
+    color: white;
+}
+
+/* เมื่อปุ่มถูก disabled */
+.buttonOK:disabled {
+    
+    background-color: grey;
+    color: white;
+    border: 2px solid grey;
 }
 
 .box {

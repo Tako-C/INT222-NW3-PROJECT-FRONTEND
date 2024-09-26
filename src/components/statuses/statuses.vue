@@ -592,7 +592,7 @@ function checkVariable() {
                 </div>
                 <button
     class="right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
-    :class="{ 'cursor-not-allowed': !TokenLogin, 'cursor-pointer': TokenLogin }"
+    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
     :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
     :disabled="!TokenLogin"
     @click="TokenLogin ? openCreateStatus() : null"

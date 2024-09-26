@@ -377,8 +377,10 @@ watch(
         </div>
       </div>
 
+      <!-- Login button -->
       <div
         class="bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer"
+        @click="logOut()"
       >
         <div class="flex items-center space-x-2 p-1">
           <svg
@@ -399,7 +401,7 @@ watch(
         <p class="itbkk-fullname text-sm font-medium p-1">
           {{ TokenLogin ? username : "Login" }}
         </p>
-        <div class="flex items-center justify-center right-0" @click="logOut()">
+        <div class="flex items-center justify-center right-0">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -429,6 +431,7 @@ watch(
           :data-tip="
             TokenLogin ? '' : 'You do not have permission to use this feature.'
           "
+          :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
           :disabled="!TokenLogin"
           @click="TokenLogin ? openCreateBoard() : null"
         >
