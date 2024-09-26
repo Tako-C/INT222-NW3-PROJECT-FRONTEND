@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import boardTable from '@/components/boards/board.vue'
-import boardDetail from '@/components/boards/boardDetail.vue'
+import boardTask from '@/components/boards/boardTask.vue'
 import createBoard from '@/components/boards/createBoard.vue'
+import boardDetail from '@/components/boards/boardDetail.vue'
 import createTask from '@/components/tasks/createTask.vue'
 import editTask from '@/components/tasks/EditTask.vue'
 import statusTable from '@/components/statuses/statuses.vue'
@@ -31,13 +32,18 @@ const router = createRouter({
           path: 'add',
           name: 'createBoard',
           component: createBoard,
+        },
+        {
+          path: ':id',
+          name: 'BoardDetail',
+          component: boardDetail,
         }
       ]
     },
     {
       path: '/board/:id/task',
-      name: 'BoardDetail',
-      component: boardDetail,
+      name: 'BoardTask',
+      component: boardTask,
       children: [
         {
           path: 'add',

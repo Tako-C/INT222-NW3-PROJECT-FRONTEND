@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted, onUpdated } from 'vue'
+import { ref, onMounted, onUpdated, watch, computed } from 'vue'
 import { getBoard, editDatas } from '@/libs/fetchs.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
+import { getAuthToken } from '@/libs/authToken.js'
 
 let statusData = ref({
   name: '',
@@ -17,6 +18,18 @@ const router = useRouter()
 const Store = useStore()
 const ID = ref(0)
 const isEdited = ref(false)
+
+const TokenLogin = computed(() => getAuthToken()) // ใช้ computed เพื่อจัดการ Token
+
+watch(
+  route.params.id,
+  async (newBoardId) => {
+    if (newBoardId) {
+      await fetchData()
+    }
+  },
+  { immediate: true }
+)
 
 if (route.params.id == 1) {
   window.alert('You can not edit this Status.')
@@ -187,18 +200,16 @@ onUpdated(() => {
         </button>
 
         <button
-          type="submit"
-          class="itbkk-button-confirm button buttonOK btn"
-          @click="
-            updateStatus(route.params.id, {
-              name: statusData.name,
-              description: statusData.description,
-            })
-          "
-          :disabled="!isEdited"
-        >
-          Update
-        </button>
+  type="submit"
+  class="itbkk-button-confirm button buttonOK "
+  @click="TokenLogin ? updateStatus() : null"
+  :disabled="!isEdited || !TokenLogin"
+  :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
+  :data-tip="!TokenLogin ? 'You do not have permission to use this feature.' : ''"
+>
+  Update
+</button>
+
       </div>
       </div>
       <!-- <div class="boxButton m-3">
@@ -246,7 +257,8 @@ onUpdated(() => {
   font-size: 16px;
   margin: 4px 2px;
   transition-duration: 0.4s;
-  cursor: pointer;
+    /* cursor: pointer; */
+    border-radius: var(--rounded-btn, 0.5rem);
 }
 
 .buttonClose {
@@ -260,13 +272,23 @@ onUpdated(() => {
   color: white;
 }
 .buttonOK {
-  background-color: white;
-  color: black;
-  border: 2px solid #04aa6d;
+    background-color: white;
+    color: black;
+    border: 2px solid #04aa6d;
+    pointer-events: auto;
 }
+
 .buttonOK:hover {
-  background-color: #04aa6d;
-  color: white;
+    background-color: #04aa6d;
+    color: white;
+}
+
+/* เมื่อปุ่มถูก disabled */
+.buttonOK:disabled {
+    
+    background-color: grey;
+    color: white;
+    border: 2px solid grey;
 }
 
 .box {

@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted, onUpdated } from "vue"
+import { ref, onMounted, onUpdated, watch } from "vue"
 import { getBoard, editDatas } from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { validateTask } from "@/libs/varidateTask.js"
+import { getAuthToken } from '@/libs/authToken.js'
 
 let createTimeInBrowserTimezone = ref(null)
 let updateTimeInBrowserTimezone = ref(null)
@@ -14,6 +15,7 @@ const Store = useStore()
 const TaskID = ref(0)
 const isEdited = ref(false)
 const DefualtStatus = 3
+let TokenLogin = ref(false)
 
 let taskData = ref({
     id: "",
@@ -57,7 +59,7 @@ async function fetchData() {
         `boards/${route.params.id}/tasks/${route.params.taskId}`
     )    
     if (result.status === 404) {
-        router.push({ name: "BoardDetail", params: { id: route.params.id } })
+        router.push({ name: "BoardTask", params: { id: route.params.id } })
         Store.errorUpdateTask = true
     }
     if (result.status === 401) {
@@ -123,8 +125,23 @@ function addToStore() {
 }
 
 function closeModal() {
-    router.push({ name: "BoardDetail", params: { id: route.params.id } })
+    router.push({ name: "BoardTask", params: { id: route.params.id } })
 }
+
+function checkTokenLogin() {
+    TokenLogin.value = getAuthToken()
+}
+
+watch(
+    boardId,
+    async (newBoardId) => {
+        if (newBoardId) {
+            await fetchData()
+            checkTokenLogin()
+        }
+    },
+    { immediate: true }
+)
 
 onMounted(fetchData)
 
@@ -269,21 +286,37 @@ onUpdated(() => {
                     Close
                 </button>
 
+                <!-- <button
+    type="submit"
+    class="itbkk-button-confirm button buttonOK"
+    :disabled="!isEdited || !TokenLogin"
+    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin}"
+    :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
+    @click="TokenLogin ? updateTask(route.params.id, {
+        title: taskData.title,
+        description: taskData.description,
+        assignees: taskData.assignees,
+        status: taskData.status,
+    }) : null"
+>
+    Update
+</button> -->
                 <button
-                    type="submit"
-                    class="itbkk-button-confirm button buttonOK btn"
-                    @click="
-                        updateTask(route.params.id, {
-                            title: taskData.title,
-                            description: taskData.description,
-                            assignees: taskData.assignees,
-                            status: taskData.status,
-                        })
-                    "
-                    :disabled="!isEdited"
-                >
-                    Update
-                </button>
+    type="submit"
+    class="itbkk-button-confirm button buttonOK"
+    :disabled="!isEdited || !TokenLogin"
+    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin}"
+    :data-tip="!TokenLogin ? 'You do not have permission to use this feature.' : ''"
+    @click="TokenLogin ? updateTask(route.params.id, {
+        title: taskData.title,
+        description: taskData.description,
+        assignees: taskData.assignees,
+        status: taskData.status,
+    }) : null"
+>
+    Update
+</button>
+
             </div>
         </div>
     </div>
@@ -307,7 +340,8 @@ onUpdated(() => {
     font-size: 16px;
     margin: 4px 2px;
     transition-duration: 0.4s;
-    cursor: pointer;
+    /* cursor: pointer; */
+    border-radius: var(--rounded-btn, 0.5rem);
 }
 
 .buttonClose {
@@ -324,11 +358,22 @@ onUpdated(() => {
     background-color: white;
     color: black;
     border: 2px solid #04aa6d;
+    pointer-events: auto;
 }
+
 .buttonOK:hover {
     background-color: #04aa6d;
     color: white;
 }
+
+/* เมื่อปุ่มถูก disabled */
+.buttonOK:disabled {
+    
+    background-color: grey;
+    color: white;
+    border: 2px solid grey;
+}
+
 
 .box {
     margin-right: auto;

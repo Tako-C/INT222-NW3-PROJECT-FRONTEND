@@ -108,10 +108,10 @@ async function getBoard(path) {
 
 async function getTaskByBoard(path) {
     getAuthToken()
-    if (!getAuthToken()) {
-        console.error("Token not found")
-       // throw new Error("Token not found")
-    }
+    // if (!getAuthToken()) {
+    //     console.error("Token not found")
+    //    // throw new Error("Token not found")
+    // }
 
     const response = await fetch(`${url}/v3/boards/${path}`, {
         method: "GET",
@@ -273,6 +273,63 @@ async function removeData(path) {
     return response
 }
 
+async function updateBoard(path,data) {
+    getAuthToken()
+    if (!getAuthToken()) {
+        console.error("Token not found")
+       // throw new Error("Token not found")
+    }
+
+    const response = await fetch(`${url}/v3/${path}`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        // console.error("Error:", error.message || "Failed to delete task")
+        // throw new Error(error.message || "Failed to delete task")
+        return error;
+        
+    }
+    return response
+}
+
+async function getAllBoard(path) {
+    getAuthToken()
+
+    if (!getAuthToken()) {
+        console.error("Token not found")
+       // throw new Error("Token not found")
+    }
+
+    const response = await fetch(`${url}/v3/${path}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`
+        },
+        
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        // console.error(
+        //     "Error fetching data:",
+        //     error.message || "Failed to fetch data"
+        // )
+        // throw new Error(error.message || "Failed to fetch data")
+        return error
+    }
+
+    const data = await response.json()
+    return data
+}
+
 export {
     addData,
     login,
@@ -283,4 +340,6 @@ export {
     addBoard,
     removeData,
     clearCookies,
+    updateBoard,
+    getAllBoard,
 }
