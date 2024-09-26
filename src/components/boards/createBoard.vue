@@ -11,7 +11,7 @@ const route = useRoute()
 const Store = useStore()
 const boardId = ref(route.params.id)
 let TokenLogin = ref(false)
-
+let userLogin = Cookies.get("name")
 function checkTokenLogin() {
     TokenLogin.value = getAuthToken()
 }
@@ -39,11 +39,15 @@ function closeModal() {
 }
 
 function addToStore(newBoard) {
-    boardData.value = newBoard
-    console.log(boardData.value);
+ 
+    boardData.value = { ...newBoard }
+    boardData.value.owner = { ...boardData.value.owner }
+    boardData.value.owner.oid = newBoard.oid
+    boardData.value.owner.name = userLogin
+
     Store.boards.push(boardData.value)
     Store.successAddStatus = true
-    console.log(Store.boards);
+
 }
 
 

@@ -4,7 +4,9 @@ import { addData,getTaskByBoard } from '@/libs/fetchs.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
 import { validateTask } from '@/libs/varidateTask.js'
-import { getAuthToken } from '@/libs/authToken.js'
+import { getAuthToken,checkUserInAuthToken } from '@/libs/authToken.js'
+import Cookies from "js-cookie"
+
 
 const router = useRouter()
 const route = useRoute()
@@ -13,6 +15,7 @@ const boardId = ref(route.params.id)
 const TaskID = ref(0)
 const DefualtStatus = ref()
 let TokenLogin = ref(false)
+let userLogin = Cookies.get("oid")
 
 function checkTokenLogin() {
     TokenLogin.value = getAuthToken()
@@ -100,8 +103,29 @@ function clearData() {
     status: DefualtStatus,
   }
 }
+
+
+function checkOwner() {
+    let userInboard = ''
+    for (const board of Store.boards) {
+        if (board.boardId === boardId.value) {
+            userInboard = board.owner.oid
+            console.log(userInboard);
+            break
+        } else{
+            // router.push({ name: "notFound" })
+        }
+
+    }
+    return checkUserInAuthToken(userInboard,userLogin)
+    
+
+}
+
+
 setDefualtStatus()
-console.log(DefualtStatus.value);
+
+
 
 </script>
 <template>
@@ -175,7 +199,7 @@ console.log(DefualtStatus.value);
         <button
           type="submit" class="itbkk-button-confirm button buttonOK"
           @click="saveTaskData()"
-          :disabled="!TokenLogin"
+          :disabled="!TokenLogin || !checkOwner()"
           :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
           :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
         >

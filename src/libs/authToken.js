@@ -63,4 +63,4 @@ function clearCookies() {
     })
 }
 
-export {getAuthToken,clearCookies,setAuthToken,checkAuthToken}
+export {getAuthToken,clearCookies,setAuthToken,checkAuthToken,checkUserInAuthToken}

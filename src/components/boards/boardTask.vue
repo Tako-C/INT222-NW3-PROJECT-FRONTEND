@@ -6,7 +6,7 @@ import { getBoard, getTaskByBoard, removeData,clearCookies } from "@/libs/fetchs
 import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalconfirmed from "@/components/modals/modalConfirmed.vue"
-import { getAuthToken } from '@/libs/authToken.js'
+import { getAuthToken,checkUserInAuthToken } from '@/libs/authToken.js'
 
 const Store = useStore()
 const router = useRouter()
@@ -27,6 +27,7 @@ const newFilterString = ref("")
 const filterList = ref([])
 const showStatusList = ref(false)
 let TokenLogin = ref(false)
+let userLogin = Cookies.get("oid")
 
 const isBoardPage = computed(() => route.path.startsWith("/board"))
 const isStatusPage = computed(() =>
@@ -227,7 +228,23 @@ async function logOut(){
 function checkTokenLogin() {
     TokenLogin.value = getAuthToken()
 }
+function checkOwner() {
+    let userInboard = ''
+    for (const board of Store.boards) {
+        if (board.boardId === boardId.value) {
+            userInboard = board.owner.oid
+            console.log(userInboard);
+            break
+        } else{
+            // router.push({ name: "notFound" })
+        }
 
+    }
+    return checkUserInAuthToken(userInboard,userLogin)
+    
+//   return checkUserInAuthToken(userInboard,userLogin)
+
+}
 onMounted(() => {
     fetchData()
     getBoardName()
@@ -527,10 +544,10 @@ onMounted(() => {
                     <p>Tasks Lists</p>
                 </div>
                 <button
-                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
-                    :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
-                    :disabled="!TokenLogin"
-                    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
+                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
+                    :data-tip="TokenLogin && checkOwner() ? 'Create New Task' : 'You do not have permission to use this feature.'"
+                    :disabled="!TokenLogin || !checkOwner()"
+                    :class="{ 'cursor-not-allowed ': !TokenLogin  }"
                     @click="openCreateTask"
                 >
                     <svg

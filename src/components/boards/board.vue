@@ -7,22 +7,21 @@ import {
   clearCookies,
   updateBoard,
   getAllBoard,
+  getAllBoardByPublic
 } from "@/libs/fetchs.js";
-import { getAuthToken, checkAuthToken } from "@/libs/authToken.js";
+import { getAuthToken, checkUserInAuthToken } from "@/libs/authToken.js";
 
-import modalNotification from "@/components/modals/modalNotification.vue";
-import modalconfirmed from "@/components/modals/modalConfirmed.vue";
 import Cookies from "js-cookie";
-import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue";
+import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
 
-const Store = useStore();
-let boardData = ref([]);
-const router = useRouter();
-const route = useRoute();
+const Store = useStore()
+let boardData = ref([])
+const router = useRouter()
+const route = useRoute()
 
 // checkLoginUser
-const loadpage = ref(route.params);
-let TokenLogin = ref(false);
+const loadpage = ref(route.params)
+let TokenLogin = ref(false)
 
 // const optionsDropDownIndex = ref(null)
 // const errorDelete = ref(false)
@@ -35,19 +34,18 @@ let TokenLogin = ref(false);
 // const filterList = ref([])
 // const showStatusList = ref(false)
 
-const username = ref(Cookies.get("name"));
-const isBoardPage = computed(() => route.path.startsWith("/board"));
-const isStatusPage = computed(() => route.path.endsWith("/status"));
-const isStatusDropdownOpen = ref(false);
-const isTaskDropdownOpen = ref(false);
-const visibilityStatus = ref(boardData.visibility);
-const openConfirmed = ref(false);
-let visibilityBoard = ref("");
-let originalVisibilityBoard = ref({});
+const username = ref(Cookies.get("name"))
+const isBoardPage = computed(() => route.path.startsWith("/board"))
+const isStatusPage = computed(() => route.path.endsWith("/status"))
+const isStatusDropdownOpen = ref(false)
+const isTaskDropdownOpen = ref(false)
+const openConfirmed = ref(false)
+let visibilityBoard = ref({})
+let userLogin = Cookies.get("oid")
 
 function getImageUrl(index) {
   //   return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
-  return `/images/bg-theme-${(index % 5) + 1}.jpg`;
+  return `/images/bg-theme-${(index % 5) + 1}.jpg`
 }
 
 // function checkFirstBoard() {
@@ -59,28 +57,49 @@ function getImageUrl(index) {
 //     }
 // }
 function checkTokenLogin() {
-  TokenLogin.value = getAuthToken();
+  TokenLogin.value = getAuthToken()
 }
 
 async function fetchData() {
-  let endpoint = "boards";
-  //   boardData.value = await getBoard(endpoint)
-  let result = await getAllBoard(endpoint);
-  console.log(TokenLogin.value);
-  for (const board of result) {
+  let endpoint = "boards"
+  let finalResult = []
+  if (getAuthToken()) {
+      let resultPrivate = await getAllBoard(endpoint)
+      let resultPublic = await getAllBoardByPublic(endpoint)
+      resultPrivate.forEach(privateBoard => {
+      resultPublic = resultPublic.filter(publicBoard => publicBoard.owner.oid !== privateBoard.owner.oid)
+      finalResult = [...resultPrivate, ...resultPublic]
+  })
+  } else{
+     finalResult = await getAllBoard(endpoint)
+    console.log(finalResult)
+  }
+  
+  // console.log(TokenLogin.value);
+  Store.boards = finalResult
+
+        
+  for (const board of Store.boards) {
     if (board.visibility == "public") {
-      board.visibility = true;
+      board.isCheck = true
     } else {
-      board.visibility = false;
+      board.isCheck = false
     }
   }
+  // for (const board of Store.boards) {
+  //   if (board.visibility == "public") {
+  //     board.visibility = true;
+  //   } else {
+  //     board.visibility = false;
+  //   }
+  // }
 
-  if (!TokenLogin.value) {
-    console.log(TokenLogin.value);
-    Store.boards = result;
-  } else {
-    Store.boards = result;
-  }
+  // if (!TokenLogin.value) {
+  //   console.log(TokenLogin.value);
+  //   Store.boards = result;
+  // } else {
+  //   Store.boards = result;
+  // }
   //   if(result.status === 401){
   //     router.push({name: 'login'})
   //     Store.errorToken = true;
@@ -92,69 +111,70 @@ async function fetchData() {
 }
 
 function openBoardTaskModal(boardId) {
-  router.push({ name: "BoardTask", params: { id: boardId } });
+  router.push({ name: "BoardTask", params: { id: boardId } })
 }
 function openStatuses(boardId) {
-  router.push({ name: "Status", params: { id: boardId } });
+  router.push({ name: "Status", params: { id: boardId } })
 }
 function openBoardDetailModal(boardId) {
-  router.push({ name: "BoardDetail", params: { id: boardId } });
+  router.push({ name: "BoardDetail", params: { id: boardId } })
   //   optionsDropDownIndex.value = null
 }
 function openCreateBoard(boardId) {
   //   router.push({ name:'createBoard', params: { id: boardId } })
   if (!TokenLogin.value) {
-    router.push({ name: "notFound" });
+    router.push({ name: "notFound" })
   } else {
-    router.push({ name: "createBoard", params: { id: boardId } });
+    router.push({ name: "createBoard", params: { id: boardId } })
   }
 }
 function toggleStatusDropdown() {
-  isStatusDropdownOpen.value = !isStatusDropdownOpen.value;
+  isStatusDropdownOpen.value = !isStatusDropdownOpen.value
 }
 function toggleTaskDropdown() {
-  isTaskDropdownOpen.value = !isTaskDropdownOpen.value;
+  isTaskDropdownOpen.value = !isTaskDropdownOpen.value
 }
 async function logOut() {
   clearCookies();
-  router.push({ name: "login" });
+  router.push({ name: "login" })
 }
 
 async function updateVisibility() {
-  console.log(visibilityBoard.value.visibility);
+ if (getAuthToken() && checkOwner(visibilityBoard.value.owner.oid,userLogin)) {
+  
+ 
 
-  if (visibilityBoard.value.visibility === false) {
-    visibilityBoard.value.visibility = "public";
+  if (visibilityBoard.value.isCheck === true) {
+    visibilityBoard.value.visibility = "public"
   } else {
-    visibilityBoard.value.visibility = "private";
+    visibilityBoard.value.visibility = "private"
   }
 
   let result = await updateBoard(`boards/${visibilityBoard.value.boardId}`, {
     visibility: visibilityBoard.value.visibility,
-  });
-  console.log(result);
+  })
+
 
   if (result.status === 401) {
-    router.push({ name: "login" });
-    Store.errorToken = true;
+    router.push({ name: "login" })
+    Store.errorToken = true
   } else {
-    changeVisibility();
+    changeVisibility()
   }
+
+} else {
+  router.push({ name: "notFound" })
+}
 }
 
 async function changeVisibility() {
-  if (visibilityBoard.value.visibility === "public") {
-    visibilityBoard.value.visibility = true;
-  } else {
-    visibilityBoard.value.visibility = false;
-  }
 
   // Find the board by ID
   let board = Store.boards.find(
     (b) => b.boardId === visibilityBoard.value.boardId
   );
 
-  board.visibility = visibilityBoard.value.visibility;
+  board.visibility = visibilityBoard.value.visibility
 
   let indexToUpdate = -1;
 
@@ -165,28 +185,41 @@ async function changeVisibility() {
     }
   }
   if (indexToUpdate !== -1) {
-    Store.boards[indexToUpdate].visibility = board.visibility;
+    Store.boards[indexToUpdate].visibility = board.visibility
   }
 
   console.log(visibilityBoard.value.boardId, board);
-  console.log(Store.boards[indexToUpdate].visibility);
+  console.log(Store.boards[indexToUpdate].visibility)
 
-  closeNotificationModal();
+  // closeNotificationModal();
+  openConfirmed.value = false
 }
 
 function openConfirmModal(board) {
   if (getAuthToken()) {
-    originalVisibilityBoard.value = board;
-    openConfirmed.value = true;
-    visibilityBoard.value = board;
+    openConfirmed.value = true
+    visibilityBoard.value = board
   } else {
-    router.push({ name: "notFound" });
+    router.push({ name: "notFound" })
   }
 }
 
 function closeNotificationModal() {
-  openConfirmed.value = false;
-  
+  openConfirmed.value = false
+  // fetchData()
+  let board = Store.boards.find(
+    (b) => b.boardId === visibilityBoard.value.boardId
+  )
+  if (visibilityBoard.value.visibility === 'public') {
+    board.isCheck = true
+  } else{
+    board.isCheck = false
+  }
+  fetchData()
+}
+function checkOwner(userInboard) {
+  return checkUserInAuthToken(userInboard,userLogin)
+
 }
 
 onMounted(() => {
@@ -196,11 +229,11 @@ watch(
   loadpage,
   async (newloadpage) => {
     if (newloadpage) {
-      checkTokenLogin();
+      checkTokenLogin()
     }
   },
   { immediate: true }
-);
+)
 </script>
 
 <template>
@@ -469,15 +502,15 @@ watch(
               />
             </div>
             <h3 class="text-lg font-bold mb-2">{{ board.board_name }}</h3>
-            <div class="flex justify-between">
+            <div class="flex justify-around">
               <button
-                class="bg-green-500 border border-slate-400 p-1 rounded-md"
+                class="bg-green-500  border text-xs border-slate-400 p-1 rounded-md"
                 @click="openBoardDetailModal(board.boardId)"
               >
                 Board Detail
               </button>
               <button
-                class="bg-green-500 border border-slate-400 p-1 rounded-md"
+                class="bg-green-500 border text-xs border-slate-400 p-1 rounded-md"
                 @click="openBoardTaskModal(board.boardId)"
               >
                 Board Tasks
@@ -489,23 +522,25 @@ watch(
             <div>
               <input
                 type="checkbox"
-                class="toggle"
+                class="toggle tooltip tooltip-right"
                 :class="{
-                  'cursor-not-allowed tooltip tooltip-right': !TokenLogin,
+                  'cursor-not-allowed ': !TokenLogin || !checkOwner(board.owner.oid) ,
                 }"
                 :data-tip="
-                  TokenLogin
+                  TokenLogin && checkOwner(board.owner.oid)
                     ? 'change Visibility Board'
                     : 'You do not have permission to use this feature.'
                 "
-                :checked="board.visibility"
+                v-model="board.isCheck"
                 @click="openConfirmModal(board)"
               />
               <p>
-                {{ board.visibility === true ? "Public" : "Private" }}
               </p>
             </div>
+            <p >Owner : {{ board.owner.name}}</p>
+            {{ checkOwner(board.owner.oid) }}
           </div>
+          
         </div>
       </div>
     </main>
