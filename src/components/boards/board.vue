@@ -13,6 +13,7 @@ import { getAuthToken, checkUserInAuthToken } from "@/libs/authToken.js";
 
 import Cookies from "js-cookie";
 import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
+import modalNotification from "@/components/modals/modalNotification.vue"
 
 const Store = useStore()
 let boardData = ref([])
@@ -206,6 +207,9 @@ function openConfirmModal(board) {
 
 function closeNotificationModal() {
   openConfirmed.value = false
+  Store.errorPrivate404 = false
+  Store.errorPrivate404Content =''
+
   // fetchData()
   let board = Store.boards.find(
     (b) => b.boardId === visibilityBoard.value.boardId
@@ -220,6 +224,16 @@ function closeNotificationModal() {
 function checkOwner(userInboard) {
   return checkUserInAuthToken(userInboard,userLogin)
 
+}
+
+function checkVariable() {
+    
+    if (
+        Store.errorPrivate404 == true
+    ) {
+        return true
+    }
+    return false
 }
 
 onMounted(() => {
@@ -244,11 +258,16 @@ watch(
     @confirmed="updateVisibility()"
     class="z-40"
   />
+  <modalNotification
+        @closemodal="closeNotificationModal()"
+        v-show="checkVariable()"
+        class="z-30"
+    />
 
   <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
     <header
       name="header"
-      class="top-0 z-10 h-full w-[25%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
+      class="top-0  h-full w-[25%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
     >
       <div class="flex">
         <div
@@ -464,8 +483,8 @@ watch(
           :data-tip="
             TokenLogin ? '' : 'You do not have permission to use this feature.'
           "
-          :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
-          :disabled="!TokenLogin"
+          :class="{ 'tooltip tooltip-left': !TokenLogin }"
+          :disabled="!TokenLogin "
           @click="TokenLogin ? openCreateBoard() : null"
         >
           <svg

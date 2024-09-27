@@ -6,7 +6,7 @@ import { getBoard, getTaskByBoard, removeData,clearCookies } from "@/libs/fetchs
 import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalconfirmed from "@/components/modals/modalConfirmed.vue"
-import { getAuthToken,checkUserInAuthToken } from '@/libs/authToken.js'
+import { getAuthToken,checkUserInAuthToken, checkAuthToken } from '@/libs/authToken.js'
 
 const Store = useStore()
 const router = useRouter()
@@ -69,10 +69,22 @@ async function fetchData() {
     let resTasks = await getTaskByBoard(endpoint)
     let resStatuses = await getTaskByBoard(`${boardId.value}/statuses`)
     let resBoards = await getBoard("boards")
-    if(resTasks.status === 401 || resStatuses.status === 401 || resBoards.status === 401){
-        router.push({name: 'login'});
-        Store.errorToken = true;
-    } else {
+
+    if(resTasks.status === 401){
+        router.push({name: 'login'})
+        Store.errorToken = true
+
+    } if (resTasks.status === 403) {
+        Store.errorPage403 = true
+        router.push({name: 'notFound'})   
+
+    }
+    if (resTasks.status === 404) {
+        Store.errorPage404 = true
+        router.push({name: 'notFound'})   
+
+    }
+    else {
     Store.tasks = resTasks
     Store.statuses = resStatuses
     Store.boards = resBoards        
@@ -160,11 +172,13 @@ function getBoardName() {
     }
 }
 
-function openTaskDetail(taskId) {
-    router.push({
+function openTaskDetail(taskId) {  
+        router.push({
         name: "editTask",
         params: { id: boardId.value, taskId: taskId },
     })
+    
+   
 }
 
 async function removeTask() {
@@ -198,6 +212,8 @@ function closeNotificationModal() {
     openConfirmed.value = false
     taskTitle.value = ""
     taskID.value = ""
+    Store.errorPage403 = false
+    Store.errorPage404 = false
 }
 
 function checkVariable() {
@@ -545,9 +561,7 @@ onMounted(() => {
                 </div>
                 <button
                     class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
-                    :data-tip="TokenLogin && checkOwner() ? 'Create New Task' : 'You do not have permission to use this feature.'"
-                    :disabled="!TokenLogin || !checkOwner()"
-                    :class="{ 'cursor-not-allowed ': !TokenLogin  }"
+                    :data-tip="TokenLogin && checkOwner() ? 'Create New Task' : 'You do not have permission to use this feature.'"          
                     @click="openCreateTask"
                 >
                     <svg

@@ -4,7 +4,7 @@ import { addData,getTaskByBoard } from '@/libs/fetchs.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store.js'
 import { validateTask } from '@/libs/varidateTask.js'
-import { getAuthToken,checkUserInAuthToken } from '@/libs/authToken.js'
+import { getAuthToken,checkUserInAuthToken,checkAuthToken } from '@/libs/authToken.js'
 import Cookies from "js-cookie"
 
 
@@ -31,19 +31,18 @@ watch(
     { immediate: true }
 )
 
-console.log(Store.statuses);
 
 async function setDefualtStatus() {
   Store.statuses = await getTaskByBoard(`${boardId.value}/statuses`)
    DefualtStatus.value = Store.statuses.find(
     (status) => status.name === "No Status"
   )
-  console.log(Store.statuses,DefualtStatus.value);
-  
+  // console.log(Store.statuses,DefualtStatus.value);
   
   taskData.value.status = DefualtStatus.value.statusId
   return DefualtStatus
 }
+
 let taskData = ref({
   title: '',
   description: '',
@@ -122,7 +121,18 @@ function checkOwner() {
 
 }
 
-
+function checkUserPermition() {
+    console.log(checkAuthToken(),checkOwner());
+    if (checkAuthToken() === false) {
+        router.push({ name: "notFound" })
+    } 
+    if (checkAuthToken() === true && checkOwner() === false) {
+        router.push({ name: "notFound" })
+    } else {
+      
+    }
+}
+checkUserPermition()
 setDefualtStatus()
 
 

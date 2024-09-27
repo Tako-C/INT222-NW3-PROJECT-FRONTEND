@@ -8,6 +8,7 @@ const emits = defineEmits(['closemodal', 'confirmed'])
 </script>
  
 <template>
+<div class="fixed bg-black bg-opacity-30 w-screen h-screen">
   <div class="fixed modal-box">
     <h3 class="text-lg font-bold">Change visibility</h3>
     <p class="border-b mt-2"></p>
@@ -29,6 +30,7 @@ const emits = defineEmits(['closemodal', 'confirmed'])
       </button>
     </div>
   </div>
+</div>
 </template>
  
 <style scoped>

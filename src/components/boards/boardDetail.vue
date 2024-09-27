@@ -35,8 +35,10 @@ async function fetchData() {
 console.log(result);
 
     if (result.status === 404) {
+  
+        Store.errorPrivate404 = true
+        Store.errorPrivate404Content ='Board'
         router.push({ name: "board", params: { id: route.params.id } })
-        // Store.errorUpdateStatus = true
     }
     if (result.status === 401) {
         router.push({ name: "login" })

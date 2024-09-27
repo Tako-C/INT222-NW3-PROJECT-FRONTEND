@@ -3,7 +3,7 @@ import { ref,watch } from "vue"
 import { createStatus } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
-import { getAuthToken } from '@/libs/authToken.js'
+import { getAuthToken,checkAuthToken } from '@/libs/authToken.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -87,6 +87,15 @@ function clearData() {
     }
 }
 
+function checkUserPermition() {
+    console.log(checkAuthToken());
+    if (checkAuthToken() === false) {
+        router.push({ name: "notFound" })
+    } else {
+        
+    }
+}
+checkUserPermition()
 </script>
 <template>
     <div
