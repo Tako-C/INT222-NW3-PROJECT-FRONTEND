@@ -37,11 +37,11 @@ function checkUserInAuthToken(oid1,oid2) {
 
 function checkAuthToken() {
     token.value = Cookies.get("token")
-    console.log(token.value);
+    // console.log(token.value);
     if (!token.value) {
         return false
     } else{
-        returntrue
+        return true
     }
 
 }
@@ -63,4 +63,4 @@ function clearCookies() {
     })
 }
 
-export {getAuthToken,clearCookies,setAuthToken,checkAuthToken}
+export {getAuthToken,clearCookies,setAuthToken,checkAuthToken,checkUserInAuthToken}

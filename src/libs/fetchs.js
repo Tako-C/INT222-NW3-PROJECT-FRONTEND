@@ -329,11 +329,42 @@ async function getAllBoard(path) {
     const data = await response.json()
     return data
 }
+async function getAllBoardByPublic(path) {
+    getAuthToken()
+
+    if (!getAuthToken()) {
+        console.error("Token not found")
+       // throw new Error("Token not found")
+    }
+
+    const response = await fetch(`${url}/v3/${path}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: ``
+        },
+        
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        // console.error(
+        //     "Error fetching data:",
+        //     error.message || "Failed to fetch data"
+        // )
+        // throw new Error(error.message || "Failed to fetch data")
+        return error
+    }
+
+    const data = await response.json()
+    return data
+}
 
 export {
     addData,
     login,
     getBoard,
+    getAllBoardByPublic,
     getTaskByBoard,
     createStatus,
     editDatas,

@@ -89,10 +89,10 @@ const router = createRouter({
        component: NotFound 
     },
 
-    {
-      path: '/:catchAll(.*)',
-      redirect: '/login',
-    },
+    // {
+    //   path: '/:catchAll(.*)',
+    //   redirect: '/login',
+    // },
   ],
 })
 
