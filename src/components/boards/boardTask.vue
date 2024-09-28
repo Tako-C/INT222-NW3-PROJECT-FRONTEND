@@ -6,7 +6,7 @@ import { getBoard, getTaskByBoard, removeData,clearCookies } from "@/libs/fetchs
 import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalconfirmed from "@/components/modals/modalConfirmed.vue"
-import { getAuthToken } from '@/libs/authToken.js'
+import { getAuthToken,checkUserInAuthToken, checkAuthToken } from '@/libs/authToken.js'
 
 const Store = useStore()
 const router = useRouter()
@@ -27,6 +27,7 @@ const newFilterString = ref("")
 const filterList = ref([])
 const showStatusList = ref(false)
 let TokenLogin = ref(false)
+let userLogin = Cookies.get("oid")
 
 const isBoardPage = computed(() => route.path.startsWith("/board"))
 const isStatusPage = computed(() =>
@@ -68,10 +69,22 @@ async function fetchData() {
     let resTasks = await getTaskByBoard(endpoint)
     let resStatuses = await getTaskByBoard(`${boardId.value}/statuses`)
     let resBoards = await getBoard("boards")
-    if(resTasks.status === 401 || resStatuses.status === 401 || resBoards.status === 401){
-        router.push({name: 'login'});
-        Store.errorToken = true;
-    } else {
+
+    if(resTasks.status === 401){
+        router.push({name: 'login'})
+        Store.errorToken = true
+
+    } if (resTasks.status === 403) {
+        Store.errorPage403 = true
+        router.push({name: 'notFound'})   
+
+    }
+    if (resTasks.status === 404) {
+        Store.errorPage404 = true
+        router.push({name: 'notFound'})   
+
+    }
+    else {
     Store.tasks = resTasks
     Store.statuses = resStatuses
     Store.boards = resBoards        
@@ -159,11 +172,13 @@ function getBoardName() {
     }
 }
 
-function openTaskDetail(taskId) {
-    router.push({
+function openTaskDetail(taskId) {  
+        router.push({
         name: "editTask",
         params: { id: boardId.value, taskId: taskId },
     })
+    
+   
 }
 
 async function removeTask() {
@@ -197,6 +212,8 @@ function closeNotificationModal() {
     openConfirmed.value = false
     taskTitle.value = ""
     taskID.value = ""
+    Store.errorPage403 = false
+    Store.errorPage404 = false
 }
 
 function checkVariable() {
@@ -227,7 +244,23 @@ async function logOut(){
 function checkTokenLogin() {
     TokenLogin.value = getAuthToken()
 }
+function checkOwner() {
+    let userInboard = ''
+    for (const board of Store.boards) {
+        if (board.boardId === boardId.value) {
+            userInboard = board.owner.oid
+            console.log(userInboard);
+            break
+        } else{
+            // router.push({ name: "notFound" })
+        }
 
+    }
+    return checkUserInAuthToken(userInboard,userLogin)
+    
+//   return checkUserInAuthToken(userInboard,userLogin)
+
+}
 onMounted(() => {
     fetchData()
     getBoardName()
@@ -527,10 +560,8 @@ onMounted(() => {
                     <p>Tasks Lists</p>
                 </div>
                 <button
-                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
-                    :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
-                    :disabled="!TokenLogin"
-                    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
+                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
+                    :data-tip="TokenLogin && checkOwner() ? 'Create New Task' : 'You do not have permission to use this feature.'"          
                     @click="openCreateTask"
                 >
                     <svg

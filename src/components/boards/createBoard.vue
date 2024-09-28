@@ -4,13 +4,14 @@ import { addBoard } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
 import Cookies from "js-cookie";
-import { getAuthToken } from '@/libs/authToken.js'
+import { getAuthToken ,checkAuthToken } from '@/libs/authToken.js'
 
 const router = useRouter()
 const route = useRoute()
 const Store = useStore()
 const boardId = ref(route.params.id)
 let TokenLogin = ref(false)
+let userLogin = Cookies.get("name")
 
 function checkTokenLogin() {
     TokenLogin.value = getAuthToken()
@@ -26,7 +27,15 @@ function checkTokenLogin() {
 //     { immediate: true }
 // )
 
-checkTokenLogin();  // เรียกใช้เมื่อเริ่มต้น
+function checkUserPermition() {
+    console.log(checkAuthToken());
+    if (checkAuthToken() === false) {
+        router.push({ name: "notFound" })
+    } else {
+        
+    }
+}
+
 
 
 let boardData = ref({
@@ -39,11 +48,15 @@ function closeModal() {
 }
 
 function addToStore(newBoard) {
-    boardData.value = newBoard
-    console.log(boardData.value);
+ 
+    boardData.value = { ...newBoard }
+    boardData.value.owner = { ...boardData.value.owner }
+    boardData.value.owner.oid = newBoard.oid
+    boardData.value.owner.name = userLogin
+
     Store.boards.push(boardData.value)
     Store.successAddStatus = true
-    console.log(Store.boards);
+
 }
 
 
@@ -52,11 +65,12 @@ async function saveBoardData() {
             boardData.value.boards = boardId.value
             let result = await addBoard(boardData.value, `boards`)
             console.log(result.status)
-            if(result.status === 401){
-                // router.push({name: 'login'})
-                // Store.errorToken = true;
-            }
-            else if(result.status === 400){
+            // if(result.status === 401){
+            //     router.push({name: 'login'})
+            //     Store.errorToken = true;
+            // }
+            // else 
+            if(result.status === 400){
                 router.push({name: 'Board'})
             }
             else {
@@ -73,6 +87,8 @@ function clearData() {
     }
 }
 
+checkTokenLogin()
+checkUserPermition()
 </script>
 <template>
     <div
@@ -124,7 +140,7 @@ function clearData() {
                         type="submit"
                         class="itbkk-button-ok button buttonOK "
                         @click="saveBoardData()"
-                        :disabled="!TokenLogin || boardData.board_name.length === 0"
+                        :disabled=" boardData.board_name.length === 0"
                         :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
                         :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
                         >

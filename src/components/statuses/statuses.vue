@@ -12,7 +12,7 @@ import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalstatusDelete from "@/components/statuses/removeStatus.vue"
 import modalTransfer from "@/components/modals/modalTransfer.vue"
-import { getAuthToken } from '@/libs/authToken.js'
+import { getAuthToken,checkAuthToken,checkUserInAuthToken } from '@/libs/authToken.js'
 
 const Store = useStore()
 const router = useRouter()
@@ -30,6 +30,7 @@ const transferModal = ref(false)
 const errorDeleteStatus = ref(false)
 const successDeleteStatus = ref(false)
 let TokenLogin = ref(false)
+let userLogin = Cookies.get("oid")
 
 const isBoardPage = computed(() => route.path.endsWith(`/board`))
 const isStatusPage = computed(() =>
@@ -40,45 +41,123 @@ function checkTokenLogin() {
     TokenLogin.value = getAuthToken()
 }
 
-watch(
-    boardId,
-    async (newBoardId) => {
-        if (newBoardId) {
-            await fetchData()
-            getBoardName()
-            checkTokenLogin()
+
+
+
+// function checkOwner() {
+//     let userInboard = ''
+//     for (const board of Store.boards) {
+//         console.log(board.boardId,boardId.value);
+//         if (board.boardId === boardId.value) {
+//             console.log(board.owner.oid);
+//             userInboard = board.owner.oid
+//             console.log(userInboard);
+//             break
+//         } else{
+//             // router.push({ name: "notFound" })
+//         }
+
+//     }
+//     console.log(boardId.value);
+//     console.log(userInboard);
+//     console.log(userLogin);
+    
+//     return checkUserInAuthToken(userInboard,userLogin)
+    
+// //   return checkUserInAuthToken(userInboard,userLogin)
+
+// }
+function checkOwner() {
+    let userInboard = '';
+    let boardFound = false
+
+    for (const board of Store.boards) {
+        if (board.boardId === boardId.value) {
+            userInboard = board.owner.oid
+            boardFound = true
         }
-    },
-    { immediate: true }
-)
-// Fetch data when the component is first mounted
-onMounted(() => {
-    fetchData()
-    getBoardName()
-})
+    }
+    if (getAuthToken() && !boardFound) {
+        Store.errorPrivate404 = true
+        Store.errorPrivate404Content ='Statuses'
+        router.push({ name: "Board" })             
+        
+    } if (!getAuthToken() && !boardFound) {
+        router.push({ name: "notFound" })
+    }
+    return checkUserInAuthToken(userInboard, userLogin);
+}
 
-// Fetch data every time the route changes (but the same component remains active)
-onBeforeRouteUpdate((to, from, next) => {
-    fetchData() // Re-fetch data when navigating within the same component
-    console.log(Store.statuses)
-    next()
-})
-
-// console.log(Store.statuses)
-
+let isFetchingData = false; 
 async function fetchData() {
+    if (isFetchingData) return; // ป้องกันการเรียกซ้ำ
+    isFetchingData = true; // ตั้งค่าว่ากำลังดึงข้อมูลอยู่
+
     const endpoint = `${boardId.value}/statuses`
     let resStatus = await getTaskByBoard(endpoint)
     let resTasks= await getTaskByBoard(`${boardId.value}/tasks`)
     let resBoards = await getBoard("boards")
-    if(resStatus.status === 401 || resTasks.status === 401 || resBoards.status === 401) {
-        router.push({name: 'login'})
-        Store.errorToken = true;
-    } else {
-        Store.statuses = resStatus
-        Store.tasks = resTasks
-        Store.boards = resBoards        
-    }
+    
+    Store.boards = resBoards  
+    Store.statuses = resStatus
+    Store.tasks = resTasks
+    let checkOwner = checkOwner()
+    
+    console.log(Store.boards)
+    // if(checkOwner){
+    //     // router.push({name: 'login'})
+    //     // Store.errorToken = true
+    //     Store.statuses = resStatus
+    //     Store.tasks = resTasks
+    //     Store.boards = resBoards 
+
+    // } 
+    // else if (checkOwner() == false && resTasks.status == 403) {
+    //     Store.errorPage403 = true
+    //     router.push({name: 'notFound'})   
+
+    // }
+    // else if  (checkOwner() == false && resTasks.status == 404) {
+    //     Store.errorPage404 = true
+    //     router.push({name: 'notFound'})   
+
+    // }
+    // else {
+    //     Store.statuses = resStatus
+    //     Store.tasks = resTasks
+    //     Store.boards = resBoards        
+    // }
+
+    // if (resTasks.status == 401) {
+    //     // if (checkOwner() == false) {
+    //     //     Store.errorPage404 = true
+    //     //     router.push({name: 'notFound'})  
+    //     // } else {
+    //     //     window.alert("Tako")
+    //     // }
+    // } 
+    // else if (resTasks.status == 403) {
+    //     if (!checkOwner()) {
+    //         Store.errorPage403 = true
+    //         router.push({name: 'notFound'})  
+    //     } else {
+    //         window.alert("Tako")
+    //     }   
+    // } 
+    // else if (resTasks.status == 404){
+    //     if (checkOwner() === false) {
+    //         Store.errorPage404 = true
+    //         router.push({name: 'notFound'})  
+            
+    //     } else {
+    //         window.alert("Tako")
+    //     }
+    //     console.log(resTasks)
+    // console.log(checkOwner());
+    // }
+    
+
+    
 }
 
 // ================= Open/Close Page Function ===========================================================================
@@ -166,34 +245,7 @@ function findUsageStatus(name) {
 // =======================================================================================================================
 
 // ======================= Remove function ===============================================================================
-// async function removeStatus() {
-//   openConfirmed.value = false
-//   const checkTaskUseStatus = Store.tasks.filter(
-//     (task) => task.statusName == removeName.value
-//   )
 
-//   if (checkTaskUseStatus.length == 0) {
-//     Store.statuses = Store.statuses.filter(
-//       (status) => status.statusId !== removeId.value
-//     )
-
-//     let result = await removeData(`boards/${route.params.id}/statuses/${removeId.value}`)
-//     if (result.status === 401) {
-//         errorDeleteStatus.value = true
-//     } else {
-//       successDeleteStatus.value = true
-//     }
-//   } else if (removeName.value == "No Status" || removeName.value == "Done") {
-//     Store.errorDeleteNoStatus = true
-//     console.log(removeName.value);
-
-//     openStatuses(route.params.id)
-//   }  else {
-//     transferModal.value = true
-//   }
-
-//   openConfirmed.value = false
-// }
 async function removeStatus() {
     openConfirmed.value = false;
 
@@ -271,6 +323,7 @@ async function logOut() {
 // =======================================================================================================================
 
 function checkVariable() {
+    
     if (
         Store.successAddStatus == true ||
         Store.successUpdateStatus == true ||
@@ -278,12 +331,36 @@ function checkVariable() {
         successDeleteStatus.value === true ||
         errorDeleteStatus.value === true ||
         Store.errorDeleteNoStatus == true ||
-        Store.errorEditDefaultStatus == true
+        Store.errorEditDefaultStatus == true    
     ) {
         return true
     }
     return false
 }
+
+watch(
+    boardId,
+    async (newBoardId) => {
+        if (newBoardId) {
+            await fetchData()
+            getBoardName()
+            checkTokenLogin()
+        }
+    },
+    { immediate: true }
+)
+// Fetch data when the component is first mounted
+onMounted(() => {
+    fetchData()
+    getBoardName()
+})
+
+// Fetch data every time the route changes (but the same component remains active)
+// onBeforeRouteUpdate((to, from, next) => {
+//     fetchData() // Re-fetch data when navigating within the same component
+//     console.log(Store.statuses)
+//     next()
+// })
 </script>
 
 <template>
@@ -312,7 +389,7 @@ function checkVariable() {
     <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
         <header
             name="header"
-            class="top-0 z-10 h-full w-20% border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
+            class="top-0 h-full w-20% border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
         >
             <div class="flex">
                 <div

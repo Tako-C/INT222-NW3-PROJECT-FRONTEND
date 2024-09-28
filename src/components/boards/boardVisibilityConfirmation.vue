@@ -2,18 +2,18 @@
 import { defineEmits, ref } from 'vue'
 const props = defineProps({
   changevisibility:{
-    type: Object,
-  required: true,}
+    type: Object}
 })
 const emits = defineEmits(['closemodal', 'confirmed'])
 </script>
  
 <template>
+<div class="fixed bg-black bg-opacity-30 w-screen h-screen">
   <div class="fixed modal-box">
     <h3 class="text-lg font-bold">Change visibility</h3>
     <p class="border-b mt-2"></p>
     <p class="itbkk-message py-4">
-      Do you want to set visibility to {{ props.changevisibility.visibility == true ? 'Private' : 'Public' }}?
+      Do you want to set visibility to {{ changevisibility.visibility == 'public' ? 'Private' : 'Public' }}?
     </p>
     <div class="boxButton">
       <button
@@ -30,6 +30,7 @@ const emits = defineEmits(['closemodal', 'confirmed'])
       </button>
     </div>
   </div>
+</div>
 </template>
  
 <style scoped>

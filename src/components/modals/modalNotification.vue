@@ -26,7 +26,8 @@ let successDeleteStatus = ref(props.successDeleteStatus)
 let errorDeleteStatus = ref(props.errorDeleteStatus)
 let errorDeleteNoStatus = ref(Store.errorDeleteNoStatus)
 let errorEditDefaultStatus = ref(Store.errorEditDefaultStatus)
-
+let errorPrivate404 = ref(Store.errorPrivate404)
+let errorPrivate404Content = ref(Store.errorPrivate404Content)
 // login by ch
 let errorLoginStatus = ref(props.errorLoginStatus)
 let errorToken = ref(Store.errorToken)
@@ -44,7 +45,8 @@ watchEffect(() => {
   errorDeleteStatus.value = props.errorDeleteStatus
   errorDeleteNoStatus.value = Store.errorDeleteNoStatus
   errorEditDefaultStatus.value = Store.errorEditDefaultStatus
-
+  errorPrivate404.value = Store.errorPrivate404
+  errorPrivate404Content.value = Store.errorPrivate404Content
   // login by ch
   errorLoginStatus.value = props.errorLoginStatus
   errorToken.value = Store.errorToken
@@ -102,6 +104,14 @@ function checkEvent() {
     message.value.header = 'Error!';
     message.value.detail = 'Something went wrong, Please try again later.';
   }
+
+    // Private Error[404,403]
+  else if (errorPrivate404.value) {
+    message.value.header = '404 Error!'
+    message.value.detail = `${errorPrivate404Content.value} Not found`
+  }
+  console.log(errorPrivate404.value,errorPrivate404Content.value)
+  
 }
 
 onMounted(checkEvent);
