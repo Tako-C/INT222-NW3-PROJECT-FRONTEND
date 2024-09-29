@@ -1,51 +1,137 @@
 import { jwtDecode } from "jwt-decode"
 import { ref } from "vue"
 import Cookies from 'js-cookie'
+import { requestToken } from "@/libs/fetchs.js"
+
 let token = ref("")
+let refreshToken = ref('')
 
 function getAuthToken() {
     return (token.value = Cookies.get("token"))
 }
+
 function setAuthToken(result) {
-    const token_raw = JSON.parse(result) // Parse result into JSON before using
-    const decodedToken = jwtDecode(token_raw.access_token) // Decode access_token
-    const now = Math.floor(Date.now() / 1000)
-    const exp = decodedToken.exp
+    console.log(result);
 
-    const cookieExpiresInSeconds = exp - now
-    const cookieExpiresInDays = cookieExpiresInSeconds / (60 * 60 * 24)
+    const token_raw = JSON.parse(result); // Parse result into JSON before using
+    const decodedToken = jwtDecode(token_raw.access_token); // Decode access_token
+    const decodedRefreshToken = jwtDecode(token_raw.refresh_token); // Decode refresh_token
+    const now = Math.floor(Date.now() / 1000);
+    const exp = decodedToken.exp;
+    const exp_RefreshToken = decodedRefreshToken.exp;
 
-    Cookies.set("token", token_raw.access_token, {
-        expires: cookieExpiresInDays,
-    })
+    const cookieExpiresInSeconds = exp - now;
+    const cookieExpiresInDays = cookieExpiresInSeconds / (60 * 60 * 24);
+    const cookieExpiresInSeconds_RefreshToken = exp_RefreshToken - now;
+    const cookieExpiresInDays_RefreshToken = cookieExpiresInSeconds_RefreshToken / (60 * 60 * 24);
+
+    Cookies.set("token", token_raw.access_token);
+    Cookies.set("refresh_token", token_raw.refresh_token, { expires: cookieExpiresInDays_RefreshToken });
+
     // Store the decoded claims in cookies
-    Cookies.set("name", decodedToken.name, { expires: cookieExpiresInDays })
-    Cookies.set("oid", decodedToken.oid, { expires: cookieExpiresInDays })
-    Cookies.set("iss", decodedToken.iss, { expires: cookieExpiresInDays })
-    Cookies.set("email", decodedToken.email, { expires: cookieExpiresInDays })
-    Cookies.set("role", decodedToken.role, { expires: cookieExpiresInDays })
-    Cookies.set("iat", decodedToken.iat, { expires: cookieExpiresInDays })
-    Cookies.set("exp", decodedToken.exp, { expires: cookieExpiresInDays })
+    Cookies.set("name", decodedToken.name, { expires: cookieExpiresInDays });
+    Cookies.set("oid", decodedToken.oid, { expires: cookieExpiresInDays });
+    Cookies.set("iss", decodedToken.iss, { expires: cookieExpiresInDays });
+    Cookies.set("email", decodedToken.email, { expires: cookieExpiresInDays });
+    Cookies.set("role", decodedToken.role, { expires: cookieExpiresInDays });
+    Cookies.set("iat", decodedToken.iat, { expires: cookieExpiresInDays });
+    Cookies.set("exp", decodedToken.exp, { expires: cookieExpiresInDays });
 }
-function checkUserInAuthToken(oid1,oid2) {
-    if (oid1 === oid2) {
-        return true
-    } else{
-        return false
-    }
+
+function checkUserInAuthToken(oid1, oid2) {
+    return oid1 === oid2;
 }
 
 function checkAuthToken() {
+    token.value = Cookies.get("token");
+    return !!token.value;
+}
+function checkExpAuthToken() {
     token.value = Cookies.get("token")
-    // console.log(token.value);
-    if (!token.value) {
-        return false
-    } else{
-        return true
-    }
+    // console.log(token.value)
+ 
+    const decodedToken = jwtDecode(token.value)
+    const now = Math.floor(Date.now() / 1000)
+    const exp = decodedToken.exp
 
+    if (now > exp) {
+        console.log("มากเกินไป");
+        return true
+    } else{
+        return false
+    }
+   
 }
 
+console.log(Cookies.get("refresh_token"), "DDDD")
+function checkAuthRefreshToken() {
+   
+    refreshToken.value = Cookies.get("refresh_token");
+    console.log(Cookies.get("refresh_token"), "DDDD")
+    return !!refreshToken.value;
+}
+console.log(checkAuthRefreshToken())
+
+function checkhaveToken() {
+    refreshToken.value = Cookies.get("refresh_token")
+    const hasRefreshToken = checkAuthRefreshToken()
+    const hasExpAuthToken = checkExpAuthToken()
+    const hasAuthToken = checkAuthToken()
+
+    // if (hasRefreshToken && hasAuthToken && hasExpAuthToken) {
+    //     requestNewToken()
+    //     Cookies.remove("token")
+    //     return true
+    // }
+    // if (hasRefreshToken && hasAuthToken && !hasExpAuthToken) {
+    //     return true
+    // }
+    // if (!hasRefreshToken && hasAuthToken && hasExpAuthToken) {
+    //     return true
+    // } else
+    // { return false
+
+    // }
+    // if (checkAuthToken()) {
+    //     if (checkExpAuthToken) {
+    //         if (checkAuthRefreshToken) {
+    //             requestNewToken()
+    //         }
+    //         else {
+    //             return true
+    //         }     
+    //     } 
+    //     else {
+    //         return true
+    //     }
+
+    // } else {
+    //     return false
+    // }
+
+
+    // if (hasAuthToken) {
+    //     if (hasRefreshToken && hasExpAuthToken) {
+    //         requestNewToken()
+    //         Cookies.remove("token")
+    //         return true
+    //     }
+    //     if (!hasRefreshToken && !hasExpAuthToken) {
+    //         return true
+    //     }
+    //     if (!hasRefreshToken && hasExpAuthToken) {
+    //         return false
+    //     }
+    // } else {
+    //     return false
+    // }
+    
+}
+
+function requestNewToken() {
+    fetchToken(Cookies.get("refresh_token"))
+    Cookies.remove("refresh_token")
+}
 
 function clearCookies() {
     const cookieNames = [
@@ -57,10 +143,50 @@ function clearCookies() {
         "role",
         "iat",
         "exp",
-    ]
+        "refresh_token"
+    ];
     cookieNames.forEach((name) => {
         Cookies.remove(name)
-    })
+    });
 }
 
-export {getAuthToken,clearCookies,setAuthToken,checkAuthToken,checkUserInAuthToken}
+async function fetchToken(token) {
+    console.log(token)
+
+    const result = await requestToken(token)
+    console.log(result)
+
+    const token_raw = result.access_token // Parse result into JSON before using
+    // console.log(token_raw);
+
+    const decodedToken = jwtDecode(token_raw); // Decode access_token
+    console.log(decodedToken);
+    const now = Math.floor(Date.now() / 1000)
+    const exp = decodedToken.exp
+
+    const cookieExpiresInSeconds = exp - now
+    const cookieExpiresInDays = cookieExpiresInSeconds / (60 * 60 * 24)
+
+    Cookies.set("token", token_raw)
+
+    // Store the decoded claims in cookies
+    Cookies.set("name", decodedToken.name, { expires: cookieExpiresInDays })
+    Cookies.set("oid", decodedToken.oid, { expires: cookieExpiresInDays })
+    Cookies.set("iss", decodedToken.iss, { expires: cookieExpiresInDays })
+    Cookies.set("email", decodedToken.email, { expires: cookieExpiresInDays })
+    Cookies.set("role", decodedToken.role, { expires: cookieExpiresInDays })
+    Cookies.set("iat", decodedToken.iat, { expires: cookieExpiresInDays })
+    Cookies.set("exp", decodedToken.exp, { expires: cookieExpiresInDays })
+}
+
+export {
+    getAuthToken,
+    clearCookies,
+    setAuthToken,
+    checkAuthToken,
+    checkAuthRefreshToken,
+    checkUserInAuthToken,
+    checkhaveToken,
+    checkExpAuthToken,
+    requestNewToken
+};

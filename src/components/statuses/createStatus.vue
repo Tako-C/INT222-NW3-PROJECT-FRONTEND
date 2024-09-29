@@ -1,9 +1,16 @@
 <script setup>
-import { ref,watch } from "vue"
+import { onMounted, ref,watch } from "vue"
 import { createStatus } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
-import { getAuthToken,checkAuthToken } from '@/libs/authToken.js'
+import {
+    checkAuthToken,
+    checkUserInAuthToken,
+    checkAuthRefreshToken,
+    requestNewToken,
+    checkExpAuthToken
+} from "@/libs/authToken.js"
+import Cookies from "js-cookie"
 
 const router = useRouter()
 const route = useRoute()
@@ -11,20 +18,47 @@ const Store = useStore()
 const statusID = ref(0)
 const boardId = ref(route.params.id)
 let TokenLogin = ref(false)
-
-function checkTokenLogin() {
-    TokenLogin.value = getAuthToken()
-}
+let userLogin = Cookies.get("oid")
+// function checkTokenLogin() {
+//     TokenLogin.value = getAuthToken()
+// }
 
 watch(
     boardId,
     async (newloadpage) => {
         if (newloadpage) {
-            checkTokenLogin()
+            checkAuthToken()
         }
     },
     { immediate: true }
 )
+
+function checkrequestNewToken() {
+  if (checkAuthToken()) {
+    if (checkExpAuthToken() && checkAuthToken()) {
+        console.log(checkAuthRefreshToken(), checkExpAuthToken())
+      if (!checkAuthRefreshToken()) {
+        
+        console.log("Token ยังใช้งานต่อไม่ได้")
+        router.push({ name: "login" })
+      } else {
+        requestNewToken()
+        // setTimeout(() => {
+        //   checkrequestNewToken()
+        // }, 1000)
+      }
+    } else {
+      console.log("Token ใช้งานต่อได้")
+    }
+  } else {
+    console.log("User Not Login")
+  }
+}
+
+// Fetch data when the component is first mounted
+onMounted(() => {
+    checkrequestNewToken()
+})
 
 
 
@@ -67,17 +101,47 @@ async function saveTaskData() {
             } 
             statusData.value.boards = boardId.value
             let result = await createStatus(statusData.value, `${boardId.value}/statuses`)
-            console.log(result.statusId);
-            if (result.status === 401) {
-                router.push({name: 'login'});
-                Store.errorToken = true;
-            } else {
-            statusID.value = result.statusId
-            console.log(result)
-            addToStore()
-            closeModal()                  
+            // console.log(result.statusId);
+
+            // if (result.status === 401) {
+            //     router.push({name: 'login'});
+            //     Store.errorToken = true;
+            // } else {
+            // statusID.value = result.statusId
+            // console.log(result)
+            // addToStore()
+            // closeModal()                  
+            // }
+                        
+            if (checkOwner() && checkAuthToken()) {
+                if(result.status === 401){
+                    router.push({name: 'login'})
+                    Store.errorToken = true
+                }
+                else {
+                    statusID.value = result.statusId
+                    console.log(result)
+                    addToStore()
+                    closeModal()  
+                }
+            } 
+            else{
+                if (result.status === 403) {
+                Store.errorPage403 = true
+                errorPermition()
+                }
+                if (result.status === 401) {
+                Store.errorPage401 = true
+                errorPermition()
+                }
+                
+                // errorPermition()
             }
     }
+}
+
+function errorPermition() {
+    router.push({ name: "notFound" })
 }
 
 function clearData() {
@@ -86,16 +150,34 @@ function clearData() {
         description: ''
     }
 }
+function checkOwner() {
+    let userInboard = ''
+    for (const board of Store.boards) {
+        if (board.boardId === boardId.value) {
+            userInboard = board.owner.oid
+            console.log(userInboard);
+            break
+        } else{
+            // router.push({ name: "notFound" })
+        }
+
+    }
+    return checkUserInAuthToken(userInboard,userLogin)
+    
+
+}
+
 
 function checkUserPermition() {
     console.log(checkAuthToken());
     if (checkAuthToken() === false) {
         router.push({ name: "notFound" })
-    } else {
-        
-    }
+    } 
+    if (checkAuthToken() && !checkOwner()) {
+        router.push({ name: "notFound" })
+    } 
 }
-checkUserPermition()
+// checkUserPermition()
 </script>
 <template>
     <div
@@ -138,13 +220,24 @@ checkUserPermition()
                     >
                     Cancel
                     </button>
-                    <button 
+                    <!-- <button 
                         type="submit"
                         class="itbkk-button-confirm button buttonOK"
                         @click="saveTaskData()"
-                        :disabled="!TokenLogin || statusData.name.length === 0"
-                        :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
-                        :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
+                        :disabled="!checkAuthToken() || statusData.name.length === 0"
+                        :class="{ 'cursor-not-allowed tooltip tooltip-left': !checkAuthToken() }"
+                        :data-tip="checkAuthToken() ? '' : 'You do not have permission to use this feature.'"
+                    >
+                        
+                    Add
+                    </button> -->
+                    <button 
+                        type="submit"
+                        class="itbkk-button-confirm button buttonOK tooltip tooltip-left"
+                        @click="saveTaskData()"
+                        :disabled="statusData.name.length === 0"
+                        :class="{ 'cursor-not-allowed ': !checkAuthToken() }"
+                        :data-tip="checkAuthToken() ? '' : 'You do not have permission to use this feature.'"
                     >
                         
                     Add

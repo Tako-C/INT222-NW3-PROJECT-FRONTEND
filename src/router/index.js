@@ -74,10 +74,10 @@ const router = createRouter({
         },
       ]
     },
-    // {
-    //     path: "/",
-    //     redirect: "/task",
-    // },
+    {
+        path: "/",
+        redirect: "/board",
+    },
     {
       path: '/login',
       name: 'login', 
@@ -103,7 +103,7 @@ const router = createRouter({
 //     // Allow navigation to the login page
 //     next();
 //   } 
-//   else if (isAuthenticated()) {
+//   else if (!isAuthenticated()) {
 //     // Allow navigation if authenticated
 //     next();
 //   } 

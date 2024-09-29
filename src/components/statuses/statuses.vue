@@ -12,7 +12,14 @@ import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalstatusDelete from "@/components/statuses/removeStatus.vue"
 import modalTransfer from "@/components/modals/modalTransfer.vue"
-import { getAuthToken,checkAuthToken,checkUserInAuthToken } from '@/libs/authToken.js'
+import {
+    getAuthToken,
+    checkAuthToken,
+    checkUserInAuthToken,
+    checkAuthRefreshToken,
+    requestNewToken,
+    checkExpAuthToken
+} from "@/libs/authToken.js"
 
 const Store = useStore()
 const router = useRouter()
@@ -37,12 +44,9 @@ const isStatusPage = computed(() =>
     route.path.includes(`/board/${boardId.value}/status`)
 )
 
-function checkTokenLogin() {
-    TokenLogin.value = getAuthToken()
-}
-
-
-
+// function checkTokenLogin() {
+//     TokenLogin.value = getAuthToken()
+// }
 
 // function checkOwner() {
 //     let userInboard = ''
@@ -61,14 +65,25 @@ function checkTokenLogin() {
 //     console.log(boardId.value);
 //     console.log(userInboard);
 //     console.log(userLogin);
-    
+
 //     return checkUserInAuthToken(userInboard,userLogin)
-    
+
 // //   return checkUserInAuthToken(userInboard,userLogin)
 
 // }
+watch(
+    boardId,
+    async (newBoardId) => {
+        if (newBoardId) {
+            await fetchData()
+            getBoardName()
+            // checkAuthToken()
+        }
+    },
+    { immediate: true }
+)
 function checkOwner() {
-    let userInboard = '';
+    let userInboard = ""
     let boardFound = false
 
     for (const board of Store.boards) {
@@ -79,85 +94,184 @@ function checkOwner() {
     }
     if (getAuthToken() && !boardFound) {
         Store.errorPrivate404 = true
-        Store.errorPrivate404Content ='Statuses'
-        router.push({ name: "Board" })             
-        
-    } if (!getAuthToken() && !boardFound) {
+        Store.errorPrivate404Content = "Statuses"
+        router.push({ name: "Board" })
+    }
+    if (!getAuthToken() && !boardFound) {
         router.push({ name: "notFound" })
     }
-    return checkUserInAuthToken(userInboard, userLogin);
+    return checkUserInAuthToken(userInboard, userLogin)
 }
 
-let isFetchingData = false; 
+// let isFetchingData = false;
 async function fetchData() {
-    if (isFetchingData) return; // ป้องกันการเรียกซ้ำ
-    isFetchingData = true; // ตั้งค่าว่ากำลังดึงข้อมูลอยู่
+    // if (isFetchingData) return; // ป้องกันการเรียกซ้ำ
+    // isFetchingData = true; // ตั้งค่าว่ากำลังดึงข้อมูลอยู่
 
     const endpoint = `${boardId.value}/statuses`
     let resStatus = await getTaskByBoard(endpoint)
-    let resTasks= await getTaskByBoard(`${boardId.value}/tasks`)
+    let resTasks = await getTaskByBoard(`${boardId.value}/tasks`)
     let resBoards = await getBoard("boards")
-    
-    Store.boards = resBoards  
+
+    Store.boards = resBoards
     Store.statuses = resStatus
     Store.tasks = resTasks
-    let checkOwner = checkOwner()
-    
+    checkOwner()
+
     console.log(Store.boards)
+
     // if(checkOwner){
     //     // router.push({name: 'login'})
     //     // Store.errorToken = true
     //     Store.statuses = resStatus
     //     Store.tasks = resTasks
-    //     Store.boards = resBoards 
+    //     Store.boards = resBoards
 
-    // } 
+    // }
     // else if (checkOwner() == false && resTasks.status == 403) {
     //     Store.errorPage403 = true
-    //     router.push({name: 'notFound'})   
+    //     router.push({name: 'notFound'})
 
     // }
     // else if  (checkOwner() == false && resTasks.status == 404) {
     //     Store.errorPage404 = true
-    //     router.push({name: 'notFound'})   
+    //     router.push({name: 'notFound'})
 
     // }
     // else {
     //     Store.statuses = resStatus
     //     Store.tasks = resTasks
-    //     Store.boards = resBoards        
+    //     Store.boards = resBoards
     // }
 
     // if (resTasks.status == 401) {
     //     // if (checkOwner() == false) {
     //     //     Store.errorPage404 = true
-    //     //     router.push({name: 'notFound'})  
+    //     //     router.push({name: 'notFound'})
     //     // } else {
     //     //     window.alert("Tako")
     //     // }
-    // } 
+    // }
     // else if (resTasks.status == 403) {
     //     if (!checkOwner()) {
     //         Store.errorPage403 = true
-    //         router.push({name: 'notFound'})  
+    //         router.push({name: 'notFound'})
     //     } else {
     //         window.alert("Tako")
-    //     }   
-    // } 
+    //     }
+    // }
     // else if (resTasks.status == 404){
     //     if (checkOwner() === false) {
     //         Store.errorPage404 = true
-    //         router.push({name: 'notFound'})  
-            
+    //         router.push({name: 'notFound'})
+
     //     } else {
     //         window.alert("Tako")
     //     }
     //     console.log(resTasks)
     // console.log(checkOwner());
     // }
-    
+}
 
-    
+// =======================================================================================================================
+
+// ======================= Remove function ===============================================================================
+
+async function removeStatus() {
+    openConfirmed.value = false
+
+    const checkTaskUseStatus = Store.tasks.filter(
+        (task) => task.statusName === removeName.value
+    )
+
+    if (removeName.value === "No Status" || removeName.value === "Done") {
+        Store.errorDeleteNoStatus = true
+        console.log(removeName.value)
+        openStatuses(route.params.id)
+        return
+    }
+    if (checkTaskUseStatus.length === 0) {
+        Store.statuses = Store.statuses.filter(
+            (status) => status.statusId !== removeId.value
+        )
+
+        const result = await removeData(
+            `boards/${route.params.id}/statuses/${removeId.value}`
+        )
+        // console.log(result);
+
+        if (checkOwner() && checkAuthToken()) {
+            if (result.status === 401) {
+                router.push({ name: "login" })
+                Store.errorToken = true
+            }
+            if (result.status === 404) {
+                errorDeleteStatus.value = true
+            } else {
+                successDeleteStatus.value = true
+            }
+        } else {
+            if (result.status === 403) {
+                Store.errorPage403 = true
+                errorPermition()
+            }
+            if (result.status === 401) {
+                Store.errorPage401 = true
+                errorPermition()
+            }
+        }
+    } else {
+        transferModal.value = true
+    }
+    openConfirmed.value = false
+}
+
+async function removeStatusTransfer(data) {
+    const { removeStatus, transferStatus } = data
+    const transferStatusId = Store.statuses.find(
+        (status) => status.name === transferStatus
+    ).statusId
+
+    // ลบข้อมูลสถานะที่ถูกโอนย้าย
+    let removedStatus = await removeData(
+        `boards/${route.params.id}/statuses/${removeId.value}/${transferStatusId}`
+    )
+
+    // อัปเดตสถานะของ tasks
+    const tasksToTransfer = Store.tasks.filter(
+        (task) => task.statusName === removeStatus
+    )
+
+    if (tasksToTransfer.length > 0) {
+        for (const task of tasksToTransfer) {
+            task.statusName = transferStatus
+        }
+    }
+    Store.statuses = Store.statuses.filter(
+        (status) => status.statusId !== removeId.value
+    )
+    transferModal.value = false
+
+    if (checkOwner() && checkAuthToken()) {
+        if (removedStatus.status === 401) {
+            router.push({ name: "login" })
+            Store.errorToken = true
+        }
+        if (removedStatus.status === 404) {
+            errorDeleteStatus.value = true
+        } else {
+            transferModal.value = false
+        }
+    } else {
+        if (removedStatus.status === 403) {
+            Store.errorPage403 = true
+            errorPermition()
+        }
+        if (removedStatus.status === 401) {
+            Store.errorPage401 = true
+            errorPermition()
+        }
+    }
 }
 
 // ================= Open/Close Page Function ===========================================================================
@@ -188,7 +302,6 @@ function openStatusDetail(statusId, statusName) {
             name: "editStatus",
             params: { id: boardId.value, statusId: statusId },
         })
-        // window.alert('You can not edit this Status.')
     }
 }
 
@@ -202,6 +315,7 @@ function closeNotificationModal() {
     Store.successAddStatus = false
     Store.successUpdateStatus = false
     Store.errorUpdateStatus = false
+    Store.errorNotfoundStatus = false
     successDeleteStatus.value = false
     errorDeleteStatus.value = false
     Store.successUpdateTask = false
@@ -212,6 +326,15 @@ function closeNotificationModal() {
     Store.errorEditDefaultStatus = false
     removeId.value = ""
     removeName.value = ""
+}
+
+function errorPermition() {
+    router.push({ name: "notFound" })
+}
+
+async function logOut() {
+    clearCookies()
+    router.push({ name: "login" })
 }
 
 // =======================================================================================================================
@@ -244,115 +367,50 @@ function findUsageStatus(name) {
 
 // =======================================================================================================================
 
-// ======================= Remove function ===============================================================================
-
-async function removeStatus() {
-    openConfirmed.value = false;
-
-    const checkTaskUseStatus = Store.tasks.filter(
-        (task) => task.statusName === removeName.value
-    )
-
-    if (removeName.value === "No Status" || removeName.value === "Done") {
-        Store.errorDeleteNoStatus = true
-        console.log(removeName.value)
-        openStatuses(route.params.id)
-        return
-    }
-    if (checkTaskUseStatus.length === 0) {
-
-        Store.statuses = Store.statuses.filter(
-            (status) => status.statusId !== removeId.value
-        );
-
-        const result = await removeData(
-            `boards/${route.params.id}/statuses/${removeId.value}`
-        );
-        console.log(result);
-
-        if (result.status === 404) {
-            errorDeleteStatus.value = true;
-        } else if (result.status === 401) {
-            router.push({ name: "login" })
-            Store.errorToken = true
-        } else {
-            successDeleteStatus.value = true
-        }
-    } else {
-        transferModal.value = true
-    }
-    openConfirmed.value = false; // Reset confirmation modal
-}
-
-async function removeStatusTransfer(data) {
-    const { removeStatus, transferStatus } = data
-    const transferStatusId = Store.statuses.find(
-        (status) => status.name === transferStatus
-    ).statusId
-
-    // ลบข้อมูลสถานะที่ถูกโอนย้าย
-    let removedStatus = await removeData(
-        `boards/${route.params.id}/statuses/${removeId.value}/${transferStatusId}`
-    )
-
-    // อัปเดตสถานะของ tasks
-    const tasksToTransfer = Store.tasks.filter(
-        (task) => task.statusName === removeStatus
-    )
-
-    if (tasksToTransfer.length > 0) {
-        for (const task of tasksToTransfer) {
-            task.statusName = transferStatus
-        }
-    }
-
-    // ลบสถานะจาก Store
-    Store.statuses = Store.statuses.filter(
-        (status) => status.statusId !== removeId.value
-    )
-
-    // อัปเดตหน้าจอ
-    transferModal.value = false
-}
-
-async function logOut() {
-    clearCookies()
-    router.push({ name: "login" })
-}
-
-// =======================================================================================================================
-
 function checkVariable() {
-    
     if (
         Store.successAddStatus == true ||
         Store.successUpdateStatus == true ||
         Store.errorUpdateStatus == true ||
+        Store.errorNotfoundStatus == true ||
         successDeleteStatus.value === true ||
         errorDeleteStatus.value === true ||
         Store.errorDeleteNoStatus == true ||
-        Store.errorEditDefaultStatus == true    
+        Store.errorEditDefaultStatus == true 
+
     ) {
         return true
     }
     return false
 }
 
-watch(
-    boardId,
-    async (newBoardId) => {
-        if (newBoardId) {
-            await fetchData()
-            getBoardName()
-            checkTokenLogin()
-        }
-    },
-    { immediate: true }
-)
+function checkrequestNewToken() {
+  if (checkAuthToken()) {
+    if (checkExpAuthToken() && checkAuthToken()) {
+        console.log(checkAuthRefreshToken(), checkExpAuthToken())
+      if (!checkAuthRefreshToken()) {
+        
+        console.log("Token ยังใช้งานต่อไม่ได้")
+        router.push({ name: "login" })
+      } else {
+        requestNewToken()
+        // setTimeout(() => {
+        //   checkrequestNewToken()
+        // }, 1000)
+      }
+    } else {
+      console.log("Token ใช้งานต่อได้")
+    }
+  } else {
+    console.log("User Not Login")
+  }
+}
+
 // Fetch data when the component is first mounted
 onMounted(() => {
     fetchData()
     getBoardName()
+    checkrequestNewToken()
 })
 
 // Fetch data every time the route changes (but the same component remains active)
@@ -579,7 +637,7 @@ onMounted(() => {
                     </svg>
                 </div>
                 <p class="itbkk-fullname text-sm font-medium p-1">
-                    {{ TokenLogin ? username : "Login" }}
+                    {{ checkAuthToken() ? username : "Login" }}
                 </p>
                 <div
                     class="flex items-center justify-center right-0"
@@ -630,7 +688,7 @@ onMounted(() => {
                 <div
                     class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
                 >
-                    <h1>{{ TokenLogin ? `${username}` : "Public Board" }}</h1>
+                    <h1>{{ checkAuthToken() ? username : "Login" }}</h1>
                     <div class="flex items-center justify-center">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -668,34 +726,38 @@ onMounted(() => {
                     <p>Statuses Lists</p>
                 </div>
                 <button
-    class="right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl"
-    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin }"
-    :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
-    :disabled="!TokenLogin"
-    @click="TokenLogin ? openCreateStatus() : null"
->
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="size-6"
-    >
-        <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-        />
-    </svg>
-    <p
-        class="pl-2"
-        :class="{ 'cursor-not-allowed': !TokenLogin, 'cursor-pointer': TokenLogin }"
-    >
-        Create Status
-    </p>
-</button>
-
+                    class="right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
+                    :data-tip="
+                        checkAuthToken()
+                            ? 'Create your status.'
+                            : 'You do not have permission to use this feature.'
+                    "
+                    @click="openCreateStatus()"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-6"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                        />
+                    </svg>
+                    <p
+                        class="pl-2"
+                        :class="{
+                            'cursor-not-allowed': !checkAuthToken(),
+                            'cursor-pointer': checkAuthToken(),
+                        }"
+                    >
+                        Create Status
+                    </p>
+                </button>
             </div>
 
             <div class="flex flex-col mt-10 ml-16 w-5/6">
@@ -714,8 +776,8 @@ onMounted(() => {
                     :key="index"
                     class="itbkk-item bg-white rounded-b-lg shadow-md mb-2"
                 >
-                    <div class=" grid grid-cols-4 gap-4 p-4">
-                        <p 
+                    <div class="grid grid-cols-4 gap-4 p-4">
+                        <p
                             @click="
                                 openStatusDetail(status.statusId, status.name)
                             "
@@ -748,21 +810,36 @@ onMounted(() => {
                         </p>
                         <div class="flex justify-between">
                             <p>({{ findUsageStatus(status.name) }})</p>
+                            <div class="itbkk-button-action-delete tooltip tooltip-top"
+                            :class="{
+                                    'cursor-not-allowed':
+                                        !checkAuthToken() || !checkOwner(),
+                                    'cursor-pointer':
+                                        checkAuthToken() && checkOwner(),
+                                }"
+                                :disabled="!checkAuthToken()"
+                                :data-tip="checkAuthToken() && checkOwner() ? 'Delete your status.' : 'You do not have permission to use this feature.'"   
+                            >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke-width="1.5"
                                 stroke="currentColor"
-                                @click="TokenLogin ?
+                                @click="
                                     openConfirmModal(
                                         status.statusId,
                                         status.name
-                                    ) : null
+                                    )
                                 "
                                 class="size-6 text-red-500"
-                                :class="{ 'cursor-not-allowed': !TokenLogin, 'cursor-pointer': TokenLogin }"
-                                :disabled="!TokenLogin"
+                                :class="{
+                                    'cursor-not-allowed':
+                                        !checkAuthToken() || !checkOwner(),
+                                    'cursor-pointer':
+                                        checkAuthToken() && checkOwner(),
+                                }"
+                                :disabled="!checkAuthToken()"
                             >
                                 <path
                                     stroke-linecap="round"
@@ -770,6 +847,7 @@ onMounted(() => {
                                     d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
                                 />
                             </svg>
+                        </div>
                         </div>
                     </div>
                 </div>

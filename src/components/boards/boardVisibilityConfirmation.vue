@@ -9,7 +9,7 @@ const emits = defineEmits(['closemodal', 'confirmed'])
  
 <template>
 <div class="fixed bg-black bg-opacity-30 w-screen h-screen">
-  <div class="fixed modal-box">
+  <div class="itbkk-modal-alert fixed modal-box">
     <h3 class="text-lg font-bold">Change visibility</h3>
     <p class="border-b mt-2"></p>
     <p class="itbkk-message py-4">

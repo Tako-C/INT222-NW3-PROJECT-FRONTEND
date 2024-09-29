@@ -6,7 +6,7 @@ import { getBoard, getTaskByBoard, removeData,clearCookies } from "@/libs/fetchs
 import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalconfirmed from "@/components/modals/modalConfirmed.vue"
-import { getAuthToken,checkUserInAuthToken, checkAuthToken } from '@/libs/authToken.js'
+import { getAuthToken,checkUserInAuthToken, checkAuthToken,requestNewToken,checkAuthRefreshToken,checkExpAuthToken } from '@/libs/authToken.js'
 
 const Store = useStore()
 const router = useRouter()
@@ -26,7 +26,6 @@ const sortStatus = ref(0)
 const newFilterString = ref("")
 const filterList = ref([])
 const showStatusList = ref(false)
-let TokenLogin = ref(false)
 let userLogin = Cookies.get("oid")
 
 const isBoardPage = computed(() => route.path.startsWith("/board"))
@@ -42,7 +41,7 @@ watch(
         if (newBoardId) {
             await fetchData()
             getBoardName()
-            checkTokenLogin()
+            // checkTokenLogin()
         }
     },
     { immediate: true }
@@ -57,7 +56,31 @@ watch(
     
 // }
 
+function checkrequestNewToken() {
+  if (checkAuthToken()) {
+    if (checkExpAuthToken() && checkAuthToken()) {
+        console.log(checkAuthRefreshToken(), checkExpAuthToken())
+      if (!checkAuthRefreshToken()) {
+        
+        console.log("Token ยังใช้งานต่อไม่ได้")
+        router.push({ name: "login" })
+      } else {
+        requestNewToken()
+        // setTimeout(() => {
+        //   checkrequestNewToken()
+        // }, 1000)
+      }
+    } else {
+      console.log("Token ใช้งานต่อได้")
+    }
+  } else {
+    console.log("User Not Login")
+  }
+}
+
+
 async function fetchData() {
+
     let endpoint = `${boardId.value}/tasks`
     if (filterList.value.length > 0) {
         endpoint = `${
@@ -69,28 +92,27 @@ async function fetchData() {
     let resTasks = await getTaskByBoard(endpoint)
     let resStatuses = await getTaskByBoard(`${boardId.value}/statuses`)
     let resBoards = await getBoard("boards")
-
+    
     if(resTasks.status === 401){
         router.push({name: 'login'})
         Store.errorToken = true
 
     } if (resTasks.status === 403) {
         Store.errorPage403 = true
-        router.push({name: 'notFound'})   
+        errorPermition()  
 
     }
-    if (resTasks.status === 404) {
-        Store.errorPage404 = true
-        router.push({name: 'notFound'})   
+    // if (resTasks.status === 404) {
+    //     Store.errorPage404 = true
+    //     errorPermition()
 
-    }
+    // }
     else {
     Store.tasks = resTasks
     Store.statuses = resStatuses
     Store.boards = resBoards        
     }
-
-
+    checkOwner()
 }
 
 function toggleSort() {
@@ -183,23 +205,49 @@ function openTaskDetail(taskId) {
 
 async function removeTask() {
     openConfirmed.value = false
-    console.log(taskID.value)
-    let result = await removeData(
+    // console.log(taskID.value)
+    let removedTask = await removeData(
         `boards/${route.params.id}/tasks/${taskID.value}`
     )
-    console.log("result", result)
-    if (result.status === 404) {
-        console.log("result :", result.status)
-        errorDelete.value = true
-    }
-    if (result.status === 401) {
-        router.push({name: 'login'});
-        Store.errorToken = true;
-    } else {
-        Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
-        successDelete.value = true
-        console.log(successDelete.value)
-    }
+    // console.log("result", result)
+    // if (result.status === 404) {
+    //     console.log("result :", result.status)
+    //     errorDelete.value = true
+    // }
+    // if (result.status === 401) {
+    //     router.push({name: 'login'});
+    //     Store.errorToken = true;
+    // } else {
+    //     Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
+    //     successDelete.value = true
+    //     console.log(successDelete.value)
+    // }
+
+    if (checkOwner() && checkAuthToken()) {
+                if(removedTask.status === 401){
+                    router.push({name: 'login'})
+                    Store.errorToken = true
+                }
+                if (removedTask.status === 404) {
+                    onsole.log("result :", removedTask.status)
+                    errorDelete.value = true
+                }
+                else {
+                    Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
+                    successDelete.value = true
+                    console.log(successDelete.value)
+                }
+            } 
+            else{
+                if (removedTask.status === 403) {
+                Store.errorPage403 = true
+                errorPermition()
+                }
+                if (removedTask.status === 401) {
+                Store.errorPage401 = true
+                errorPermition()
+                }
+            }
 
 }
 
@@ -240,28 +288,43 @@ async function logOut(){
     router.push({ name:'login'})
 
 }
-
-function checkTokenLogin() {
-    TokenLogin.value = getAuthToken()
+function errorPermition() {
+    router.push({ name: "notFound" })
 }
+
+// function checkTokenLogin() {
+//     TokenLogin.value = getAuthToken()
+// }
 function checkOwner() {
     let userInboard = ''
+    let boardFound = false
+    
     for (const board of Store.boards) {
         if (board.boardId === boardId.value) {
             userInboard = board.owner.oid
-            console.log(userInboard);
-            break
-        } else{
-            // router.push({ name: "notFound" })
-        }
-
+            boardFound = true
+            // console.log(userInboard);
+            // break
+        } 
+        
     }
-    return checkUserInAuthToken(userInboard,userLogin)
+    // console.log(Store.boards)
+    // console.log(boardFound , checkAuthToken());
     
-//   return checkUserInAuthToken(userInboard,userLogin)
-
+    if (getAuthToken() && !boardFound ) {
+       
+       Store.errorPrivate404 = true
+       Store.errorPrivate404Content ='Board'
+       router.push({ name: "Board" })             
+       
+   } if (!getAuthToken() && !boardFound) {
+       router.push({ name: "notFound" })
+   }
+    
+    return checkUserInAuthToken(userInboard,userLogin)
 }
 onMounted(() => {
+    checkrequestNewToken()
     fetchData()
     getBoardName()
 })
@@ -473,7 +536,7 @@ onMounted(() => {
                     </svg>
                 </div>
                 <p class="itbkk-fullname text-sm font-medium p-1">
-                    {{ TokenLogin ? username : "Login" }}
+                    {{ checkAuthToken() ? username : "Login" }}
                 </p>
                 <div class="flex items-center justify-center right-0" @click="logOut()">
                     <svg
@@ -523,7 +586,7 @@ onMounted(() => {
                 <div
                     class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
                 >
-                    <h1>{{ TokenLogin ? `${username}` : "Public Board" }}</h1>
+                    <h1>{{ checkAuthToken() ? `${username}` : "Public Board" }}</h1>
                     <div class="flex items-center justify-center">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -561,7 +624,7 @@ onMounted(() => {
                 </div>
                 <button
                     class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
-                    :data-tip="TokenLogin && checkOwner() ? 'Create New Task' : 'You do not have permission to use this feature.'"          
+                    :data-tip="checkAuthToken() ? 'Create your task.' : 'You do not have permission to use this feature.'"          
                     @click="openCreateTask"
                 >
                     <svg
@@ -786,17 +849,24 @@ onMounted(() => {
                             <p @click="openTaskDetail(task.id)">
                                 {{ task.statusName }}
                             </p>
-                            <div class="itbkk-button-action-delete">
-<svg
+                            <div class="itbkk-button-action-delete tooltip tooltip-top"
+                            :class="{
+                                    'cursor-not-allowed':
+                                        !checkAuthToken() || !checkOwner(),
+                                    'cursor-pointer':
+                                        checkAuthToken() && checkOwner(),
+                                }"
+                                :disabled="!checkAuthToken()"
+                                :data-tip="checkAuthToken() && checkOwner() ? 'Delete your task.' : 'You do not have permission to use this feature.'"   >
+                            <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke-width="1.5"
                                 stroke="currentColor"
-                                @click="TokenLogin ? openConfirmModal(task.id, task.title) : null"
-                                class="itbkk-button-delete size-6 text-red-500"
-                                :class="{ 'cursor-not-allowed': !TokenLogin, 'cursor-pointer': TokenLogin }"
-                                :disabled="!TokenLogin"
+                                @click="openConfirmModal(task.id, task.title)"
+                                class="size-6 text-red-500 "
+                                  
                             >
                                 <path
                                     stroke-linecap="round"
@@ -805,7 +875,6 @@ onMounted(() => {
                                 />
                             </svg>
                             </div>
-                            
                         </div>
                     </div>
                 </div>

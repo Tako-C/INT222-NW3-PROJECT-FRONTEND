@@ -4,7 +4,7 @@ import { getBoard, editDatas } from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { validateTask } from "@/libs/varidateTask.js"
-import { getAuthToken, checkAuthToken,checkUserInAuthToken } from "@/libs/authToken.js"
+import { requestNewToken,checkAuthRefreshToken,checkExpAuthToken,checkAuthToken,checkUserInAuthToken } from "@/libs/authToken.js"
 import Cookies from "js-cookie";
 
 let createTimeInBrowserTimezone = ref(null)
@@ -60,8 +60,8 @@ function checkOwner() {
     for (const board of Store.boards) {
         if (board.boardId === boardId.value) {
             userInboard = board.owner.oid
-            console.log(userInboard);
-            break
+            // console.log(userInboard);
+            // break
         } else{
             // router.push({ name: "notFound" })
         }
@@ -69,21 +69,15 @@ function checkOwner() {
     }  
     return checkUserInAuthToken(userInboard,userLogin)
 }
-// console.log(checkOwner());
+
 
 async function fetchData() {
-    if (checkOwner()=== true && getAuthToken) {
+
         let result = await getBoard(
         `boards/${route.params.id}/tasks/${route.params.taskId}`
     )
     let resultStatuses = await getBoard(`boards/${route.params.id}/statuses`)
 
-    // let result = await getBoard(
-    //     `boards/${route.params.id}/tasks/${route.params.taskId}`
-    // )
-    // let resultStatuses = await getBoard(
-    //     `boards/${route.params.id}/statuses`
-    // )
     Store.statuses = resultStatuses
 
     if (result.status === 404) {
@@ -103,12 +97,13 @@ async function fetchData() {
         createTimeInBrowserTimezone = convertToBrowserTimezone(result.createdOn)
         updateTimeInBrowserTimezone = convertToBrowserTimezone(result.updatedOn)
     }
-    } else {
-        router.push({ name: "notFound" })
-    }
+    // } else {
+    //     router.push({ name: "notFound" })
+    // }
 }
 
 async function updateTask() {
+    
     if (!validateTask(taskData.value)) {
         return
     }
@@ -120,22 +115,8 @@ async function updateTask() {
         `boards/${route.params.id}/tasks/${route.params.taskId}`,
         taskData.value
     )
-    // console.log(result)
-
-    // if (result.status === 401) {
-    //     router.push({ name: "notFound" })
-    //     Store.errorPage401 = true
-    // } 
-    // else if (result.status === 403) {
-    //     Store.errorPage403 = true
-    //     router.push({ name: "notFound" })
-
-    // }
-    // else if (result.status === 404) {
-    //     Store.errorPage404 = true
-    //     router.push({ name: "notFound" })
-
-    // }
+    
+if (checkOwner() && checkAuthToken()) {
     if(result.status === 401){
         router.push({name: 'login'})
         Store.errorToken = true
@@ -145,6 +126,21 @@ async function updateTask() {
         Store.successUpdateTask = true
         addToStore()
     }
+} else{
+
+    if (result.status === 403) {
+        Store.errorPage403 = true
+        errorPermition()
+    }
+    if (result.status === 401) {
+        Store.errorPage401 = true
+        errorPermition()
+    } else{
+        Store.errorPage403 = true
+        errorPermition()
+    }
+    // errorPermition()
+}
 }
 
 function addToStore() {
@@ -174,32 +170,58 @@ function closeModal() {
     router.push({ name: "BoardTask", params: { id: route.params.id } })
 }
 
-function checkTokenLogin() {
-    TokenLogin.value = getAuthToken()
-}
+// function checkTokenLogin() {
+//     TokenLogin.value = getAuthToken()
+// }
 
 function checkUserPermition() {
     console.log(checkAuthToken())
     if (checkAuthToken() === false) {
-        router.push({ name: "notFound" })
+        errorPermition()
     } else {
     }
 }
 
+function errorPermition() {
+    router.push({ name: "notFound" })
+}
+function checkrequestNewToken() {
+  if (checkAuthToken()) {
+    if (checkExpAuthToken() && checkAuthToken()) {
+        console.log(checkAuthRefreshToken(), checkExpAuthToken())
+      if (!checkAuthRefreshToken()) {
+        
+        console.log("Token ยังใช้งานต่อไม่ได้")
+        router.push({ name: "login" })
+      } else {
+        requestNewToken()
+        // setTimeout(() => {
+        //   checkrequestNewToken()
+        // }, 1000)
+      }
+    } else {
+      console.log("Token ใช้งานต่อได้")
+    }
+  } else {
+    console.log("User Not Login")
+  }
+}
 watch(
     boardId,
     async (newBoardId) => {
         if (newBoardId) {
             await fetchData()
-            checkTokenLogin()
+            // checkTokenLogin()
         }
     },
     { immediate: true }
 )
 
 onMounted(() => {
+    checkrequestNewToken()
     fetchData()
 })
+
 onUpdated(() => {
     if (
         originalTaskData.value.title !== taskData.value.title ||
@@ -342,33 +364,17 @@ onUpdated(() => {
                 >
                     Close
                 </button>
-
-                <!-- <button
-    type="submit"
-    class="itbkk-button-confirm button buttonOK"
-    :disabled="!isEdited || !TokenLogin"
-    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin}"
-    :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
-    @click="TokenLogin ? updateTask(route.params.id, {
-        title: taskData.title,
-        description: taskData.description,
-        assignees: taskData.assignees,
-        status: taskData.status,
-    }) : null"
->
-    Update
-</button> -->
                 <button
                     type="submit"
-                    class="itbkk-button-confirm button buttonOK"
+                    class="itbkk-button-confirm button buttonOK tooltip "
                     :disabled="!isEdited"
                     :class="{
-                        'tooltip tooltip-left': !TokenLogin,
+                        'tooltip-left': !checkAuthToken(),
                     }"
                     :data-tip="
-                        !TokenLogin
-                            ? 'You do not have permission to use this feature.'
-                            : ''
+                        checkAuthToken() && checkOwner()
+                            ? 'Update Task Data.'
+                            : 'You do not have permission to use this feature.'
                     "
                     @click="
                         updateTask(route.params.id, {

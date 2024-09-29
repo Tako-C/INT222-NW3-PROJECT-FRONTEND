@@ -7,6 +7,9 @@ import {
     getAuthToken,
     checkAuthToken,
     checkUserInAuthToken,
+    checkAuthRefreshToken,
+    requestNewToken,
+    checkExpAuthToken
 } from "@/libs/authToken.js"
 import Cookies from "js-cookie"
 
@@ -48,6 +51,27 @@ watch(
     { immediate: true }
 )
 
+function checkrequestNewToken() {
+  if (checkAuthToken()) {
+    if (checkExpAuthToken() && checkAuthToken()) {
+        console.log(checkAuthRefreshToken(), checkExpAuthToken())
+      if (!checkAuthRefreshToken()) {
+        
+        console.log("Token ยังใช้งานต่อไม่ได้")
+        router.push({ name: "login" })
+      } else {
+        requestNewToken()
+        // setTimeout(() => {
+        //   checkrequestNewToken()
+        // }, 1000)
+      }
+    } else {
+      console.log("Token ใช้งานต่อได้")
+    }
+  } else {
+    console.log("User Not Login")
+  }
+}
 // if (route.params.id == 1) {
 //   window.alert('You can not edit this Status.')
 //   router.push({ name: 'StatusTable' })
@@ -67,36 +91,80 @@ watch(
 // }
 
 async function fetchData() {
+    // let resultBoard = await getBoard(`boards/${route.params.id}`)
+    // boardId.value = resultBoard
+    // console.log(checkUserInAuthToken(userLogin, boardId.value.owner.oid))
+    // // if (
+    // //     checkAuthToken() === true &&
+    // //     checkUserInAuthToken(userLogin, boardId.value.owner.oid) === true
+    // // ) {
+
+    // let result = await getBoard(
+    //     `boards/${route.params.id}/statuses/${route.params.statusId}`
+    // )
+    // if (result.name === "No status" || result.name === "Done") {
+    //     window.alert("You can not edit this Status.")
+    //     router.push({ name: "StatusTable" })
+    // }
+    // if (result.status === 404) {
+    //     router.push({ name: "Status", params: { id: route.params.id } })
+    //     Store.errorUpdateStatus = true
+    // }
+    // if (result.status === 401) {
+    //     router.push({ name: "login" })
+    //     Store.errorToken = true
+    // } else {
+    //     statusData.value = result
+    //     originalStatusData.value = { ...statusData.value }
+    //     // console.log(Store.errorUpdateStatus)
+    // }
+    // } else {
+    //     router.push({ name: "notFound" })
+    // }
     let resultBoard = await getBoard(`boards/${route.params.id}`)
-    boardId.value = resultBoard
-    console.log(checkUserInAuthToken(userLogin, boardId.value.owner.oid));
-    if (
-        checkAuthToken() === true &&
-        checkUserInAuthToken(userLogin, boardId.value.owner.oid) === true
-    ) {
-      
-      
+        boardId.value = resultBoard     
         let result = await getBoard(
             `boards/${route.params.id}/statuses/${route.params.statusId}`
         )
+
+    if (
+        checkAuthToken() &&
+        checkUserInAuthToken(userLogin, boardId.value.owner.oid)
+    ) {
+        let resultBoard = await getBoard(`boards/${route.params.id}`)
+        boardId.value = resultBoard     
+        let result = await getBoard(
+            `boards/${route.params.id}/statuses/${route.params.statusId}`
+        )
+
         if (result.name === "No status" || result.name === "Done") {
             window.alert("You can not edit this Status.")
             router.push({ name: "StatusTable" })
         }
         if (result.status === 404) {
             router.push({ name: "Status", params: { id: route.params.id } })
-            Store.errorUpdateStatus = true
+            Store.errorNotfoundStatus = true
         }
-        if (result.status === 401) {
-            router.push({ name: "login" })
-            Store.errorToken = true
-        } else {
+        // if (result.status === 401) {
+        //     router.push({ name: "login" })
+        //     Store.errorToken = true
+        // } 
+        else {
             statusData.value = result
             originalStatusData.value = { ...statusData.value }
-            // console.log(Store.errorUpdateStatus)
         }
     } else {
-        router.push({ name: "notFound" })
+        if (result.status === 403) {
+            Store.errorPage403 = true
+            errorPermition()
+        }
+        if (result.status === 401) {
+            Store.errorPage401 = true
+            errorPermition()
+        } else{
+            Store.errorPage403 = true
+            errorPermition()
+        }
     }
 }
 
@@ -160,8 +228,12 @@ function clearData() {
         description: "",
     }
 }
+function errorPermition() {
+    router.push({ name: "notFound" })
+}
 
-onMounted(fetchData)
+
+onMounted(fetchData, checkrequestNewToken())
 
 onUpdated(() => {
     if (

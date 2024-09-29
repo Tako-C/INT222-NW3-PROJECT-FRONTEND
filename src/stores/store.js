@@ -29,6 +29,7 @@ export const useStore = defineStore('task', () => {
   const errorUpdateStatus = false
   const errorDeleteNoStatus = false
   const errorEditDefaultStatus = false
+  const errorNotfoundStatus = false
   const errorPage403 = false
   const errorPage404 = false
   const errorPage401 = false
@@ -49,6 +50,7 @@ export const useStore = defineStore('task', () => {
     errorUpdateStatus,
     errorUpdateTask,
     errorEditDefaultStatus,
+    errorNotfoundStatus,
     
 
     // login by ch
