@@ -63,11 +63,8 @@ function checkExpAuthToken() {
    
 }
 
-console.log(Cookies.get("refresh_token"), "DDDD")
 function checkAuthRefreshToken() {
-   
     refreshToken.value = Cookies.get("refresh_token");
-    console.log(Cookies.get("refresh_token"), "DDDD")
     return !!refreshToken.value;
 }
 console.log(checkAuthRefreshToken())

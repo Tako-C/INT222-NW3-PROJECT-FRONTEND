@@ -13,7 +13,7 @@ const emits = defineEmits(['closemodal', 'confirmed'])
     <h3 class="text-lg font-bold">Change visibility</h3>
     <p class="border-b mt-2"></p>
     <p class="itbkk-message py-4">
-      Do you want to set visibility to {{ changevisibility.visibility == 'public' ? 'Private' : 'Public' }}?
+      Do you want to change board visibility to {{ changevisibility.visibility == 'public' ? 'private' : 'public' }}?
     </p>
     <div class="boxButton">
       <button

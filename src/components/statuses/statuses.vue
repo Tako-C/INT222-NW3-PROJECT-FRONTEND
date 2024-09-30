@@ -726,7 +726,7 @@ onMounted(() => {
                     <p>Statuses Lists</p>
                 </div>
                 <button
-                    class="right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
+                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
                     :data-tip="
                         checkAuthToken()
                             ? 'Create your status.'
@@ -810,7 +810,7 @@ onMounted(() => {
                         </p>
                         <div class="flex justify-between">
                             <p>({{ findUsageStatus(status.name) }})</p>
-                            <div class="itbkk-button-action-delete tooltip tooltip-top"
+                            <div class="itbkk-button-delete tooltip tooltip-top"
                             :class="{
                                     'cursor-not-allowed':
                                         !checkAuthToken() || !checkOwner(),

@@ -38,20 +38,30 @@ const isTaskDropdownOpen = ref(false)
 const openConfirmed = ref(false)
 let visibilityBoard = ref({})
 let userLogin = Cookies.get("oid")
-
+let resultPrivatTest = ref({})
 function getImageUrl(index) {
     //   return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
     return `/images/bg-theme-${(index % 5) + 1}.jpg`
 }
 
-// function checkFirstBoard() {
-//     if (Store.boards.length === 1) {
-//         let firstBoard = Store.boards[0]
-//         // console.log(firstBoard.boardId)
-
-//         openBoardDetailModal(firstBoard.boardId);
-//     }
-// }
+function checkFirstBoard() {
+    // let boardFirst = null
+    // for (const board of resultPrivatTest.value) {
+    //     if (board.owner.oid === userLogin) {
+    //         console.log(board)
+    //         boardFirst = board
+    //     }
+    // }
+    // console.log(boardFirst);
+    
+    // if (boardFirst) {
+    //     console.log(boardFirst.boardId)
+    //     openBoardTaskModal(boardFirst.boardId)
+    // }
+    // else{
+    //     console.log("Not have board")
+    // }
+}
 
 // function checkTokenLogin() {
 //   TokenLogin.value = getAuthToken()
@@ -88,6 +98,11 @@ async function fetchData() {
     if (checkAuthToken()) {
         let resultPrivate = await getAllBoard(endpoint)
         let resultPublic = await getAllBoardByPublic(endpoint)
+
+        // จำเป็น     
+        resultPrivatTest.value = resultPrivate
+        //
+
         resultPrivate.forEach((privateBoard) => {
             resultPublic = resultPublic.filter(
                 (publicBoard) =>
@@ -109,6 +124,8 @@ async function fetchData() {
             board.isCheck = false
         }
     }
+    checkFirstBoard()
+
 }
 
 function openBoardTaskModal(boardId) {
@@ -218,6 +235,7 @@ function closeNotificationModal() {
     } else {
         board.isCheck = false
     }
+    checkFirstBoard()
     // fetchData()
 }
 
@@ -236,6 +254,8 @@ function checkVariable() {
 onMounted(() => {
     checkrequestNewToken()
     fetchData()
+    // checkFirstBoard()
+
 })
 
 watch(
@@ -497,7 +517,7 @@ watch(
                             : 'You do not have permission to use this feature.'
                     "
                     :disabled="!checkAuthToken()"
-                    @click="checkAuthToken() ? openCreateBoard() : null"
+                    @click=" openCreateBoard()"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

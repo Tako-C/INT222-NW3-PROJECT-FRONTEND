@@ -2,7 +2,7 @@
 import { ref, onMounted, watch, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
-import { getBoard, getTaskByBoard, removeData,clearCookies } from "@/libs/fetchs.js"
+import { getBoard, getTaskByBoard, removeData,updateBoard } from "@/libs/fetchs.js"
 import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalconfirmed from "@/components/modals/modalConfirmed.vue"
@@ -78,6 +78,89 @@ function checkrequestNewToken() {
   }
 }
 
+// ต้องทำเพราะ cypress  ====================================================================================================
+let boardnow = ref({})
+function loopBoardVisibility() {
+    for (const board of Store.boards) {
+        if (board.boardId == boardId.value) {
+            boardnow.value = board
+        }
+    }
+}
+loopBoardVisibility()
+let visibilityBoard = ref({})
+let openConfirmedvisibility = ref(false)
+import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
+
+function openConfirmVisibilitymodal() {
+    if (checkAuthToken) {
+        visibilityBoard.value = boardnow.value
+        console.log(boardnow.value.visibility)
+        
+        openConfirmedvisibility.value = true
+        
+    } else {
+        errorPermition()
+    }
+}
+
+async function updateVisibility() {
+    checkrequestNewToken()
+    
+
+    if (visibilityBoard.value.isCheck === true) {
+        visibilityBoard.value.visibility = "public"
+    } else {
+        visibilityBoard.value.visibility = "private"
+    }
+
+    let result = await updateBoard(`boards/${visibilityBoard.value.boardId}`, {
+        visibility: visibilityBoard.value.visibility,
+    })
+
+    if (
+        checkAuthToken() &&
+        checkUserInAuthToken(visibilityBoard.value.owner.oid, userLogin)
+    ) {
+        if (result.status === 401) {
+            router.push({ name: "login" })
+            Store.errorToken = true
+        } else {
+            changeVisibility()
+        }
+    } else {
+        if (result.status === 403) {
+            Store.errorPage403 = true
+            errorPermition()
+        }
+        if (result.status === 401) {
+            Store.errorPage401 = true
+            errorPermition()
+        }
+    }
+}
+async function changeVisibility() {
+    let indexToUpdate = -1
+
+    // Find the board by ID
+    let board = Store.boards.find(
+        (b) => b.boardId === visibilityBoard.value.boardId
+    )
+    board.visibility = visibilityBoard.value.visibility
+    for (let i = 0; i < Store.boards.length; i++) {
+        if (Store.boards[i].boardId === board.boardId) {
+            indexToUpdate = i
+            // break;
+        }
+    }
+    if (indexToUpdate !== -1) {
+        Store.boards[indexToUpdate].visibility = board.visibility
+    }
+    openConfirmed.value = false
+}
+// ====================================================================================================
+
+
 
 async function fetchData() {
 
@@ -113,6 +196,14 @@ async function fetchData() {
     Store.boards = resBoards        
     }
     checkOwner()
+
+    for (const board of Store.boards) {
+        if (board.visibility == "public") {
+            board.isCheck = true
+        } else {
+            board.isCheck = false
+        }
+    }
 }
 
 function toggleSort() {
@@ -262,6 +353,22 @@ function closeNotificationModal() {
     taskID.value = ""
     Store.errorPage403 = false
     Store.errorPage404 = false
+    
+
+
+    // เพิ่มจากcypress
+    openConfirmedvisibility.value = false
+    Store.errorPrivate404 = false
+    Store.errorPrivate404Content = ""
+    
+    let board = Store.boards.find(
+        (b) => b.boardId === visibilityBoard.value.boardId
+    )
+    if (visibilityBoard.value.visibility === "public") {
+        boardnow.value.isCheck = true
+    } else {
+        boardnow.value.isCheck = false
+    }
 }
 
 function checkVariable() {
@@ -284,7 +391,7 @@ function openConfirmModal(id, title) {
 }
 
 async function logOut(){
-    clearCookies()
+
     router.push({ name:'login'})
 
 }
@@ -331,6 +438,7 @@ onMounted(() => {
 </script>
 
 <template>
+    
     <modalNotification
         :errorDelete="errorDelete"
         :successDelete="successDelete"
@@ -343,6 +451,13 @@ onMounted(() => {
         :taskTitle="taskTitle"
         @closemodal="closeNotificationModal()"
         @confirmed="removeTask()"
+        class="z-40"
+    />
+    <BoardVisibilityConfirmation
+        :changevisibility="visibilityBoard"
+        v-show="openConfirmedvisibility"
+        @closemodal="closeNotificationModal()"
+        @confirmed="updateVisibility(),closeNotificationModal()"
         class="z-40"
     />
     <div class=" w-screen bg-white h-screen flex">
@@ -451,7 +566,7 @@ onMounted(() => {
 
                 <!-- Statuses Section -->
                 <div
-                    class="itbkk-manage-status w-60 p-5 flex items-center justify-between cursor-pointer"
+                    class=" w-60 p-5 flex items-center justify-between cursor-pointer"
                     :class="['rounded-md', { 'bg-orange-400': isStatusPage }]"
                     @click="toggleStatusDropdown()"
                 >
@@ -626,6 +741,7 @@ onMounted(() => {
                     class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
                     :data-tip="checkAuthToken() ? 'Create your task.' : 'You do not have permission to use this feature.'"          
                     @click="openCreateTask"
+                    :disabled="!checkAuthToken()"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -731,6 +847,28 @@ onMounted(() => {
                     </div>
                 </div>
 
+                <!-- Visibility -->
+                <div class="itbkk-board-visibility flex mt-8 ">
+                            <input
+                                type="checkbox"
+                                class=" toggle tooltip tooltip-right"
+                                :class="{
+                                    'cursor-not-allowed ':
+                                        !checkAuthToken() ||
+                                        !checkOwner()
+                                }"
+                                :data-tip="
+                                    checkAuthToken() &&
+                                    checkOwner()
+                                        ? 'change Visibility Board'
+                                        : 'You do not have permission to use this feature.'
+                                "
+                                v-model="boardnow.isCheck"
+                                @click="openConfirmVisibilitymodal()"
+                            />
+                            <p class="pl-3">{{ boardnow.visibility }}</p>
+                        </div>
+                        
                 <!--Sort-->
                 <div
                     class="itbkk-status-sort cursor-pointer pt-1 flex items-center mr-[12%] mt-3"
@@ -793,6 +931,7 @@ onMounted(() => {
                             </svg>
                         </div>
                     </template>
+                    <button class="ml-2 bg-sky-200 rounded-lg p-2 itbkk-manage-status" @click="openStatuses(boardId)">Manage Status</button>
                 </div>
             </div>
 
@@ -821,8 +960,8 @@ onMounted(() => {
                                 'itbkk-status': !route.params.taskId,
                             }"
                             >
-                        <p class="itbkk-button-action " >
-                            <div class="itbkk-button-edit" @click="openTaskDetail(task.id)">
+                        <p class="itbkk-button-action ">
+                            <div class="itbkk-button-edit" :class="{ disabled: !checkAuthToken() }"  @click="openTaskDetail(task.id)" >
                                 {{ index + 1 }}({{ task.id }})
                             </div>
                             
@@ -849,12 +988,13 @@ onMounted(() => {
                             <p @click="openTaskDetail(task.id)">
                                 {{ task.statusName }}
                             </p>
-                            <div class="itbkk-button-action-delete tooltip tooltip-top"
+                            <div class="itbkk-button-delete tooltip tooltip-top"
                             :class="{
                                     'cursor-not-allowed':
                                         !checkAuthToken() || !checkOwner(),
                                     'cursor-pointer':
                                         checkAuthToken() && checkOwner(),
+
                                 }"
                                 :disabled="!checkAuthToken()"
                                 :data-tip="checkAuthToken() && checkOwner() ? 'Delete your task.' : 'You do not have permission to use this feature.'"   >

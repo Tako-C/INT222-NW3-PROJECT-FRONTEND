@@ -60,7 +60,7 @@ function checkUserPermition() {
 
 
 let boardData = ref({
-    board_name: `${Cookies.get("name")} personal Board`
+    board_name: `${Cookies.get("name")} personal board`
 })
 
 function closeModal() {
