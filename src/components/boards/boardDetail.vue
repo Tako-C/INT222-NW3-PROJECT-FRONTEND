@@ -1,172 +1,147 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { getBoard } from '@/libs/fetchs.js'
-import { useStore } from '@/stores/store.js'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted } from "vue";
+import { getBoard } from "@/libs/fetchs.js";
+import { useStore } from "@/stores/store.js";
+import { useRoute, useRouter } from "vue-router";
+import { checkAuthToken, requestNewToken, checkAuthRefreshToken, checkExpAuthToken } from '@/libs/authToken.js';
 
-let boardData = ref({})
-let createTimeInBrowserTimezone = ref(null)
-let updateTimeInBrowserTimezone = ref(null)
-let browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
-let fetchHaveData = ref(false)
-const route = useRoute()
-const router = useRouter()
-const Store = useStore()
+let boardData = ref({});
+let createTimeInBrowserTimezone = ref(null);
+let updateTimeInBrowserTimezone = ref(null);
+let browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+let fetchHaveData = ref(false);
+const route = useRoute();
+const router = useRouter();
+const Store = useStore();
 
-//Option datetime
 const options = {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
-}
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+};
 
 function convertToBrowserTimezone(utcTime) {
-    let date = new Date(utcTime)
-    const browserTime = date.toLocaleString("en-AU", options)
-    return browserTime
+    let date = new Date(utcTime);
+    return date.toLocaleString("en-AU", options);
 }
 
+function checkrequestNewToken() {
+    if (checkAuthToken()) {
+        if (checkExpAuthToken() && checkAuthToken()) {
+            if (!checkAuthRefreshToken()) {
+                router.push({ name: "login" });
+            } else {
+                requestNewToken();
+            }
+        }
+    } 
+}
 
 async function fetchData() {
-  let result = await getBoard(`boards/${route.params.id}`)
+    let result = await getBoard(`boards/${route.params.id}`);
 
-  if(result.status === 404)  {
-    router.push({ name: "board", params: { id: route.params.id } })
-    // Store.errorUpdateStatus = true
-  } 
-  if(result.status === 401){
-    router.push({name: 'login'})
-    Store.errorToken = true;
-  } else {
-    boardData.value = result  // อัปเดต boardData ด้วยข้อมูลที่ได้จาก backend
-    fetchHaveData.value = true // อัปเดตสถานะการดึงข้อมูลเสร็จสิ้น
-    console.log(result)
-    createTimeInBrowserTimezone.value = convertToBrowserTimezone(result.createdOn)
-    updateTimeInBrowserTimezone.value = convertToBrowserTimezone(result.updatedOn)
-    console.log(createTimeInBrowserTimezone, updateTimeInBrowserTimezone, browserTimeZone)
-    
-  }     
+    if (result.status === 404) {
+        Store.errorPrivate404 = true;
+        Store.errorPrivate404Content = 'Board';
+        router.push({ name: "board", params: { id: route.params.id } });
+    } else if (result.status === 403) {
+        Store.errorPage403 = true;
+        router.push({ name: "notFound" });
+    } else if (result.status === 401) {
+        router.push({ name: "login" });
+        Store.errorToken = true;
+    } else {
+        boardData.value = result;
+        fetchHaveData.value = true;
+        createTimeInBrowserTimezone.value = convertToBrowserTimezone(result.createdOn);
+        updateTimeInBrowserTimezone.value = convertToBrowserTimezone(result.updatedOn);
+        console.log(boardData.value);
+    }
 }
+
 function closeModal() {
-  router.push('/board')
-  fetchHaveData.value = !fetchHaveData.value
+    router.push("/board");
+    fetchHaveData.value = !fetchHaveData.value;
 }
-onMounted(fetchData)
+
+function taskQuantity(dataList) {
+    let count = 0
+    for (const key in dataList) {
+        count++
+    }
+    return count;  // Assuming dataList is an array
+}
+
+onMounted(() => {
+    checkrequestNewToken();
+    fetchData();
+});
 </script>
+
 <template>
-  <div
-    v-show="fetchHaveData"
-    class="class name : itbkk-* fixed w-screen h-screen z-10 top-0 left-0 flex justify-center items-center"
-  >
-    <div
-      class="bg-black bg-opacity-50 w-screen h-screen"
-      @click="closeModal()"
-    ></div>
-    <div
-      class="fixed bg-white w-[55%] h-auto indicator flex flex-col rounded-2xl shadow-2xl shadow-white"
-    >
-    <h1>Board name</h1>
-    <p>{{ boardData.board_name }}</p>
-    <h1>Time Zone</h1>
-    <p>{{ browserTimeZone }}</p>
-    <h1>Created On</h1>
-    <p>{{ createTimeInBrowserTimezone }}</p>
-    <h1>Updated On</h1>
-    <p>{{ updateTimeInBrowserTimezone }}</p>
-    <h1>Status</h1>
-    <p>{{ boardData.visibility }}</p>
-      <div class="boxButton m-3">
-        <button
-          type="submit"
-          class="itbkk-button button buttonClose btn"
-          @click="closeModal()"
-        >
-          Close
-        </button>
-      </div> 
-    </div> 
-  </div>
+    <div v-show="fetchHaveData" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-8">
+            <h1 class="text-3xl font-semibold text-center text-gray-800 mb-6">Board Details</h1>
+            <div class="flex space-x-8">
+                <div class="flex-1 space-y-4 border p-4 rounded-lg border-gray-300">
+                    <div>
+                        <h2 class="text-xl font-medium text-gray-700">Board Name</h2>
+                        <p class="text-gray-600">{{ boardData.board_name }}</p>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-medium text-gray-700">Time Zone</h2>
+                        <p class="text-gray-600">{{ browserTimeZone }}</p>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-medium text-gray-700">Created On</h2>
+                        <p class="text-gray-600">{{ createTimeInBrowserTimezone }}</p>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-medium text-gray-700">Updated On</h2>
+                        <p class="text-gray-600">{{ updateTimeInBrowserTimezone }}</p>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-medium text-gray-700">Status</h2>
+                        <p class="text-gray-600">{{ boardData.visibility }}</p>
+                    </div>
+                </div>
+                <div class="flex-none w-auto text-sm">
+                    <div class="flex justify-center items-center bg-orange-300 rounded-2xl p-2"><p class=" font-medium text-gray-700">Task Quantity :</p>
+                    <p class="text-gray-600 p-1">{{ taskQuantity(boardData.tasks) }}</p></div>
+                    
+                    <div  class="flex justify-center items-center bg-sky-300 rounded-2xl mt-2 p-2"><p class="font-medium text-gray-700">Statuses Quantity :</p>
+                    <p class="text-gray-600 p-1">{{ taskQuantity(boardData.statuses) }}</p></div>
+                    
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button 
+                    class="btn btn-primary"
+                    @click="closeModal()"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
+
 <style scoped>
-.boxButton {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: auto;
-  margin-right: 25px;
-}
-.button {
-  margin-top: auto;
-  background-color: #04aa6d;
-  border: none;
-  color: white;
-  padding: 10px 50px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  transition-duration: 0.4s;
-  cursor: pointer;
+/* Custom button styles for DaisyUI */
+.btn-primary {
+    @apply bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 ease-in-out;
 }
 
-.buttonClose {
-  background-color: white;
-  color: black;
-  border: 2px solid red;
-}
-.buttonClose:hover {
-  background-color: red;
-  color: white;
-}
-.buttonOK {
-  background-color: white;
-  color: black;
-  border: 2px solid #04aa6d;
-}
-.buttonOK:hover {
-  background-color: #04aa6d;
-  color: white;
+.btn-primary:hover {
+    @apply bg-blue-700;
 }
 
-.box {
-  margin-right: auto;
-}
-
-.modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 98;
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-h1 {
-  color: black;
-  font-size: 32px;
-  font-weight: 600;
-  margin-top: 15px;
-  margin-left: 25px;
-  font-family: sans-serif;
-}
-
-.modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 99;
-
-  width: 100%;
-  max-width: 400px;
-  background-color: #fff;
-  border-radius: 16px;
-
-  padding: 25px;
+/* Optional: Additional styling for the border */
+.border {
+    border-width: 1px;
 }
 </style>

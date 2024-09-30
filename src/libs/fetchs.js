@@ -46,9 +46,38 @@ const url = import.meta.env.VITE_BASE_URL
 //         Cookies.remove(name)
 //     })
 // }
+async function requestToken(refresh_token) {
+    console.log(refresh_token)
+    
+    const res = await fetch(`${url}/token`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${refresh_token}`,
+        }
+    })
+
+    if (res.ok) {
+        const result = await res.json()
+        if (result) {
+            // setAuthToken(result)
+
+            console.log("request successful:", result)
+        } else {
+            console.error("Token not found in response")
+        }
+        console.log("request successful:")
+        console.log(result)
+        
+        return result
+    } else {
+        console.log("Error during login:", res.statusText)
+        return null
+    }
+}
 
 async function login(username, password) {
-    const res = await fetch(`${url}/api/login`, {
+    const res = await fetch(`${url}/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -222,6 +251,7 @@ async function editDatas(path, data) {
 async function addBoard(data, path) {
     getAuthToken() // Get the token from the getAuthToken function
 
+    console.log(getAuthToken())
     if (!getAuthToken()) {
         console.error("Token not found");
        // throw new Error("Token not found");
@@ -329,11 +359,43 @@ async function getAllBoard(path) {
     const data = await response.json()
     return data
 }
+async function getAllBoardByPublic(path) {
+    getAuthToken()
+
+    if (!getAuthToken()) {
+        console.error("Token not found")
+       // throw new Error("Token not found")
+    }
+
+    const response = await fetch(`${url}/v3/${path}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: ``
+        },
+        
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        // console.error(
+        //     "Error fetching data:",
+        //     error.message || "Failed to fetch data"
+        // )
+        // throw new Error(error.message || "Failed to fetch data")
+        return error
+    }
+
+    const data = await response.json()
+    return data
+}
 
 export {
     addData,
+    requestToken,
     login,
     getBoard,
+    getAllBoardByPublic,
     getTaskByBoard,
     createStatus,
     editDatas,

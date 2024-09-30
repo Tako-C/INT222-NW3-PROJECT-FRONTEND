@@ -9,7 +9,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="itbkk-message fixed modal-box">
+  <div class=" fixed modal-box">
     <h3 class="text-lg font-bold">Delete a status</h3>
     <p class="border-b mt-2"></p>
     <p class="itbkk-message py-4">
@@ -24,7 +24,7 @@ const props = defineProps({
       </button>
       <button
         @click="emits('confirmed')"
-        class="itbkk-button-confirm button buttonConfirm"
+        class="itbkk-button-confirm  button buttonConfirm"
       >
         Confirm
       </button>

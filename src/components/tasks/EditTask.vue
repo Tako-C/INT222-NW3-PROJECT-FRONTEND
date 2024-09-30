@@ -4,7 +4,8 @@ import { getBoard, editDatas } from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { validateTask } from "@/libs/varidateTask.js"
-import { getAuthToken } from '@/libs/authToken.js'
+import { requestNewToken,checkAuthRefreshToken,checkExpAuthToken,checkAuthToken,checkUserInAuthToken } from "@/libs/authToken.js"
+import Cookies from "js-cookie";
 
 let createTimeInBrowserTimezone = ref(null)
 let updateTimeInBrowserTimezone = ref(null)
@@ -12,10 +13,12 @@ let browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 const route = useRoute()
 const router = useRouter()
 const Store = useStore()
-const TaskID = ref(0)
 const isEdited = ref(false)
 const DefualtStatus = 3
 let TokenLogin = ref(false)
+const boardId = ref(route.params.id)
+let statusObject = ref()
+let userLogin = Cookies.get("oid")
 
 let taskData = ref({
     id: "",
@@ -43,21 +46,40 @@ const options = {
     hour12: false,
 }
 
-const boardId = ref(route.params.id)
-let statusObject = ref()
+
 
 function convertToBrowserTimezone(utcTime) {
     let date = new Date(utcTime)
     const browserTime = date.toLocaleString("en-AU", options)
     return browserTime
 }
-console.log(route.params.taskId)
+// console.log(route.params.taskId)
+
+function checkOwner() {
+    let userInboard = ''
+    for (const board of Store.boards) {
+        if (board.boardId === boardId.value) {
+            userInboard = board.owner.oid
+            // console.log(userInboard);
+            // break
+        } else{
+            // router.push({ name: "notFound" })
+        }
+
+    }  
+    return checkUserInAuthToken(userInboard,userLogin)
+}
+
 
 async function fetchData() {
-    // taskData.value = await getBoard(`boards/${route.params.id}/tasks/${route.params.taskId}`)
-    let result = await getBoard(
+
+        let result = await getBoard(
         `boards/${route.params.id}/tasks/${route.params.taskId}`
-    )    
+    )
+    let resultStatuses = await getBoard(`boards/${route.params.id}/statuses`)
+
+    Store.statuses = resultStatuses
+
     if (result.status === 404) {
         router.push({ name: "BoardTask", params: { id: route.params.id } })
         Store.errorUpdateTask = true
@@ -65,7 +87,6 @@ async function fetchData() {
     if (result.status === 401) {
         router.push({ name: "login" })
         Store.errorToken = true
-
     } else {
         statusObject = Store.statuses.find(
             (status) => status.name === result.statusName
@@ -76,9 +97,13 @@ async function fetchData() {
         createTimeInBrowserTimezone = convertToBrowserTimezone(result.createdOn)
         updateTimeInBrowserTimezone = convertToBrowserTimezone(result.updatedOn)
     }
+    // } else {
+    //     router.push({ name: "notFound" })
+    // }
 }
 
 async function updateTask() {
+    
     if (!validateTask(taskData.value)) {
         return
     }
@@ -90,15 +115,32 @@ async function updateTask() {
         `boards/${route.params.id}/tasks/${route.params.taskId}`,
         taskData.value
     )
-    console.log(result)
-    if (result.status === 401) {
-        router.push({ name: "login" })
+    
+if (checkOwner() && checkAuthToken()) {
+    if(result.status === 401){
+        router.push({name: 'login'})
         Store.errorToken = true
-    } else {
+    }
+     else {
         // TaskID.value = result.id
         Store.successUpdateTask = true
         addToStore()
     }
+} else{
+
+    if (result.status === 403) {
+        Store.errorPage403 = true
+        errorPermition()
+    }
+    if (result.status === 401) {
+        Store.errorPage401 = true
+        errorPermition()
+    } else{
+        Store.errorPage403 = true
+        errorPermition()
+    }
+    // errorPermition()
+}
 }
 
 function addToStore() {
@@ -128,22 +170,57 @@ function closeModal() {
     router.push({ name: "BoardTask", params: { id: route.params.id } })
 }
 
-function checkTokenLogin() {
-    TokenLogin.value = getAuthToken()
+// function checkTokenLogin() {
+//     TokenLogin.value = getAuthToken()
+// }
+
+function checkUserPermition() {
+    console.log(checkAuthToken())
+    if (checkAuthToken() === false) {
+        errorPermition()
+    } else {
+    }
 }
 
+function errorPermition() {
+    router.push({ name: "notFound" })
+}
+function checkrequestNewToken() {
+  if (checkAuthToken()) {
+    if (checkExpAuthToken() && checkAuthToken()) {
+        console.log(checkAuthRefreshToken(), checkExpAuthToken())
+      if (!checkAuthRefreshToken()) {
+        
+        console.log("Token ยังใช้งานต่อไม่ได้")
+        router.push({ name: "login" })
+      } else {
+        requestNewToken()
+        // setTimeout(() => {
+        //   checkrequestNewToken()
+        // }, 1000)
+      }
+    } else {
+      console.log("Token ใช้งานต่อได้")
+    }
+  } else {
+    console.log("User Not Login")
+  }
+}
 watch(
     boardId,
     async (newBoardId) => {
         if (newBoardId) {
             await fetchData()
-            checkTokenLogin()
+            // checkTokenLogin()
         }
     },
     { immediate: true }
 )
 
-onMounted(fetchData)
+onMounted(() => {
+    checkrequestNewToken()
+    fetchData()
+})
 
 onUpdated(() => {
     if (
@@ -169,8 +246,8 @@ onUpdated(() => {
         <div
             class="fixed bg-white w-[55%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
             :class="{
-                                'itbkk-modal-task itbkk-item': route.params.taskId,
-                            }"
+                'itbkk-modal-task itbkk-item': route.params.taskId,
+            }"
         >
             <div class="rounded-2xl">
                 <h1 class="w-[79%]">
@@ -182,9 +259,7 @@ onUpdated(() => {
                 <p class="border-b mt-2"></p>
             </div>
 
-            <div class="flex mt-3 mb-20 ml-7"
-        
-            >
+            <div class="flex mt-3 mb-20 ml-7">
                 <div class="w-1/2">
                     <p class="font-bold">Title</p>
                     <textarea
@@ -194,8 +269,7 @@ onUpdated(() => {
                         class="itbkk-title text-black w-[90%] h-auto resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3 border-2 overflow-hidden hover:overflow-y-scroll"
                     >
                         {{ taskData.title }}  
-                    </textarea
-                    >
+                    </textarea>
                     <p class="flex justify-end pr-14 text-[10px]">
                         {{ taskData.title.length }}/100
                     </p>
@@ -211,7 +285,11 @@ onUpdated(() => {
                                 : 'No Description Provided'
                         "
                     >
-                        {{ taskData.description === null ? "No Description Provided" : taskData.description }}
+                        {{
+                            taskData.description === null
+                                ? "No Description Provided"
+                                : taskData.description
+                        }}
           </textarea
                     >
                     <p class="flex justify-end pr-14 text-[10px]">
@@ -244,18 +322,19 @@ onUpdated(() => {
                     </p>
 
                     <div class="font-bold">Status</div>
-                    
-                        <select class="itbkk-status w-[30%] z-40 h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
-                            v-model="taskData.status"
+
+                    <select
+                        class="itbkk-status w-[30%] z-40 h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
+                        v-model="taskData.status"
+                    >
+                        <option
+                            v-for="(status, index) in Store.statuses"
+                            :key="index"
+                            :value="status.statusId"
                         >
-                            <option
-                                v-for="(status, index) in Store.statuses"
-                                :key="index"
-                                :value="status.statusId"
-                            >
-                                {{ status.name }}
-                            </option>
-                        </select>
+                            {{ status.name }}
+                        </option>
+                    </select>
 
                     <div class="font-bold pt-1">TimeZone</div>
                     <p
@@ -285,38 +364,30 @@ onUpdated(() => {
                 >
                     Close
                 </button>
-
-                <!-- <button
-    type="submit"
-    class="itbkk-button-confirm button buttonOK"
-    :disabled="!isEdited || !TokenLogin"
-    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin}"
-    :data-tip="TokenLogin ? '' : 'You do not have permission to use this feature.'"
-    @click="TokenLogin ? updateTask(route.params.id, {
-        title: taskData.title,
-        description: taskData.description,
-        assignees: taskData.assignees,
-        status: taskData.status,
-    }) : null"
->
-    Update
-</button> -->
                 <button
-    type="submit"
-    class="itbkk-button-confirm button buttonOK"
-    :disabled="!isEdited || !TokenLogin"
-    :class="{ 'cursor-not-allowed tooltip tooltip-left': !TokenLogin}"
-    :data-tip="!TokenLogin ? 'You do not have permission to use this feature.' : ''"
-    @click="TokenLogin ? updateTask(route.params.id, {
-        title: taskData.title,
-        description: taskData.description,
-        assignees: taskData.assignees,
-        status: taskData.status,
-    }) : null"
->
-    Update
-</button>
-
+                    type="submit"
+                    class="itbkk-button-confirm button buttonOK tooltip "
+                    :disabled="!isEdited"
+                    :class="{
+                        'tooltip-left': !checkAuthToken(),
+                    }"
+                    :data-tip="
+                        checkAuthToken() && checkOwner()
+                            ? 'Update Task Data.'
+                            : 'You do not have permission to use this feature.'
+                    "
+                    @click="
+                        updateTask(route.params.id, {
+                                  title: taskData.title,
+                                  description: taskData.description,
+                                  assignees: taskData.assignees,
+                                  status: taskData.status,
+                              })
+                            
+                    "
+                >
+                    Update
+                </button>
             </div>
         </div>
     </div>
@@ -368,12 +439,10 @@ onUpdated(() => {
 
 /* เมื่อปุ่มถูก disabled */
 .buttonOK:disabled {
-    
     background-color: grey;
     color: white;
     border: 2px solid grey;
 }
-
 
 .box {
     margin-right: auto;

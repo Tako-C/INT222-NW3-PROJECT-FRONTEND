@@ -9,7 +9,7 @@ const props = defineProps({
 })
 
 const statusData = ref([])
-const transferStatus = ref(null)
+const transferStatus = ref("No Status")
 
 watchEffect(() => {
   statusData.value = [...Store.statuses]
