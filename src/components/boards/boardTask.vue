@@ -403,7 +403,7 @@ function errorPermition() {
 //     TokenLogin.value = getAuthToken()
 // }
 function checkOwner() {
-    let userInboard = ''
+    let userInboard = null
     let boardFound = false
     
     for (const board of Store.boards) {
@@ -418,13 +418,19 @@ function checkOwner() {
     // console.log(Store.boards)
     // console.log(boardFound , checkAuthToken());
     
-    if (getAuthToken() && !boardFound ) {
+    // if (getAuthToken() && !boardFound) {
+    //     Store.errorPage403 = true;
+    //     router.push({ name: "notFound" })
+    //     console.log('boardFound :' ,boardFound , 'userInboard :' ,userInboard, 'userLogin :',userLogin ,checkUserInAuthToken(userInboard,userLogin));
+    // }
+    // if (getAuthToken() && !boardFound && checkUserInAuthToken(userInboard,userLogin)) {
        
-       Store.errorPrivate404 = true
-       Store.errorPrivate404Content ='Board'
-       router.push({ name: "Board" })             
+    //    Store.errorPrivate404 = true
+    //    Store.errorPrivate404Content ='Board'
+    //    router.push({ name: "Board" })             
        
-   } if (!getAuthToken() && !boardFound) {
+//    } 
+   if (!getAuthToken() && !boardFound) {
        router.push({ name: "notFound" })
    }
     
