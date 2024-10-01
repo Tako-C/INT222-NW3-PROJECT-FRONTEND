@@ -40,23 +40,26 @@ let visibilityBoard = ref({})
 let userLogin = Cookies.get("oid")
 let resultPrivatTest = ref({})
 function getImageUrl(index) {
-    //   return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
-    return `/images/bg-theme-${(index % 5) + 1}.jpg`
+       return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
+   // return `/images/bg-theme-${(index % 5) + 1}.jpg`
 }
 
 function checkFirstBoard() {
-    // let boardFirst = null
+    // let boardFirst = []
     // for (const board of resultPrivatTest.value) {
-    //     if (board.owner.oid === userLogin) {
+    //     if (board.owner.oid == userLogin) {
+    //         console.log(board.owner.oid ,userLogin)
     //         console.log(board)
-    //         boardFirst = board
+    //         boardFirst.push({...board})
+            
+    //     } else{
+
     //     }
     // }
-    // console.log(boardFirst);
-    
-    // if (boardFirst) {
-    //     console.log(boardFirst.boardId)
-    //     openBoardTaskModal(boardFirst.boardId)
+    // console.log(boardFirst.length);
+    // if (boardFirst.length === 1) {
+    //     console.log(boardFirst[0].boardId)
+    //     openBoardTaskModal(boardFirst[0].boardId)
     // }
     // else{
     //     console.log("Not have board")

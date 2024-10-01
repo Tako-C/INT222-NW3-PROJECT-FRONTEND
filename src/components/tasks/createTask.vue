@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from "vue"
-import { addData, getTaskByBoard } from "@/libs/fetchs.js"
+import { addData, getTaskByBoard,getBoard } from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { validateTask } from "@/libs/varidateTask.js"
@@ -16,11 +16,31 @@ const DefualtStatus = ref()
 let TokenLogin = ref(false)
 let userLogin = Cookies.get("oid")
 
-function checkTokenLogin() {
-    TokenLogin.value = getAuthToken()
+async function fetchCheckBoardId() {
+    let result = await getBoard(`boards/${route.params.id}`);
+ if (checkAuthToken()) {
+    if (result.status === 404) {
+        Store.errorPage404 = true;
+        Store.errorPrivate404Content = 'Board';
+        router.push({ name: "board", params: { id: route.params.id } });
+    } else if (result.status === 403) {
+        Store.errorPage403 = true;
+        router.push({ name: "notFound" });
+    } else if (result.status === 401) {
+        router.push({ name: "login" });
+        Store.errorToken = true;
+    }
+ } else {
+    Store.errorPage401 = true;
+    router.push({ name: "notFound" });
+ }
+    
 }
+
+
 function checkrequestNewToken() {
   if (checkAuthToken()) {
+    fetchCheckBoardId()
     if (checkExpAuthToken() && checkAuthToken()) {
         console.log(checkAuthRefreshToken(), checkExpAuthToken())
       if (!checkAuthRefreshToken()) {
@@ -33,7 +53,8 @@ function checkrequestNewToken() {
         //   checkrequestNewToken()
         // }, 1000)
       }
-    } else {
+    } 
+    else {
       console.log("Token ใช้งานต่อได้")
     }
   } else {
@@ -54,7 +75,6 @@ function checkrequestNewToken() {
 
 onMounted(() => {
     checkrequestNewToken()
-
 })
 
 async function setDefualtStatus() {
