@@ -16,9 +16,7 @@ import {
     getAuthToken,
     checkAuthToken,
     checkUserInAuthToken,
-    checkAuthRefreshToken,
-    requestNewToken,
-    checkExpAuthToken
+    checkrequestNewToken
 } from "@/libs/authToken.js"
 
 const Store = useStore()
@@ -384,33 +382,12 @@ function checkVariable() {
     return false
 }
 
-function checkrequestNewToken() {
-  if (checkAuthToken()) {
-    if (checkExpAuthToken() && checkAuthToken()) {
-        console.log(checkAuthRefreshToken(), checkExpAuthToken())
-      if (!checkAuthRefreshToken()) {
-        
-        console.log("Token ยังใช้งานต่อไม่ได้")
-        router.push({ name: "login" })
-      } else {
-        requestNewToken()
-        // setTimeout(() => {
-        //   checkrequestNewToken()
-        // }, 1000)
-      }
-    } else {
-      console.log("Token ใช้งานต่อได้")
-    }
-  } else {
-    console.log("User Not Login")
-  }
-}
 
 // Fetch data when the component is first mounted
 onMounted(() => {
     fetchData()
     getBoardName()
-    checkrequestNewToken()
+    checkrequestNewToken(router)
 })
 
 // Fetch data every time the route changes (but the same component remains active)

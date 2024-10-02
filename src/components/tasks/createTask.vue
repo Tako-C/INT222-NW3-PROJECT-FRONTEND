@@ -4,7 +4,7 @@ import { addData, getTaskByBoard,getBoard } from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { validateTask } from "@/libs/varidateTask.js"
-import { checkAuthToken,requestNewToken,checkAuthRefreshToken,checkExpAuthToken, checkUserInAuthToken } from '@/libs/authToken.js'
+import { checkAuthToken, checkUserInAuthToken,checkrequestNewToken } from '@/libs/authToken.js'
 import Cookies from "js-cookie"
 
 const router = useRouter()
@@ -38,30 +38,6 @@ async function fetchCheckBoardId() {
 }
 
 
-function checkrequestNewToken() {
-  if (checkAuthToken()) {
-    fetchCheckBoardId()
-    if (checkExpAuthToken() && checkAuthToken()) {
-        console.log(checkAuthRefreshToken(), checkExpAuthToken())
-      if (!checkAuthRefreshToken()) {
-        
-        console.log("Token ยังใช้งานต่อไม่ได้")
-        router.push({ name: "login" })
-      } else {
-        requestNewToken()
-        // setTimeout(() => {
-        //   checkrequestNewToken()
-        // }, 1000)
-      }
-    } 
-    else {
-      console.log("Token ใช้งานต่อได้")
-    }
-  } else {
-    console.log("User Not Login")
-  }
-}
-
 // watch(
 //     boardId,
 //     async (newloadpage) => {
@@ -74,7 +50,7 @@ function checkrequestNewToken() {
 // )
 
 onMounted(() => {
-    checkrequestNewToken()
+    checkrequestNewToken(router)
 })
 
 async function setDefualtStatus() {

@@ -9,13 +9,11 @@ import {
     getAllBoard,
     getAllBoardByPublic,
 } from "@/libs/fetchs.js"
+
 import {
-    checkhaveToken,
     checkUserInAuthToken,
     checkAuthToken,
-    checkExpAuthToken,
-    checkAuthRefreshToken,
-    requestNewToken
+    checkrequestNewToken
 } from "@/libs/authToken.js"
 
 import Cookies from "js-cookie"
@@ -40,8 +38,8 @@ let visibilityBoard = ref({})
 let userLogin = Cookies.get("oid")
 let resultPrivatTest = ref({})
 function getImageUrl(index) {
-       return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
-   // return `/images/bg-theme-${(index % 5) + 1}.jpg`
+       //return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
+    return `/images/bg-theme-${(index % 5) + 1}.jpg`
 }
 
 function checkFirstBoard() {
@@ -64,34 +62,6 @@ function checkFirstBoard() {
     // else{
     //     console.log("Not have board")
     // }
-}
-
-// function checkTokenLogin() {
-//   TokenLogin.value = getAuthToken()
-// }
-
-// function check() {
-//     if () {
-//         console.log(checkAuthRefreshToken_And_checkAuthToken())
-
-//         router.push({ name: "login" })
-//     }
-// }
-
-function checkrequestNewToken() {
-  if (checkAuthToken()) {
-    if (checkExpAuthToken()) {
-        if (checkAuthRefreshToken()) {
-            requestNewToken()
-        } else {
-          router.push({ name: "login" })
-        }
-    } else {
-      console.log("Token ยังใช้งานต่อได้");
-    }
-  } else {
-    console.log("Not Login");
-  }
 }
 
 async function fetchData() {
@@ -165,9 +135,7 @@ function errorPermition() {
 }
 
 async function updateVisibility() {
-    checkrequestNewToken()
-    
-
+    checkrequestNewToken(router)
     if (visibilityBoard.value.isCheck === true) {
         visibilityBoard.value.visibility = "public"
     } else {
@@ -255,7 +223,7 @@ function checkVariable() {
 }
 
 onMounted(() => {
-    checkrequestNewToken()
+    checkrequestNewToken(router)
     fetchData()
     // checkFirstBoard()
 

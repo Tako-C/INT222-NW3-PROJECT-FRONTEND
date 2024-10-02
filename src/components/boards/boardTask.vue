@@ -6,7 +6,7 @@ import { getBoard, getTaskByBoard, removeData,updateBoard } from "@/libs/fetchs.
 import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalconfirmed from "@/components/modals/modalConfirmed.vue"
-import { getAuthToken,checkUserInAuthToken, checkAuthToken,requestNewToken,checkAuthRefreshToken,checkExpAuthToken } from '@/libs/authToken.js'
+import { getAuthToken,checkUserInAuthToken,checkAuthToken,checkrequestNewToken } from '@/libs/authToken.js'
 
 const Store = useStore()
 const router = useRouter()
@@ -56,28 +56,6 @@ watch(
     
 // }
 
-function checkrequestNewToken() {
-  if (checkAuthToken()) {
-    if (checkExpAuthToken() && checkAuthToken()) {
-        console.log(checkAuthRefreshToken(), checkExpAuthToken())
-      if (!checkAuthRefreshToken()) {
-        
-        console.log("Token ยังใช้งานต่อไม่ได้")
-        router.push({ name: "login" })
-      } else {
-        requestNewToken()
-        // setTimeout(() => {
-        //   checkrequestNewToken()
-        // }, 1000)
-      }
-    } else {
-      console.log("Token ใช้งานต่อได้")
-    }
-  } else {
-    console.log("User Not Login")
-  }
-}
-
 // ต้องทำเพราะ cypress  ====================================================================================================
 let boardnow = ref({})
 function loopBoardVisibility() {
@@ -105,9 +83,7 @@ function openConfirmVisibilitymodal() {
 }
 
 async function updateVisibility() {
-    checkrequestNewToken()
-    
-
+    checkrequestNewToken(router)
     if (visibilityBoard.value.isCheck === true) {
         visibilityBoard.value.visibility = "public"
     } else {
@@ -437,7 +413,7 @@ function checkOwner() {
     return checkUserInAuthToken(userInboard,userLogin)
 }
 onMounted(() => {
-    checkrequestNewToken()
+    checkrequestNewToken(router)
     fetchData()
     getBoardName()
 })

@@ -4,7 +4,7 @@ import { addBoard } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
 import Cookies from "js-cookie";
-import { checkAuthToken,requestNewToken,checkAuthRefreshToken,checkExpAuthToken } from '@/libs/authToken.js'
+import { checkAuthToken,checkrequestNewToken } from '@/libs/authToken.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -17,27 +17,6 @@ let userLogin = Cookies.get("name")
 //     TokenLogin.value = getAuthToken()
 // }
 
-function checkrequestNewToken() {
-  if (checkAuthToken()) {
-    if (checkExpAuthToken() && checkAuthToken()) {
-        console.log(checkAuthRefreshToken(), checkExpAuthToken())
-      if (!checkAuthRefreshToken()) {
-        
-        console.log("Token ยังใช้งานต่อไม่ได้")
-        router.push({ name: "login" })
-      } else {
-        requestNewToken()
-        // setTimeout(() => {
-        //   checkrequestNewToken()
-        // }, 1000)
-      }
-    } else {
-      console.log("Token ใช้งานต่อได้")
-    }
-  } else {
-    console.log("User Not Login")
-  }
-}
 
 // watch(
 //     boardId,
@@ -109,7 +88,7 @@ function clearData() {
     }
 }
 onMounted(() => {
-    checkrequestNewToken()
+    checkrequestNewToken(router)
 
 })
 
