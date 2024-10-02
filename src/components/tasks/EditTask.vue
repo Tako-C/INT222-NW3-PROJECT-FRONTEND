@@ -4,7 +4,7 @@ import { getBoard, editDatas } from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { validateTask } from "@/libs/varidateTask.js"
-import { requestNewToken,checkAuthRefreshToken,checkExpAuthToken,checkAuthToken,checkUserInAuthToken } from "@/libs/authToken.js"
+import { checkrequestNewToken,checkAuthToken,checkUserInAuthToken } from "@/libs/authToken.js"
 import Cookies from "js-cookie";
 
 let createTimeInBrowserTimezone = ref(null)
@@ -15,7 +15,6 @@ const router = useRouter()
 const Store = useStore()
 const isEdited = ref(false)
 const DefualtStatus = 3
-let TokenLogin = ref(false)
 const boardId = ref(route.params.id)
 let statusObject = ref()
 let userLogin = Cookies.get("oid")
@@ -185,27 +184,7 @@ function checkUserPermition() {
 function errorPermition() {
     router.push({ name: "notFound" })
 }
-function checkrequestNewToken() {
-  if (checkAuthToken()) {
-    if (checkExpAuthToken() && checkAuthToken()) {
-        console.log(checkAuthRefreshToken(), checkExpAuthToken())
-      if (!checkAuthRefreshToken()) {
-        
-        console.log("Token ยังใช้งานต่อไม่ได้")
-        router.push({ name: "login" })
-      } else {
-        requestNewToken()
-        // setTimeout(() => {
-        //   checkrequestNewToken()
-        // }, 1000)
-      }
-    } else {
-      console.log("Token ใช้งานต่อได้")
-    }
-  } else {
-    console.log("User Not Login")
-  }
-}
+
 watch(
     boardId,
     async (newBoardId) => {
@@ -218,7 +197,7 @@ watch(
 )
 
 onMounted(() => {
-    checkrequestNewToken()
+    checkrequestNewToken(router)
     fetchData()
 })
 

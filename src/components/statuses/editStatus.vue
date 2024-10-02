@@ -7,9 +7,7 @@ import {
     getAuthToken,
     checkAuthToken,
     checkUserInAuthToken,
-    checkAuthRefreshToken,
-    requestNewToken,
-    checkExpAuthToken
+    checkrequestNewToken
 } from "@/libs/authToken.js"
 import Cookies from "js-cookie"
 
@@ -51,27 +49,7 @@ watch(
     { immediate: true }
 )
 
-function checkrequestNewToken() {
-  if (checkAuthToken()) {
-    if (checkExpAuthToken() && checkAuthToken()) {
-        console.log(checkAuthRefreshToken(), checkExpAuthToken())
-      if (!checkAuthRefreshToken()) {
-        
-        console.log("Token ยังใช้งานต่อไม่ได้")
-        router.push({ name: "login" })
-      } else {
-        requestNewToken()
-        // setTimeout(() => {
-        //   checkrequestNewToken()
-        // }, 1000)
-      }
-    } else {
-      console.log("Token ใช้งานต่อได้")
-    }
-  } else {
-    console.log("User Not Login")
-  }
-}
+
 // if (route.params.id == 1) {
 //   window.alert('You can not edit this Status.')
 //   router.push({ name: 'StatusTable' })
@@ -233,7 +211,7 @@ function errorPermition() {
 }
 
 
-onMounted(fetchData, checkrequestNewToken())
+onMounted(fetchData, checkrequestNewToken(router))
 
 onUpdated(() => {
     if (

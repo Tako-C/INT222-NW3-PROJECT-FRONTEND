@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 import { getBoard } from "@/libs/fetchs.js";
 import { useStore } from "@/stores/store.js";
 import { useRoute, useRouter } from "vue-router";
-import { checkAuthToken, requestNewToken, checkAuthRefreshToken, checkExpAuthToken } from '@/libs/authToken.js';
+import { checkrequestNewToken } from '@/libs/authToken.js';
 
 let boardData = ref({});
 let createTimeInBrowserTimezone = ref(null);
@@ -27,18 +27,6 @@ const options = {
 function convertToBrowserTimezone(utcTime) {
     let date = new Date(utcTime);
     return date.toLocaleString("en-AU", options);
-}
-
-function checkrequestNewToken() {
-    if (checkAuthToken()) {
-        if (checkExpAuthToken() && checkAuthToken()) {
-            if (!checkAuthRefreshToken()) {
-                router.push({ name: "login" });
-            } else {
-                requestNewToken();
-            }
-        }
-    } 
 }
 
 async function fetchData() {
@@ -77,7 +65,7 @@ function taskQuantity(dataList) {
 }
 
 onMounted(() => {
-    checkrequestNewToken();
+    checkrequestNewToken(router);
     fetchData();
 });
 </script>

@@ -6,9 +6,7 @@ import { useStore } from '@/stores/store.js'
 import {
     checkAuthToken,
     checkUserInAuthToken,
-    checkAuthRefreshToken,
-    requestNewToken,
-    checkExpAuthToken
+    checkrequestNewToken
 } from "@/libs/authToken.js"
 import Cookies from "js-cookie"
 
@@ -17,11 +15,8 @@ const route = useRoute()
 const Store = useStore()
 const statusID = ref(0)
 const boardId = ref(route.params.id)
-let TokenLogin = ref(false)
 let userLogin = Cookies.get("oid")
-// function checkTokenLogin() {
-//     TokenLogin.value = getAuthToken()
-// }
+
 
 watch(
     boardId,
@@ -33,34 +28,11 @@ watch(
     { immediate: true }
 )
 
-function checkrequestNewToken() {
-  if (checkAuthToken()) {
-    if (checkExpAuthToken() && checkAuthToken()) {
-        console.log(checkAuthRefreshToken(), checkExpAuthToken())
-      if (!checkAuthRefreshToken()) {
-        
-        console.log("Token ยังใช้งานต่อไม่ได้")
-        router.push({ name: "login" })
-      } else {
-        requestNewToken()
-        // setTimeout(() => {
-        //   checkrequestNewToken()
-        // }, 1000)
-      }
-    } else {
-      console.log("Token ใช้งานต่อได้")
-    }
-  } else {
-    console.log("User Not Login")
-  }
-}
 
 // Fetch data when the component is first mounted
 onMounted(() => {
-    checkrequestNewToken()
+    checkrequestNewToken(router)
 })
-
-
 
 
 let statusData = ref({
