@@ -16,7 +16,7 @@ import {
     getAuthToken,
     checkAuthToken,
     checkUserInAuthToken,
-    checkrequestNewToken
+    checkrequestNewToken,
 } from "@/libs/authToken.js"
 
 const Store = useStore()
@@ -34,13 +34,14 @@ const openConfirmed = ref(false)
 const transferModal = ref(false)
 const errorDeleteStatus = ref(false)
 const successDeleteStatus = ref(false)
-let TokenLogin = ref(false)
 let userLogin = Cookies.get("oid")
 
 const isBoardPage = computed(() => route.path.endsWith(`/board`))
 const isStatusPage = computed(() =>
     route.path.includes(`/board/${boardId.value}/status`)
 )
+
+const resultAllBoardCollab = ref(null)
 
 // function checkTokenLogin() {
 //     TokenLogin.value = getAuthToken()
@@ -83,22 +84,51 @@ watch(
 function checkOwner() {
     let userInboard = ""
     let boardFound = false
+    // for (const board of Store.boards) {
+    //     if (board.boardId === boardId.value) {
+    //         userInboard = board.owner.oid
+    //         boardFound = true
+    //     }
+    // }
+    
+    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value)
 
-    for (const board of Store.boards) {
-        if (board.boardId === boardId.value) {
-            userInboard = board.owner.oid
-            boardFound = true
+    if (foundBoard) {
+        const userInboard = foundBoard.owner.oid
+        if (getAuthToken() && !foundBoard) {
+            Store.errorPrivate404 = true
+            Store.errorPrivate404Content = "Statuses"
+            router.push({ name: "Board" })
+        }
+        if (!getAuthToken() && !foundBoard) {
+            router.push({ name: "notFound" })
+        }
+        return checkUserInAuthToken(userInboard, userLogin)
+    } else {
+        // ไม่พบบอร์ด
+        if (getAuthToken()) {
+            Store.errorPage403 = true
+            // Store.errorPrivate404 = true
+            // Store.errorPrivate404Content = "Statuses"
+            router.push({ name: "Board" })
+        } else {
+            router.push({ name: "notFound" })
         }
     }
-    if (getAuthToken() && !boardFound) {
-        Store.errorPrivate404 = true
-        Store.errorPrivate404Content = "Statuses"
-        router.push({ name: "Board" })
-    }
-    if (!getAuthToken() && !boardFound) {
-        router.push({ name: "notFound" })
-    }
-    return checkUserInAuthToken(userInboard, userLogin)
+}
+
+function checkPublicCollab(resultAllBoard) {
+    console.log(resultAllBoard)
+
+    // const foundBoardPublic = resultAllBoard.find((board) => board.boardId === boardId.value)
+    // console.log(foundBoardPublic)
+    // console.log(boardId.value)
+    // if (foundBoardPublic != undefined) {
+    //     return true
+    // }
+    // else{
+    //     return false
+    // }
 }
 
 // let isFetchingData = false;
@@ -111,13 +141,43 @@ async function fetchData() {
     let resTasks = await getTaskByBoard(`${boardId.value}/tasks`)
     let resBoards = await getBoard("boards")
 
-    Store.boards = resBoards
+    Store.boards = resBoards.boards
     Store.statuses = resStatus
     Store.tasks = resTasks
-    checkOwner()
-
+    Store.collaborate = resBoards.collaborate
+    console.log(Store.collaborate)
     console.log(Store.boards)
+    // checkOwner()
 
+    console.log(resStatus)
+    // if (resStatus.status === 404) {
+    //     Store.errorPage404 = true
+    //     router.push({name: 'notFound'})
+    // } 
+    switch (resStatus.status) {
+        case 401:
+            router.push({ name: "login" })
+            Store.errorToken = true
+            break
+        case 400:
+            console.log("400 error")
+            errorPermition()
+            break
+        case 404:
+            Store.errortext404 = 'The Status does not exist'
+            Store.errorPage404 = true
+            console.log("404 error")
+            errorPermition()
+            break
+        case 403:
+            Store.errorPage403 = true
+            console.log("403 error")
+            errorPermition()
+            break
+        default:
+            
+            break
+    }
     // if(checkOwner){
     //     // router.push({name: 'login'})
     //     // Store.errorToken = true
@@ -347,7 +407,7 @@ function toggleTaskDropdown() {
 }
 
 function getBoardName() {
-    const board = Store.boards.find((b) => b.boardId === boardId.value)
+    const board = Store.boards.find((b) => b.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value)
     if (board) {
         boardName.value = board.board_name
     }
@@ -374,14 +434,12 @@ function checkVariable() {
         successDeleteStatus.value === true ||
         errorDeleteStatus.value === true ||
         Store.errorDeleteNoStatus == true ||
-        Store.errorEditDefaultStatus == true 
-
+        Store.errorEditDefaultStatus == true
     ) {
         return true
     }
     return false
 }
-
 
 // Fetch data when the component is first mounted
 onMounted(() => {
@@ -787,29 +845,8 @@ onMounted(() => {
                         </p>
                         <div class="flex justify-between">
                             <p>({{ findUsageStatus(status.name) }})</p>
-                            <div class="itbkk-button-delete tooltip tooltip-top"
-                            :class="{
-                                    'cursor-not-allowed':
-                                        !checkAuthToken() || !checkOwner(),
-                                    'cursor-pointer':
-                                        checkAuthToken() && checkOwner(),
-                                }"
-                                :disabled="!checkAuthToken()"
-                                :data-tip="checkAuthToken() && checkOwner() ? 'Delete your status.' : 'You do not have permission to use this feature.'"   
-                            >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                @click="
-                                    openConfirmModal(
-                                        status.statusId,
-                                        status.name
-                                    )
-                                "
-                                class="size-6 text-red-500"
+                            <div
+                                class="itbkk-button-delete tooltip tooltip-top"
                                 :class="{
                                     'cursor-not-allowed':
                                         !checkAuthToken() || !checkOwner(),
@@ -817,14 +854,40 @@ onMounted(() => {
                                         checkAuthToken() && checkOwner(),
                                 }"
                                 :disabled="!checkAuthToken()"
+                                :data-tip="
+                                    checkAuthToken() && checkOwner()
+                                        ? 'Delete your status.'
+                                        : 'You do not have permission to use this feature.'
+                                "
                             >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                                />
-                            </svg>
-                        </div>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                    @click="
+                                        openConfirmModal(
+                                            status.statusId,
+                                            status.name
+                                        )
+                                    "
+                                    class="size-6 text-red-500"
+                                    :class="{
+                                        'cursor-not-allowed':
+                                            !checkAuthToken() || !checkOwner(),
+                                        'cursor-pointer':
+                                            checkAuthToken() && checkOwner(),
+                                    }"
+                                    :disabled="!checkAuthToken()"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                    />
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>

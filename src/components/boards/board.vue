@@ -13,7 +13,7 @@ import {
 import {
     checkUserInAuthToken,
     checkAuthToken,
-    checkrequestNewToken
+    checkrequestNewToken,
 } from "@/libs/authToken.js"
 
 import Cookies from "js-cookie"
@@ -23,7 +23,6 @@ import modalNotification from "@/components/modals/modalNotification.vue"
 const Store = useStore()
 const router = useRouter()
 const route = useRoute()
-
 // checkLoginUser
 const loadpage = ref(route.params)
 // let TokenLogin = ref(false)
@@ -38,8 +37,9 @@ let visibilityBoard = ref({})
 let userLogin = Cookies.get("oid")
 let resultPrivatTest = ref({})
 function getImageUrl(index) {
-       //return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
-    return `/images/bg-theme-${(index % 5) + 1}.jpg`
+    //return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
+    // return `/images/bg-theme-${(index % 5) + 1}.jpg`
+    return `/images/${(index % 5) + 1}.png`
 }
 
 function checkFirstBoard() {
@@ -49,9 +49,7 @@ function checkFirstBoard() {
     //         console.log(board.owner.oid ,userLogin)
     //         console.log(board)
     //         boardFirst.push({...board})
-            
     //     } else{
-
     //     }
     // }
     // console.log(boardFirst.length);
@@ -67,12 +65,26 @@ function checkFirstBoard() {
 async function fetchData() {
     let endpoint = "boards"
     let finalResult = []
+    let resultCollab = {}
+    let resultPrivate = {}
+    let resultPublic = {}
+    let resultPublicRaw = []
 
+    
     if (checkAuthToken()) {
-        let resultPrivate = await getAllBoard(endpoint)
-        let resultPublic = await getAllBoardByPublic(endpoint)
+        let resultPrivateRaw = await getAllBoard(endpoint)
+        let resultPublicRaw = await getAllBoardByPublic(endpoint)
+        console.log(resultPrivateRaw)
 
-        // จำเป็น     
+        resultCollab = resultPrivateRaw.collaborate
+        resultPrivate = resultPrivateRaw.boards
+        resultPublic = resultPublicRaw.boards
+
+        // console.log(resultPrivate)
+        // console.log(resultCollab)
+        // console.log(resultPublicRaw)
+
+        // จำเป็น
         resultPrivatTest.value = resultPrivate
         //
 
@@ -82,23 +94,28 @@ async function fetchData() {
                     publicBoard.owner.oid !== privateBoard.owner.oid
             )
             finalResult = [...resultPrivate, ...resultPublic]
+            console.log(finalResult)
         })
     } else {
-        finalResult = await getAllBoard(endpoint)
+        resultPublicRaw = await getAllBoard(endpoint)
+        finalResult = resultPublicRaw.boards
         console.log(finalResult)
     }
 
     Store.boards = finalResult
+    Store.collaborate = resultCollab
+    // console.log(Store.collaborate)
 
     for (const board of Store.boards) {
-        if (board.visibility == "public") {
+        if (board.visibility === "public") {
             board.isCheck = true
         } else {
             board.isCheck = false
         }
     }
     checkFirstBoard()
-
+    console.log(Store.boards);
+    
 }
 
 function openBoardTaskModal(boardId) {
@@ -135,8 +152,10 @@ function errorPermition() {
 }
 
 async function updateVisibility() {
+    
     checkrequestNewToken(router)
-    if (visibilityBoard.value.isCheck === true) {
+
+    if (visibilityBoard.value.isCheck == true) {
         visibilityBoard.value.visibility = "public"
     } else {
         visibilityBoard.value.visibility = "private"
@@ -145,7 +164,8 @@ async function updateVisibility() {
     let result = await updateBoard(`boards/${visibilityBoard.value.boardId}`, {
         visibility: visibilityBoard.value.visibility,
     })
-
+    console.log(visibilityBoard.value)
+    
     if (
         checkAuthToken() &&
         checkUserInAuthToken(visibilityBoard.value.owner.oid, userLogin)
@@ -185,9 +205,12 @@ async function changeVisibility() {
 }
 
 function openConfirmModal(board) {
-    if (checkAuthToken) {
-        openConfirmed.value = true
+    if (checkAuthToken() && checkUserInAuthToken(board.owner.oid, userLogin)) {    
         visibilityBoard.value = board
+        console.log(visibilityBoard.value.isCheck);
+        openConfirmed.value = true
+        // openConfirmed.value = true
+        
     } else {
         errorPermition()
     }
@@ -226,14 +249,13 @@ onMounted(() => {
     checkrequestNewToken(router)
     fetchData()
     // checkFirstBoard()
-
 })
-
 watch(
     loadpage,
     async (newloadpage) => {
         if (newloadpage) {
             // checkAuthToken()
+            
         }
     },
     { immediate: true }
@@ -471,7 +493,7 @@ watch(
         </header>
 
         <!-- Table สำหรับแสดงข้อมูลของ board -->
-        <main class="w-full h-full overflow-y-scroll">
+        <main class="w-full h-screen overflow-y-auto flex flex-col">
             <div class="flex justify-between text-white">
                 <h1 class="text-3xl font-bold text-black ml-10 mt-10">
                     {{
@@ -488,7 +510,7 @@ watch(
                             : 'You do not have permission to use this feature.'
                     "
                     :disabled="!checkAuthToken()"
-                    @click=" openCreateBoard()"
+                    @click="openCreateBoard()"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -505,73 +527,118 @@ watch(
                         />
                     </svg>
                     <p class="pl-2">Create Board</p>
-                    {{ visibilityBoard.value }}
+                    <!-- {{ visibilityBoard.value }} -->
                 </button>
             </div>
 
-            <div class="h-screen p-8">
-                <div class="flex flex-wrap gap-4">
-                    <div
-                        v-for="(board, index) in Store.boards"
-                        :key="index"
-                        class="bg-white rounded-lg shadow p-6 w-10 md:w-1/5 lg:w-1/5 flex flex-col"
-                    >
-                        {{ board.board }}
-                        <div class="mb-4">
-                            <img
-                                :src="getImageUrl(index)"
-                                alt="bg-board"
-                                class="w-full h-full object-cover rounded-2xl"
-                            />
-                        </div>
-                        <h3 class="text-lg font-bold mb-2">
-                            {{ board.board_name }}
-                        </h3>
-                        <div class="flex justify-around">
-                            <button
-                                class="bg-green-500 border text-xs border-slate-400 p-1 rounded-md"
-                                @click="openBoardDetailModal(board.boardId)"
-                            >
-                                Board Detail
-                            </button>
-                            <button
-                                class="bg-green-500 border text-xs border-slate-400 p-1 rounded-md"
-                                @click="openBoardTaskModal(board.boardId)"
-                            >
-                                Board Tasks
-                            </button>
-                        </div>
-                        <div>
-                            <p>{{ board.visibility }}</p>
-                        </div>
-                        <div class="itbkk-board-visibility">
-                            <input
-                                type="checkbox"
-                                class=" toggle tooltip tooltip-right"
-                                :class="{
-                                    'cursor-not-allowed ':
-                                        !checkAuthToken() ||
-                                        !checkUserInAuthToken(
+            <div class="flex-grow p-8 overflow-y-auto">
+                <!-- Personal boards -->
+                <div class="overflow-x-auto flex-grow p-4 border mb-8">
+                    <div class="flex gap-4 flex-nowwrap">
+                        <!-- เพิ่ม flex-wrap และ justify-center -->
+                        <div
+                            v-for="(board, index) in Store.boards"
+                            :key="index"
+                            class="bg-white rounded-lg shadow p-6 min-w-[250px] max-w-[250px] flex flex-col"
+                        >
+                            {{ board.board }}
+                            <div class="mb-4">
+                                <img
+                                    :src="getImageUrl(index)"
+                                    alt="bg-board"
+                                    class="w-full h-full object-cover rounded-2xl"
+                                />
+                            </div>
+                            <h3 class="text-lg font-bold mb-2">
+                                {{ board.board_name }}
+                            </h3>
+                            <div class="flex justify-around">
+                                <button
+                                    class="bg-green-500 border text-xs border-slate-400 p-1 rounded-md"
+                                    @click="openBoardDetailModal(board.boardId)"
+                                >
+                                    Board Detail
+                                </button>
+                                <button
+                                    class="bg-green-500 border text-xs border-slate-400 p-1 rounded-md"
+                                    @click="openBoardTaskModal(board.boardId)"
+                                >
+                                    Board Tasks
+                                </button>
+                            </div>
+                            <div>
+                                <p>{{ board.visibility }}</p>
+                            </div>
+                            <div class="itbkk-board-visibility">
+                                <input
+                                    type="checkbox"
+                                    class="toggle tooltip tooltip-right"
+                                
+                                    :class="{
+                                        'cursor-not-allowed ':
+                                            !checkAuthToken() ||
+                                            !checkUserInAuthToken(
+                                                board.owner.oid,
+                                                userLogin
+                                            ),
+                                    }"
+                                    :data-tip="
+                                        checkAuthToken() &&
+                                        checkUserInAuthToken(
                                             board.owner.oid,
                                             userLogin
-                                        ),
-                                }"
-                                :data-tip="
-                                    checkAuthToken() &&
-                                    checkUserInAuthToken(
-                                        board.owner.oid,
-                                        userLogin
-                                    )
-                                        ? 'change Visibility Board'
-                                        : 'You do not have permission to use this feature.'
-                                "
-                                v-model="board.isCheck"
-                                @click="openConfirmModal(board)"
-                            />
-                            <p></p>
+                                        )
+                                            ? 'change Visibility Board'
+                                            : 'You do not have permission to use this feature.'
+                                    "
+                                    v-model="board.isCheck"
+                                    @change="openConfirmModal(board)"
+                                />
+                            </div>{{ board.isCheck }}
+                            <p>Owner : {{ board.owner.name }}</p>
+                            {{
+                                checkUserInAuthToken(board.owner.oid, userLogin)
+                            }}
                         </div>
-                        <p>Owner : {{ board.owner.name }}</p>
-                        {{ checkUserInAuthToken(board.owner.oid, userLogin) }}
+                    </div>
+                </div>
+
+                <!-- collab row -->
+                <h1
+                    v-show="checkAuthToken()"
+                    class="text-3xl font-bold text-black ml-2 mt-10 mb-6"
+                >
+                    Collab Boards
+                </h1>
+                <div
+                    v-show="checkAuthToken()"
+                    class="overflow-x-auto flex-grow p-4 border"
+                >
+                    <div class="flex gap-4 flex-nowwrap">
+                        <!-- เพิ่ม flex-wrap และ justify-center -->
+                        <div
+                            v-for="(boardcollab, index) in Store.collaborate"
+                            :key="index"
+                            class=" bg-white rounded-lg shadow p-6 min-w-[250px] max-w-[250px] flex flex-col items-center"
+                            @click="openBoardTaskModal(boardcollab.boardId)"
+                        >
+                            <div class="mb-4">
+                                <img
+                                    :src="getImageUrl(index)"
+                                    alt="bg-board"
+                                    class="w-full h-full object-cover rounded-2xl"
+                                />
+                            </div>
+                            <p class="pt-2">No : {{ index + 1 }}</p>
+                            <p class="text-lg font-bold">{{ boardcollab.board_name }}</p>
+                            <p class="pt-2">Owner : {{ boardcollab.owner?.name }}</p>
+                            <p class="pt-2">Access Right : {{ boardcollab.accessRight }}</p>
+                            <button
+                                class="flex justify-center bg-gray-300 w-3/5 rounded-2xl mt-3"
+                            >
+                                Leave
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

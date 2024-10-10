@@ -21,6 +21,7 @@ export const useStore = defineStore('task', () => {
   const boards = []
   const tasks = []
   const statuses = []
+  const collaborate = []
   const successAddTask = false
   const successUpdateTask = false
   const errorUpdateTask = false
@@ -30,9 +31,11 @@ export const useStore = defineStore('task', () => {
   const errorDeleteNoStatus = false
   const errorEditDefaultStatus = false
   const errorNotfoundStatus = false
+  const errorPage409 = false
   const errorPage403 = false
   const errorPage404 = false
   const errorPage401 = false
+  const errortext404 = ''
   const errorPrivate404 = false
   const errorPrivate404Content = ''
 
@@ -43,6 +46,7 @@ export const useStore = defineStore('task', () => {
     boards,
     tasks,
     statuses,
+    collaborate,
     successAddStatus,
     successAddTask,
     successUpdateTask,
@@ -58,9 +62,11 @@ export const useStore = defineStore('task', () => {
     errorDeleteNoStatus,
 
     // Error Page
+    errorPage409,
     errorPage403,
     errorPage404,
     errorPage401,
+    errortext404,
 
     // Error Private 
     errorPrivate404,

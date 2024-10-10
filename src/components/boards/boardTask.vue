@@ -41,6 +41,7 @@ watch(
         if (newBoardId) {
             await fetchData()
             getBoardName()
+            loopBoardVisibility()
             // checkTokenLogin()
         }
     },
@@ -58,14 +59,21 @@ watch(
 
 // ต้องทำเพราะ cypress  ====================================================================================================
 let boardnow = ref({})
+// function loopBoardVisibility() {
+//     for (const board of Store.boards) {
+//         if (board.boardId == boardId.value) {
+//             boardnow.value = board
+//         }
+//     }
+// }
 function loopBoardVisibility() {
-    for (const board of Store.boards) {
-        if (board.boardId == boardId.value) {
-            boardnow.value = board
-        }
-    }
+    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) 
+    if (foundBoard) {
+        boardnow.value = foundBoard;
+        console.log(boardnow.value);
+        
+    } 
 }
-loopBoardVisibility()
 let visibilityBoard = ref({})
 let openConfirmedvisibility = ref(false)
 import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
@@ -93,7 +101,6 @@ async function updateVisibility() {
     let result = await updateBoard(`boards/${visibilityBoard.value.boardId}`, {
         visibility: visibilityBoard.value.visibility,
     })
-
     if (
         checkAuthToken() &&
         checkUserInAuthToken(visibilityBoard.value.owner.oid, userLogin)
@@ -148,9 +155,13 @@ async function fetchData() {
             .map((status) => status.trim())
             .join("&FilterStatuses=")}`
     } 
+    let resBoards = await getBoard("boards")
     let resTasks = await getTaskByBoard(endpoint)
     let resStatuses = await getTaskByBoard(`${boardId.value}/statuses`)
-    let resBoards = await getBoard("boards")
+    
+    // console.log(resTasks);
+    // console.log(resStatuses);
+    // console.log(resBoards);
     
     if(resTasks.status === 401){
         router.push({name: 'login'})
@@ -161,15 +172,22 @@ async function fetchData() {
         errorPermition()  
 
     }
-    // if (resTasks.status === 404) {
-    //     Store.errorPage404 = true
-    //     errorPermition()
+    if (resTasks.status === 404) {
+        Store.errortext404 = 'The Tasks does not exist'
+        Store.errorPage404 = true
+        errorPermition()
 
-    // }
+    }
     else {
     Store.tasks = resTasks
     Store.statuses = resStatuses
-    Store.boards = resBoards        
+    Store.boards = resBoards.boards 
+    Store.collaborate = resBoards.collaborate    
+    console.log(Store.tasks);
+    console.log(Store.boards);
+    console.log(Store.collaborate);
+
+         
     }
     checkOwner()
 
@@ -179,6 +197,12 @@ async function fetchData() {
         } else {
             board.isCheck = false
         }
+    }
+}
+
+function LoopcheckCollab(params) {
+    for (const element of Store.boards) {
+        
     }
 }
 
@@ -245,6 +269,10 @@ function openStatuses(boardId) {
     router.push({ name: "Status", params: { id: boardId } })
 }
 
+function openCollaborator(boardId) {
+    router.push({ name: "collab", params: { id: boardId } })
+}
+
 function toggleStatusDropdown() {
     isStatusDropdownOpen.value = !isStatusDropdownOpen.value
     // checkFirstStatuses()
@@ -254,10 +282,32 @@ function toggleTaskDropdown() {
     isTaskDropdownOpen.value = !isTaskDropdownOpen.value
 }
 
+// function getBoardName() {
+    
+//     const board = Store.boards.find((b) => b.boardId === boardId.value)
+//     console.log(board)
+
+//     if (!board) {
+//         const board = Store.collaborate.find((b) => b.boardId === boardId.value)
+//         console.log(board)
+//         boardName.value = board.board_name
+//     } else {
+//       if (board) {
+//         boardName.value = board.board_name
+//     }      
+//     }
+    
+    
+// }
 function getBoardName() {
-    const board = Store.boards.find((b) => b.boardId === boardId.value)
+    const board = Store.boards.find((b) => b.boardId === boardId.value) || 
+                  Store.collaborate.find((b) => b.boardId === boardId.value);
     if (board) {
+        console.log(board)
         boardName.value = board.board_name
+    } else {
+        console.log('ไม่พบบอร์ด')
+        boardName.value = ''
     }
 }
 
@@ -415,7 +465,6 @@ function checkOwner() {
 onMounted(() => {
     checkrequestNewToken(router)
     fetchData()
-    getBoardName()
 })
 </script>
 
@@ -445,7 +494,7 @@ onMounted(() => {
     <div class=" w-screen bg-white h-screen flex">
         <header
             name="header"
-            class="top-0 z-10 h-full w-[20%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
+            class="top-0 h-full w-[20%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
         >
             <div class="flex">
                 <div
@@ -846,7 +895,7 @@ onMounted(() => {
                                         : 'You do not have permission to use this feature.'
                                 "
                                 v-model="boardnow.isCheck"
-                                @click="openConfirmVisibilitymodal()"
+                                @change="openConfirmVisibilitymodal()"
                             />
                             <p class="pl-3">{{ boardnow.visibility }}</p>
                         </div>
@@ -914,6 +963,7 @@ onMounted(() => {
                         </div>
                     </template>
                     <button class="ml-2 bg-sky-200 rounded-lg p-2 itbkk-manage-status" @click="openStatuses(boardId)">Manage Status</button>
+                    <button class="ml-2 bg-yellow-200 rounded-lg p-2 itbkk-manage-status" @click="openCollaborator(boardId)">Manage Collaborator</button>
                 </div>
             </div>
 
