@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref,watch } from "vue"
-import { createStatus } from "@/libs/fetchs.js"
+import { createStatus,getAllBoard } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
 import {
@@ -32,6 +32,7 @@ watch(
 // Fetch data when the component is first mounted
 onMounted(() => {
     checkrequestNewToken(router)
+    fetchData() 
 })
 
 
@@ -55,6 +56,7 @@ function addToStore() {
 }
 
 
+
 async function saveTaskData() {
     let checkStatusName = Store.statuses.filter((status) => status.name === statusData.value.name)
     console.log(statusData.value,checkStatusName);
@@ -72,19 +74,7 @@ async function saveTaskData() {
             
             } 
             statusData.value.boards = boardId.value
-            let result = await createStatus(statusData.value, `${boardId.value}/statuses`)
-            // console.log(result.statusId);
-
-            // if (result.status === 401) {
-            //     router.push({name: 'login'});
-            //     Store.errorToken = true;
-            // } else {
-            // statusID.value = result.statusId
-            // console.log(result)
-            // addToStore()
-            // closeModal()                  
-            // }
-                        
+            let result = await createStatus(statusData.value, `${boardId.value}/statuses`)       
             if (checkOwner() && checkAuthToken()) {
                 if(result.status === 401){
                     router.push({name: 'login'})
@@ -106,12 +96,21 @@ async function saveTaskData() {
                 Store.errorPage401 = true
                 errorPermition()
                 }
-                
-                // errorPermition()
+
             }
     }
 }
 
+async function fetchData() {
+    let endpoint = "boards"
+
+        let resBoards = await getAllBoard(endpoint)
+        Store.boards = resBoards.boards
+        Store.collaborate = resBoards.collaborate
+        console.log(Store.boards)
+        
+        checkUserPermition()
+}
 function errorPermition() {
     router.push({ name: "notFound" })
 }
@@ -123,33 +122,31 @@ function clearData() {
     }
 }
 function checkOwner() {
-    let userInboard = ''
-    for (const board of Store.boards) {
-        if (board.boardId === boardId.value) {
-            userInboard = board.owner.oid
-            console.log(userInboard);
-            break
-        } else{
-            // router.push({ name: "notFound" })
-        }
-
-    }
-    return checkUserInAuthToken(userInboard,userLogin)
+    let userInboard = ""
+    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
+    console.log(foundBoard)
     
-
+    if (foundBoard.boardId === boardId.value) {
+        userInboard = foundBoard.owner.oid
+        
+    } else {
+        
+    }
+    console.log(userInboard)
+    console.log(checkUserInAuthToken(userInboard, userLogin));
+    
+    
+    return checkUserInAuthToken(userInboard, userLogin)
 }
 
 
 function checkUserPermition() {
-    console.log(checkAuthToken());
-    if (checkAuthToken() === false) {
+    if (!checkAuthToken()||!checkOwner()) {
+        Store.errorPage403 = true
         router.push({ name: "notFound" })
-    } 
-    if (checkAuthToken() && !checkOwner()) {
-        router.push({ name: "notFound" })
-    } 
+    }
 }
-// checkUserPermition()
+
 </script>
 <template>
     <div

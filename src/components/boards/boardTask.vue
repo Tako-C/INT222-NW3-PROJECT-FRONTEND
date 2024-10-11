@@ -41,6 +41,7 @@ watch(
         if (newBoardId) {
             await fetchData()
             getBoardName()
+            loopBoardVisibility()
             // checkTokenLogin()
         }
     },
@@ -58,14 +59,29 @@ watch(
 
 // ต้องทำเพราะ cypress  ====================================================================================================
 let boardnow = ref({})
+// function loopBoardVisibility() {
+//     for (const board of Store.boards) {
+//         if (board.boardId == boardId.value) {
+//             boardnow.value = board
+//         }
+//     }
+// }
 function loopBoardVisibility() {
-    for (const board of Store.boards) {
-        if (board.boardId == boardId.value) {
-            boardnow.value = board
+    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value) 
+    if (foundBoard) {      
+        if (foundBoard.visibility === "public") {
+            foundBoard.isCheck = true
+        } 
+        if(foundBoard.visibility === "private") {
+            foundBoard.isCheck = false
         }
+        boardnow.value = foundBoard
+        console.log(boardnow.value)
     }
+
+    console.log(Store.boards);
+    
 }
-loopBoardVisibility()
 let visibilityBoard = ref({})
 let openConfirmedvisibility = ref(false)
 import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
@@ -93,7 +109,6 @@ async function updateVisibility() {
     let result = await updateBoard(`boards/${visibilityBoard.value.boardId}`, {
         visibility: visibilityBoard.value.visibility,
     })
-
     if (
         checkAuthToken() &&
         checkUserInAuthToken(visibilityBoard.value.owner.oid, userLogin)
@@ -148,9 +163,13 @@ async function fetchData() {
             .map((status) => status.trim())
             .join("&FilterStatuses=")}`
     } 
+    let resBoards = await getBoard("boards")
     let resTasks = await getTaskByBoard(endpoint)
     let resStatuses = await getTaskByBoard(`${boardId.value}/statuses`)
-    let resBoards = await getBoard("boards")
+    
+    // console.log(resTasks);
+    // console.log(resStatuses);
+    // console.log(resBoards);
     
     if(resTasks.status === 401){
         router.push({name: 'login'})
@@ -161,26 +180,28 @@ async function fetchData() {
         errorPermition()  
 
     }
-    // if (resTasks.status === 404) {
-    //     Store.errorPage404 = true
-    //     errorPermition()
+    if (resTasks.status === 404) {
+        Store.errortext404 = 'The Tasks does not exist'
+        Store.errorPage404 = true
+        errorPermition()
 
-    // }
+    }
     else {
     Store.tasks = resTasks
     Store.statuses = resStatuses
-    Store.boards = resBoards        
+    Store.boards = resBoards.boards 
+    Store.collaborate = resBoards.collaborate    
+    console.log(Store.tasks);
+    console.log(Store.boards);
+    console.log(Store.collaborate);
+
+         
     }
     checkOwner()
-
-    for (const board of Store.boards) {
-        if (board.visibility == "public") {
-            board.isCheck = true
-        } else {
-            board.isCheck = false
-        }
-    }
+    loopBoardVisibility()
 }
+
+
 
 function toggleSort() {
     sortStatus.value = (sortStatus.value + 1) % 3
@@ -245,6 +266,10 @@ function openStatuses(boardId) {
     router.push({ name: "Status", params: { id: boardId } })
 }
 
+function openCollaborator(boardId) {
+    router.push({ name: "collab", params: { id: boardId } })
+}
+
 function toggleStatusDropdown() {
     isStatusDropdownOpen.value = !isStatusDropdownOpen.value
     // checkFirstStatuses()
@@ -254,10 +279,32 @@ function toggleTaskDropdown() {
     isTaskDropdownOpen.value = !isTaskDropdownOpen.value
 }
 
+// function getBoardName() {
+    
+//     const board = Store.boards.find((b) => b.boardId === boardId.value)
+//     console.log(board)
+
+//     if (!board) {
+//         const board = Store.collaborate.find((b) => b.boardId === boardId.value)
+//         console.log(board)
+//         boardName.value = board.board_name
+//     } else {
+//       if (board) {
+//         boardName.value = board.board_name
+//     }      
+//     }
+    
+    
+// }
 function getBoardName() {
-    const board = Store.boards.find((b) => b.boardId === boardId.value)
+    const board = Store.boards.find((b) => b.boardId === boardId.value) || 
+                  Store.collaborate.find((b) => b.boardId === boardId.value);
     if (board) {
+        console.log(board)
         boardName.value = board.board_name
+    } else {
+        console.log('ไม่พบบอร์ด')
+        boardName.value = ''
     }
 }
 
@@ -272,23 +319,9 @@ function openTaskDetail(taskId) {
 
 async function removeTask() {
     openConfirmed.value = false
-    // console.log(taskID.value)
     let removedTask = await removeData(
         `boards/${route.params.id}/tasks/${taskID.value}`
     )
-    // console.log("result", result)
-    // if (result.status === 404) {
-    //     console.log("result :", result.status)
-    //     errorDelete.value = true
-    // }
-    // if (result.status === 401) {
-    //     router.push({name: 'login'});
-    //     Store.errorToken = true;
-    // } else {
-    //     Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
-    //     successDelete.value = true
-    //     console.log(successDelete.value)
-    // }
 
     if (checkOwner() && checkAuthToken()) {
                 if(removedTask.status === 401){
@@ -315,7 +348,7 @@ async function removeTask() {
                 errorPermition()
                 }
             }
-
+            
 }
 
 function closeNotificationModal() {
@@ -340,11 +373,13 @@ function closeNotificationModal() {
     let board = Store.boards.find(
         (b) => b.boardId === visibilityBoard.value.boardId
     )
+    console.log(visibilityBoard.value.visibility)
     if (visibilityBoard.value.visibility === "public") {
         boardnow.value.isCheck = true
     } else {
         boardnow.value.isCheck = false
     }
+    fetchData()
 }
 
 function checkVariable() {
@@ -361,6 +396,9 @@ function checkVariable() {
 }
 
 function openConfirmModal(id, title) {
+console.log("open delete");
+    console.log(checkOwner());
+    
     openConfirmed.value = true
     taskTitle.value = title
     taskID.value = id
@@ -375,9 +413,6 @@ function errorPermition() {
     router.push({ name: "notFound" })
 }
 
-// function checkTokenLogin() {
-//     TokenLogin.value = getAuthToken()
-// }
 function checkOwner() {
     let userInboard = null
     let boardFound = false
@@ -391,21 +426,6 @@ function checkOwner() {
         } 
         
     }
-    // console.log(Store.boards)
-    // console.log(boardFound , checkAuthToken());
-    
-    // if (getAuthToken() && !boardFound) {
-    //     Store.errorPage403 = true;
-    //     router.push({ name: "notFound" })
-    //     console.log('boardFound :' ,boardFound , 'userInboard :' ,userInboard, 'userLogin :',userLogin ,checkUserInAuthToken(userInboard,userLogin));
-    // }
-    // if (getAuthToken() && !boardFound && checkUserInAuthToken(userInboard,userLogin)) {
-       
-    //    Store.errorPrivate404 = true
-    //    Store.errorPrivate404Content ='Board'
-    //    router.push({ name: "Board" })             
-       
-//    } 
    if (!getAuthToken() && !boardFound) {
        router.push({ name: "notFound" })
    }
@@ -415,7 +435,6 @@ function checkOwner() {
 onMounted(() => {
     checkrequestNewToken(router)
     fetchData()
-    getBoardName()
 })
 </script>
 
@@ -445,7 +464,7 @@ onMounted(() => {
     <div class=" w-screen bg-white h-screen flex">
         <header
             name="header"
-            class="top-0 z-10 h-full w-[20%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
+            class="top-0 h-full w-[20%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
         >
             <div class="flex">
                 <div
@@ -723,7 +742,7 @@ onMounted(() => {
                     class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
                     :data-tip="checkAuthToken() ? 'Create your task.' : 'You do not have permission to use this feature.'"          
                     @click="openCreateTask"
-                    :disabled="!checkAuthToken()"
+                    :disabled="!checkAuthToken() || !checkOwner()"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -833,7 +852,7 @@ onMounted(() => {
                 <div class="itbkk-board-visibility flex mt-8 ">
                             <input
                                 type="checkbox"
-                                class=" toggle tooltip tooltip-right"
+                                class=" toggle tooltip tooltip-right "
                                 :class="{
                                     'cursor-not-allowed ':
                                         !checkAuthToken() ||
@@ -845,8 +864,10 @@ onMounted(() => {
                                         ? 'change Visibility Board'
                                         : 'You do not have permission to use this feature.'
                                 "
+                                :disabled="!checkAuthToken() || !checkOwner()"
                                 v-model="boardnow.isCheck"
-                                @click="openConfirmVisibilitymodal()"
+                                @change="openConfirmVisibilitymodal()"
+                                
                             />
                             <p class="pl-3">{{ boardnow.visibility }}</p>
                         </div>
@@ -914,6 +935,7 @@ onMounted(() => {
                         </div>
                     </template>
                     <button class="ml-2 bg-sky-200 rounded-lg p-2 itbkk-manage-status" @click="openStatuses(boardId)">Manage Status</button>
+                    <button class="ml-2 bg-yellow-200 rounded-lg p-2 itbkk-manage-status" @click="openCollaborator(boardId)">Manage Collaborator</button>
                 </div>
             </div>
 
@@ -978,7 +1000,7 @@ onMounted(() => {
                                         checkAuthToken() && checkOwner(),
 
                                 }"
-                                :disabled="!checkAuthToken()"
+                                :disabled="!checkAuthToken() || !checkOwner() "
                                 :data-tip="checkAuthToken() && checkOwner() ? 'Delete your task.' : 'You do not have permission to use this feature.'"   >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -986,9 +1008,8 @@ onMounted(() => {
                                 viewBox="0 0 24 24"
                                 stroke-width="1.5"
                                 stroke="currentColor"
-                                @click="openConfirmModal(task.id, task.title)"
+                                @click="checkAuthToken() && checkOwner() ? openConfirmModal(task.id, task.title) : ''"
                                 class="size-6 text-red-500 "
-                                  
                             >
                                 <path
                                     stroke-linecap="round"

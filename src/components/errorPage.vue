@@ -10,14 +10,22 @@ const router = useRouter()
 let error401 = ref(Store.errorPage401)
 let error403 = ref(Store.errorPage403)
 let error404 = ref(Store.errorPage404)
+let error409 = ref(Store.errorPage409)
+let errortext404 = ref(Store.errortext404)
 let ErrorCode = ref('');
+let errorText = ''
 
 if (error403.value === true) {
     ErrorCode.value = "403"
+    errorText = 'Access denied, you do not have permission to view this page.'
 } else if (error404.value === true) {
-    ErrorCode.value = "404";
+    ErrorCode.value = "404"
+    // errorText = 'Access denied, you do not have permission to view this page.'
+    errorText = errortext404
 } else if (error401.value === true) {
     ErrorCode.value = "401"
+} else{
+  errorText = 'There is a problem. Please try again later.'
 }
 
 function openBoards() {
@@ -38,7 +46,7 @@ function openBoards() {
           <!-- Error Code -->
           <p class="text-6xl font-extrabold text-red-700">{{ ErrorCode }}</p>
           <p class="text-red-600 font-semibold mt-2 text-lg">ERROR !!!</p>
-          <p class="text-gray-600 mt-2">Access denied, you do not have permission to view this page.</p>
+          <p class="text-gray-600 mt-2">{{ errorText }}</p>
           <!-- Retry Button -->
           <div class="card-actions mt-6">
             <button class="btn btn-outline btn-primary hover:bg-primary hover:text-white" @click="openBoards()">

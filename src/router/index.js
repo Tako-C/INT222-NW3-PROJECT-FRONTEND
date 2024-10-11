@@ -9,6 +9,9 @@ import statusTable from '@/components/statuses/statuses.vue'
 import createStatus from '@/components/statuses/createStatus.vue'
 import editStatus from '@/components/statuses/editStatus.vue'
 import NotFound from '@/components/errorPage.vue'
+import Collab from '@/components/boards/boardCollab.vue'
+import createCollabUser from '@/components/collab/createCollabUser.vue'
+
 
 import login from '@/components/login.vue'
 import Cookies from 'js-cookie'
@@ -40,6 +43,24 @@ const router = createRouter({
         }
       ]
     },
+    // {
+    //   path: '/board/:id/collab/add',
+    //   name: 'createCollab',
+    //   component: createCollabUser,
+    // },
+    {
+      path: '/board/:id/collab',
+      name: 'collab',
+      component: Collab,
+      children: [
+        {
+          path: 'add',
+          name: 'createCollab',
+          component: createCollabUser,
+        }
+      ]
+    },
+    
     {
       path: '/board/:id/task',
       name: 'BoardTask',

@@ -49,8 +49,28 @@ async function fetchData() {
         updateTimeInBrowserTimezone.value = convertToBrowserTimezone(result.updatedOn);
         console.log(boardData.value);
     }
+    checkOwner()
 }
 
+function checkOwner() {
+    let userInboard = null
+    let boardFound = false
+    
+    for (const board of Store.boards) {
+        if (board.boardId === boardId.value) {
+            userInboard = board.owner.oid
+            boardFound = true
+            // console.log(userInboard);
+            // break
+        } 
+        
+    }
+   if (!getAuthToken() && !boardFound) {
+       router.push({ name: "notFound" })
+   }
+    
+    return checkUserInAuthToken(userInboard,userLogin)
+}
 function closeModal() {
     router.push("/board");
     fetchHaveData.value = !fetchHaveData.value;

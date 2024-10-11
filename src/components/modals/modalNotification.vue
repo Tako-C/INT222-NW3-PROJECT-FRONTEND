@@ -29,6 +29,10 @@ let errorEditDefaultStatus = ref(Store.errorEditDefaultStatus)
 let errorNotfoundStatus = ref(Store.errorNotfoundStatus)
 let errorPrivate404 = ref(Store.errorPrivate404)
 let errorPrivate404Content = ref(Store.errorPrivate404Content)
+
+// collab
+let errorPage409 = ref(Store.errorPage409)
+let errorPage404 = ref(Store.errorPage404)
 // login by ch
 let errorLoginStatus = ref(props.errorLoginStatus)
 let errorToken = ref(Store.errorToken)
@@ -49,6 +53,9 @@ watchEffect(() => {
   errorNotfoundStatus.value = Store.errorNotfoundStatus
   errorPrivate404.value = Store.errorPrivate404
   errorPrivate404Content.value = Store.errorPrivate404Content
+
+  errorPage409.value = Store.errorPage409
+  errorPage404.value = Store.errorPage404
   // login by ch
   errorLoginStatus.value = props.errorLoginStatus
   errorToken.value = Store.errorToken
@@ -116,7 +123,16 @@ function checkEvent() {
     message.value.header = '404 Error!'
     message.value.detail = `${errorPrivate404Content.value} Not found`
   }
-  
+
+  // collab
+  else if (errorPage409.value) {
+    message.value.header = '409 Error!'
+    message.value.detail = "The user is already the collaborator of this board."
+  }
+  else if (errorPage404.value) {
+    message.value.header = '404 Error!'
+    message.value.detail = "The user does not exist."
+  }
 }
 
 onMounted(checkEvent);
@@ -124,7 +140,7 @@ onMounted(checkEvent);
 
 <template>
   <div
-    class="fixed modal-box"
+    class="fixed modal-box z-50"
     :class="{
       'bg-green-100 border-green-600 border-2': message.header === 'Success!',
       'bg-red-100 border-red-600 border-2': message.header === 'Error!',

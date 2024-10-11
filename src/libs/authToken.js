@@ -154,5 +154,5 @@ export {
     checkUserInAuthToken,
     checkExpAuthToken,
     requestNewToken,
-    checkrequestNewToken
+    checkrequestNewToken,
 };
