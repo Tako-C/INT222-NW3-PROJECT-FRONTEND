@@ -41,35 +41,7 @@ const isStatusPage = computed(() =>
     route.path.includes(`/board/${boardId.value}/status`)
 )
 
-const resultAllBoardCollab = ref(null)
 
-// function checkTokenLogin() {
-//     TokenLogin.value = getAuthToken()
-// }
-
-// function checkOwner() {
-//     let userInboard = ''
-//     for (const board of Store.boards) {
-//         console.log(board.boardId,boardId.value);
-//         if (board.boardId === boardId.value) {
-//             console.log(board.owner.oid);
-//             userInboard = board.owner.oid
-//             console.log(userInboard);
-//             break
-//         } else{
-//             // router.push({ name: "notFound" })
-//         }
-
-//     }
-//     console.log(boardId.value);
-//     console.log(userInboard);
-//     console.log(userLogin);
-
-//     return checkUserInAuthToken(userInboard,userLogin)
-
-// //   return checkUserInAuthToken(userInboard,userLogin)
-
-// }
 watch(
     boardId,
     async (newBoardId) => {
@@ -81,16 +53,15 @@ watch(
     },
     { immediate: true }
 )
+
+onMounted(() => {
+    fetchData()
+    getBoardName()
+    checkrequestNewToken(router)
+})
+
 function checkOwner() {
-    let userInboard = ""
-    let boardFound = false
-    // for (const board of Store.boards) {
-    //     if (board.boardId === boardId.value) {
-    //         userInboard = board.owner.oid
-    //         boardFound = true
-    //     }
-    // }
-    
+  
     const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value)
 
     if (foundBoard) {
@@ -105,15 +76,11 @@ function checkOwner() {
         }
         return checkUserInAuthToken(userInboard, userLogin)
     } else {
-        // ไม่พบบอร์ด
-        if (getAuthToken()) {
-            Store.errorPage403 = true
-            // Store.errorPrivate404 = true
-            // Store.errorPrivate404Content = "Statuses"
-            router.push({ name: "Board" })
-        } else {
+            console.log(Store.boards);
+            Store.errorPage404 = true
+            Store.errortext404 = 'The Status does not exist'
             router.push({ name: "notFound" })
-        }
+        // }
     }
 }
 
@@ -147,13 +114,8 @@ async function fetchData() {
     Store.collaborate = resBoards.collaborate
     console.log(Store.collaborate)
     console.log(Store.boards)
-    // checkOwner()
+    checkOwner()
 
-    console.log(resStatus)
-    // if (resStatus.status === 404) {
-    //     Store.errorPage404 = true
-    //     router.push({name: 'notFound'})
-    // } 
     switch (resStatus.status) {
         case 401:
             router.push({ name: "login" })
@@ -441,12 +403,6 @@ function checkVariable() {
     return false
 }
 
-// Fetch data when the component is first mounted
-onMounted(() => {
-    fetchData()
-    getBoardName()
-    checkrequestNewToken(router)
-})
 
 // Fetch data every time the route changes (but the same component remains active)
 // onBeforeRouteUpdate((to, from, next) => {
@@ -767,7 +723,8 @@ onMounted(() => {
                             ? 'Create your status.'
                             : 'You do not have permission to use this feature.'
                     "
-                    @click="openCreateStatus()"
+                    
+                    @click="checkAuthToken() && checkOwner() ? openCreateStatus():''"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -866,11 +823,11 @@ onMounted(() => {
                                     viewBox="0 0 24 24"
                                     stroke-width="1.5"
                                     stroke="currentColor"
-                                    @click="
+                                    @click=" checkAuthToken() && checkOwner() ?
                                         openConfirmModal(
                                             status.statusId,
                                             status.name
-                                        )
+                                        ):''
                                     "
                                     class="size-6 text-red-500"
                                     :class="{
@@ -898,7 +855,7 @@ onMounted(() => {
             >
                 <tr>
                     <td class="text-center" colspan="6">
-                        Don't Have Status ??
+                        Don't Have Status ?
                     </td>
                 </tr>
             </tbody>

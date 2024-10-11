@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { getBoard, getTaskByBoard,getAllBoard} from "@/libs/fetchs.js"
 import Cookies from "js-cookie"
-import { checkAuthToken} from '@/libs/authToken.js'
+import { checkAuthToken,checkUserInAuthToken} from '@/libs/authToken.js'
 import modalNotification from "@/components/modals/modalNotification.vue"
  
 const Store = useStore()
@@ -18,7 +18,10 @@ const username = ref(Cookies.get("name"))
 const isTaskDropdownOpen = ref(false)
 const isStatusDropdownOpen = ref(false)
 const boardId = ref(route.params.id)
- 
+let userLogin = Cookies.get("oid")
+const boardName = ref("")
+let resultAllBoard = {}
+
 function checkPublicCollab(resultAllBoard) {
     console.log(resultAllBoard)
     const foundBoardPublic = resultAllBoard.find((board) => board.boardId === boardId.value)
@@ -30,39 +33,38 @@ function checkPublicCollab(resultAllBoard) {
     }
 }
  
+function checkOwner() {
+  const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value)
+  console.log(foundBoard)
+  
+  if (foundBoard) {
+      const userInboard = foundBoard.owner.oid  
+      return checkUserInAuthToken(userInboard, userLogin)
+  }
+  return false
+}
+
 async function fetchData() {
     let endpoint = "boards"
-    let resultAllBoard = {}
-    if (checkAuthToken()) {   
-        let resultColab = await getBoard(`boards/${boardId.value}/collabs`)
+    let resultColab = await getBoard(`boards/${boardId.value}/collabs`)
         let resStatuses = await getTaskByBoard(`${boardId.value}/statuses`)
         let resBoards = await getBoard(`${endpoint}`)
-         resultAllBoard = await getAllBoard(endpoint)
-        //     resultPrivate = resultPrivateRaw.boards
-
-        //     resultPublic = resultPublicRaw.boards
-            
-        // console.log(resultPrivate)
-        // console.log(resultCollab)
-        // console.log(resultPublicRaw)
-        
-
-        // resultPrivate.forEach((privateBoard) => {
-        //     resultPublic = resultPublic.filter(
-        //         (publicBoard) =>
-        //             publicBoard.owner.oid !== privateBoard.owner.oid
-        //     )
-        //     finalResult = [...resultPrivate, ...resultPublic]
-        //     console.log(finalResult)
-        // })
+        resultAllBoard = await getAllBoard(endpoint)
         Store.collaborate = resultColab
         Store.boards = resBoards.boards
         Store.statuses = resStatuses
+        console.log(resultAllBoard)
+        // console.log(Store.statuses)
+        // console.log(Store.boards)
+        // console.log(Store.collaborate)
 
-        console.log(Store.statuses)
-        console.log(Store.boards)
-        console.log(Store.collaborate)
-
+        
+        // if (!resultAllBoard.collaborate) {    
+        // }else{
+        //     checkPublicCollab(resultAllBoard.collaborate)
+        // } 
+  
+        
         switch (resultColab.status) {
         case 401:
             router.push({ name: "login" })
@@ -86,22 +88,28 @@ async function fetchData() {
         default:
             
             break
-    }
-    } else {
-        Store.errorPage403 = true
-        errorPermition()    
-        
-    
-    
-    }  
-    checkPublicCollab(resultAllBoard.collaborate)
+        }
+
 }
+function getBoardName() {
+    const board = resultAllBoard.boards.find((b) => b.boardId === boardId.value) || 
+                    resultAllBoard.collaborate.find((b) => b.boardId === boardId.value);
+    if (board) {
+        console.log(board)
+        boardName.value = board.board_name
+    } else {
+        console.log('ไม่พบบอร์ด')
+        boardName.value = ''
+    }
+    console.log(board)
+    console.log(resultAllBoard)
+    
+}
+
 
 function errorPermition() {
     router.push({ name: "notFound" })
 }
-
-fetchData()
 
 function toggleTaskDropdown() {
     isTaskDropdownOpen.value = !isTaskDropdownOpen.value
@@ -125,7 +133,9 @@ async function logOut(){
     router.push({ name:'login'})
 }
 function openCreateCollabUser() {
+    fetchData()
     router.push({ name: "createCollab", params: { id: boardId.value } });
+
 }
 
 function checkVariable() {
@@ -139,6 +149,23 @@ function closeNotificationModal() {
     Store.errorPage409 = false
     
 }
+
+watch(
+    boardId,
+    async (newBoardId) => {
+        if (newBoardId) {
+            await fetchData()
+            getBoardName()
+            console.log(boardName.value);
+            
+        }
+    },
+    { immediate: true }
+)
+onMounted(() => {
+    fetchData()
+    
+})
 </script>
 <template>
 <div class=" w-screen bg-white h-screen flex">
@@ -387,7 +414,7 @@ function closeNotificationModal() {
                 <div
                     class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
                 >
-                    <h1>{{ checkAuthToken() ? `${username}` : "Public Board" }} personal board</h1>
+                <h1>{{ boardName }}</h1>
                     <div class="flex items-center justify-center">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -410,7 +437,7 @@ function closeNotificationModal() {
                     class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
                     :data-tip="checkAuthToken() ? 'Add user in Collaburate.' : 'You do not have permission to use this feature.'"          
                     @click="openCreateCollabUser"
-                    :disabled="!checkAuthToken()"
+                    :disabled="!checkAuthToken() || !checkOwner()"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -433,7 +460,6 @@ function closeNotificationModal() {
             <div class="flex justify-between">
                         
             </div>
- 
             <!--Table-->
             <div class=" flex flex-col mt-5 ml-16 w-5/6">
                 <!-- Table Header -->
@@ -461,6 +487,7 @@ function closeNotificationModal() {
                     </div>
                 </div>
             </div>
+            
             <tbody
                 v-show="Store.collaborate.length === 0"
                 class="w-full flex justify-center mt-16"

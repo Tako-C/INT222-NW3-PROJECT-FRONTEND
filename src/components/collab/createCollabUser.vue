@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted  } from "vue"
-import { addData } from "@/libs/fetchs.js"
+import { addData,getAllBoard } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
 import Cookies from "js-cookie";
@@ -14,10 +14,14 @@ const boardId = ref(route.params.id)
 let userLogin = Cookies.get("oid")
 
 function checkUserPermition() {
-    console.log(checkAuthToken());
-    if (checkAuthToken() === false) {
+    console.log(checkAuthToken(),checkOwner());
+    if (!checkAuthToken() || !checkOwner()) {
+        Store.errorPage403 = true
+        errorPermition()
         router.push({ name: "notFound" })
-    } 
+    } else {
+
+    }
 }
 
 
@@ -37,10 +41,6 @@ function checkUserIsCollab() {
     // const foundBoard = Store.collaborate.find((board) => board.boardsId === boardId.value && board.oid === userLogin)
     // console.log(foundBoard);
     for (let i = 0; i < Store.collaborate.length; i++) {
-        // console.log(Store.collaborate[i].oid);
-        // console.log(Store.collaborate[i].boardsId);
-
-        
         if (Store.collaborate[i].oid === userLogin && Store.collaborate[i].boardsId === boardId.value) {
             console.log(Store.collaborate[i].oid);
         console.log(Store.collaborate[i].boardsId);
@@ -51,29 +51,36 @@ function checkUserIsCollab() {
 }
 function checkOwner() {
     let userInboard = ""
-    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value)
-    if (foundBoard) {
+    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
+    console.log(foundBoard)
+    
+    if (foundBoard.boardId === boardId.value) {
         userInboard = foundBoard.owner.oid
         
     } else {
         
     }
+    console.log(userInboard)
+    console.log(checkUserInAuthToken(userInboard, userLogin));
+    
     
     return checkUserInAuthToken(userInboard, userLogin)
 }
+
+async function fetchData() {
+    let endpoint = "boards"
+
+        let resBoards = await getAllBoard(endpoint)
+        Store.boards = resBoards.boards
+        Store.collaborate = resBoards.collaborate
+        console.log(Store.boards)
+        
+        checkUserPermition()
+}
 function addToStore(newBoard) {
     console.log(newBoard);
-    
-    // collabData.value = { ...newBoard }
-    // collabData.value.owner = { ...boardData.value.owner }
-    // collabData.value.owner.oid = newBoard.oid
-    // collabData.value.owner.name = userLogin
-
     Store.collaborate.push({ ...newBoard })
     console.log(Store.collaborate);
-    
-    // Store.successAddStatus = true 
-
 }
 
 
@@ -91,41 +98,10 @@ async function saveBoardData() {
                 let result = await addData(collabData.value, `${boardId.value}/collabs`)
                 console.log(result)
               console.log(checkOwner(),checkAuthToken());
-                
-    // if (checkOwner() && checkAuthToken()) {
-
-    //     if (result.status === 401) {
-    //         router.push({ name: "login" })
-    //         Store.errorToken = true
-    //     } 
-    //     if (result.status === 400) {
-    //         console.log("400 error");
-            
-    //         errorPermition()
-    //     }
-    //     if (result.status === 409) {
-    //         errorPermition()
-    //     }
-    //     else {
-    //          addToStore(result)
-    //         console.log(result)
-    //         closeModal()
-    //     }
-    // } else {
-    //     if (result.status === 403) {
-    //         Store.errorPage403 = true
-    //         errorPermition()
-    //     }
-    //     if (result.status === 401) {
-    //         Store.errorPage401 = true
-    //         errorPermition()
-    //     }if (result.status === 409) {
-    //         errorPermition()
-    //     }
-    // }
 
 
     if (checkOwner() && checkAuthToken()) {
+        
     switch (result.status) {
         case 401:
             router.push({ name: "login" })
@@ -144,8 +120,10 @@ async function saveBoardData() {
             console.log("409 error")
             break
         default:
+            console.log(Store.collaborate);
+            
             addToStore(result)
-            // console.log(result)
+            console.log(result)
             closeModal()
             break
     }
@@ -192,7 +170,10 @@ function closeNotificationModal() {
 onMounted(() => {
     checkrequestNewToken(router)
     checkAuthToken()
-checkUserPermition()
+    fetchData()
+
+    
+    
 })
 
 // checkAuthToken()

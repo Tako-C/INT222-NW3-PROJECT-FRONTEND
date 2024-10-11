@@ -346,7 +346,7 @@ onUpdated(() => {
                 <button
                     type="submit"
                     class="itbkk-button-confirm button buttonOK tooltip "
-                    :disabled="!isEdited"
+                    :disabled="!isEdited || !checkAuthToken() || !checkOwner()"
                     :class="{
                         'tooltip-left': !checkAuthToken(),
                     }"

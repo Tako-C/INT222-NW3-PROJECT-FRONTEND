@@ -67,12 +67,20 @@ let boardnow = ref({})
 //     }
 // }
 function loopBoardVisibility() {
-    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) 
-    if (foundBoard) {
-        boardnow.value = foundBoard;
-        console.log(boardnow.value);
-        
-    } 
+    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value) 
+    if (foundBoard) {      
+        if (foundBoard.visibility === "public") {
+            foundBoard.isCheck = true
+        } 
+        if(foundBoard.visibility === "private") {
+            foundBoard.isCheck = false
+        }
+        boardnow.value = foundBoard
+        console.log(boardnow.value)
+    }
+
+    console.log(Store.boards);
+    
 }
 let visibilityBoard = ref({})
 let openConfirmedvisibility = ref(false)
@@ -190,21 +198,10 @@ async function fetchData() {
          
     }
     checkOwner()
-
-    for (const board of Store.boards) {
-        if (board.visibility == "public") {
-            board.isCheck = true
-        } else {
-            board.isCheck = false
-        }
-    }
+    loopBoardVisibility()
 }
 
-function LoopcheckCollab(params) {
-    for (const element of Store.boards) {
-        
-    }
-}
+
 
 function toggleSort() {
     sortStatus.value = (sortStatus.value + 1) % 3
@@ -322,23 +319,9 @@ function openTaskDetail(taskId) {
 
 async function removeTask() {
     openConfirmed.value = false
-    // console.log(taskID.value)
     let removedTask = await removeData(
         `boards/${route.params.id}/tasks/${taskID.value}`
     )
-    // console.log("result", result)
-    // if (result.status === 404) {
-    //     console.log("result :", result.status)
-    //     errorDelete.value = true
-    // }
-    // if (result.status === 401) {
-    //     router.push({name: 'login'});
-    //     Store.errorToken = true;
-    // } else {
-    //     Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
-    //     successDelete.value = true
-    //     console.log(successDelete.value)
-    // }
 
     if (checkOwner() && checkAuthToken()) {
                 if(removedTask.status === 401){
@@ -365,7 +348,7 @@ async function removeTask() {
                 errorPermition()
                 }
             }
-
+            
 }
 
 function closeNotificationModal() {
@@ -390,11 +373,13 @@ function closeNotificationModal() {
     let board = Store.boards.find(
         (b) => b.boardId === visibilityBoard.value.boardId
     )
+    console.log(visibilityBoard.value.visibility)
     if (visibilityBoard.value.visibility === "public") {
         boardnow.value.isCheck = true
     } else {
         boardnow.value.isCheck = false
     }
+    fetchData()
 }
 
 function checkVariable() {
@@ -411,6 +396,9 @@ function checkVariable() {
 }
 
 function openConfirmModal(id, title) {
+console.log("open delete");
+    console.log(checkOwner());
+    
     openConfirmed.value = true
     taskTitle.value = title
     taskID.value = id
@@ -425,9 +413,6 @@ function errorPermition() {
     router.push({ name: "notFound" })
 }
 
-// function checkTokenLogin() {
-//     TokenLogin.value = getAuthToken()
-// }
 function checkOwner() {
     let userInboard = null
     let boardFound = false
@@ -441,21 +426,6 @@ function checkOwner() {
         } 
         
     }
-    // console.log(Store.boards)
-    // console.log(boardFound , checkAuthToken());
-    
-    // if (getAuthToken() && !boardFound) {
-    //     Store.errorPage403 = true;
-    //     router.push({ name: "notFound" })
-    //     console.log('boardFound :' ,boardFound , 'userInboard :' ,userInboard, 'userLogin :',userLogin ,checkUserInAuthToken(userInboard,userLogin));
-    // }
-    // if (getAuthToken() && !boardFound && checkUserInAuthToken(userInboard,userLogin)) {
-       
-    //    Store.errorPrivate404 = true
-    //    Store.errorPrivate404Content ='Board'
-    //    router.push({ name: "Board" })             
-       
-//    } 
    if (!getAuthToken() && !boardFound) {
        router.push({ name: "notFound" })
    }
@@ -772,7 +742,7 @@ onMounted(() => {
                     class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
                     :data-tip="checkAuthToken() ? 'Create your task.' : 'You do not have permission to use this feature.'"          
                     @click="openCreateTask"
-                    :disabled="!checkAuthToken()"
+                    :disabled="!checkAuthToken() || !checkOwner()"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -882,7 +852,7 @@ onMounted(() => {
                 <div class="itbkk-board-visibility flex mt-8 ">
                             <input
                                 type="checkbox"
-                                class=" toggle tooltip tooltip-right"
+                                class=" toggle tooltip tooltip-right "
                                 :class="{
                                     'cursor-not-allowed ':
                                         !checkAuthToken() ||
@@ -894,8 +864,10 @@ onMounted(() => {
                                         ? 'change Visibility Board'
                                         : 'You do not have permission to use this feature.'
                                 "
+                                :disabled="!checkAuthToken() || !checkOwner()"
                                 v-model="boardnow.isCheck"
                                 @change="openConfirmVisibilitymodal()"
+                                
                             />
                             <p class="pl-3">{{ boardnow.visibility }}</p>
                         </div>
@@ -1028,7 +1000,7 @@ onMounted(() => {
                                         checkAuthToken() && checkOwner(),
 
                                 }"
-                                :disabled="!checkAuthToken()"
+                                :disabled="!checkAuthToken() || !checkOwner() "
                                 :data-tip="checkAuthToken() && checkOwner() ? 'Delete your task.' : 'You do not have permission to use this feature.'"   >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1036,9 +1008,8 @@ onMounted(() => {
                                 viewBox="0 0 24 24"
                                 stroke-width="1.5"
                                 stroke="currentColor"
-                                @click="openConfirmModal(task.id, task.title)"
+                                @click="checkAuthToken() && checkOwner() ? openConfirmModal(task.id, task.title) : ''"
                                 class="size-6 text-red-500 "
-                                  
                             >
                                 <path
                                     stroke-linecap="round"

@@ -39,66 +39,9 @@ const originalStatusData = ref({
 //     },
 //     { immediate: true }
 // )
-watch(
-    boardUrl,
-    async (newBoardId) => {
-        if (newBoardId) {
-            await fetchData()
-        }
-    },
-    { immediate: true }
-)
-
-
-// if (route.params.id == 1) {
-//   window.alert('You can not edit this Status.')
-//   router.push({ name: 'StatusTable' })
-// }
-// async function fetchData() {
-//   try {
-//     statusData.value = await getBoard(`boards/${route.params.id}/statuses/${route.params.statusId}`)
-//     console.log(originalStatusData.value)
-//     originalStatusData.value = { ...statusData.value }
-
-//   } catch (error) {
-//     Store.errorUpdateStatus = true
-//     console.log( Store.errorUpdateStatus);
-
-//     router.push({ name: "Status", params: { id: route.params.id } })
-//   }
-// }
 
 async function fetchData() {
-    // let resultBoard = await getBoard(`boards/${route.params.id}`)
-    // boardId.value = resultBoard
-    // console.log(checkUserInAuthToken(userLogin, boardId.value.owner.oid))
-    // // if (
-    // //     checkAuthToken() === true &&
-    // //     checkUserInAuthToken(userLogin, boardId.value.owner.oid) === true
-    // // ) {
 
-    // let result = await getBoard(
-    //     `boards/${route.params.id}/statuses/${route.params.statusId}`
-    // )
-    // if (result.name === "No status" || result.name === "Done") {
-    //     window.alert("You can not edit this Status.")
-    //     router.push({ name: "StatusTable" })
-    // }
-    // if (result.status === 404) {
-    //     router.push({ name: "Status", params: { id: route.params.id } })
-    //     Store.errorUpdateStatus = true
-    // }
-    // if (result.status === 401) {
-    //     router.push({ name: "login" })
-    //     Store.errorToken = true
-    // } else {
-    //     statusData.value = result
-    //     originalStatusData.value = { ...statusData.value }
-    //     // console.log(Store.errorUpdateStatus)
-    // }
-    // } else {
-    //     router.push({ name: "notFound" })
-    // }
     let resultBoard = await getBoard(`boards/${route.params.id}`)
         boardId.value = resultBoard     
         let result = await getBoard(
@@ -123,10 +66,6 @@ async function fetchData() {
             router.push({ name: "Status", params: { id: route.params.id } })
             Store.errorNotfoundStatus = true
         }
-        // if (result.status === 401) {
-        //     router.push({ name: "login" })
-        //     Store.errorToken = true
-        // } 
         else {
             statusData.value = result
             originalStatusData.value = { ...statusData.value }
@@ -141,6 +80,8 @@ async function fetchData() {
             errorPermition()
         } else{
             Store.errorPage403 = true
+            console.log("not Permition");
+            
             errorPermition()
         }
     }
@@ -211,6 +152,17 @@ function errorPermition() {
 }
 
 
+function checkOwner() {
+    let userInboard = ''
+    for (const board of Store.boards) {
+        if (board.boardId === boardId.value) {
+            userInboard = board.owner.oid
+        } else{
+        }
+
+    }  
+    return checkUserInAuthToken(userInboard,userLogin)
+}
 onMounted(fetchData, checkrequestNewToken(router))
 
 onUpdated(() => {
@@ -223,6 +175,16 @@ onUpdated(() => {
         isEdited.value = false
     }
 })
+// watch(
+//     boardUrl,
+//     async (newBoardId) => {
+//         if (newBoardId) {
+//             await fetchData()
+//         }
+//     },
+//     { immediate: true }
+// )
+
 </script>
 <template>
     <div
@@ -295,7 +257,7 @@ onUpdated(() => {
                         type="submit"
                         class="itbkk-button-confirm button buttonOK"
                         @click="TokenLogin ? updateStatus() : null"
-                        :disabled="!isEdited || !TokenLogin"
+                        :disabled="!isEdited || !TokenLogin || !checkOwner()"
                         :class="{
                             'cursor-not-allowed tooltip tooltip-left':
                                 !TokenLogin,
@@ -310,29 +272,6 @@ onUpdated(() => {
                     </button>
                 </div>
             </div>
-            <!-- <div class="boxButton m-3">
-        <button
-          type="submit"
-          class="itbkk-button-cancel button buttonClose btn"
-          @click="closeModal()"
-        >
-          Close
-        </button>
-
-        <button
-          type="submit"
-          class="itbkk-button-confirm button buttonOK btn"
-          @click="
-            updateStatus(route.params.id, {
-              name: statusData.name,
-              description: statusData.description,
-            })
-          "
-          :disabled="!isEdited"
-        >
-          Update
-        </button>
-      </div> -->
         </div>
     </div>
 </template>

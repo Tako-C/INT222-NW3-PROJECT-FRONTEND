@@ -102,8 +102,9 @@ async function fetchData() {
         console.log(finalResult)
     }
 
-    Store.boards = finalResult
-    Store.collaborate = resultCollab
+    Store.boards = finalResult.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
+    // Store.collaborate = resultCollab
+    Store.collaborate = resultCollab.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
     // console.log(Store.collaborate)
 
     for (const board of Store.boards) {
@@ -541,7 +542,46 @@ watch(
                             :key="index"
                             class="bg-white rounded-lg shadow p-6 min-w-[250px] max-w-[250px] flex flex-col"
                         >
+
+                        <div class="flex justify-between">
+                                <div class="relative w-1/4 h-[60%] bg-orange-300 rounded-xl p-1">No: {{ index+1 }}</div>  
+                                <div class="">
+                                        
+                                    <div class="itbkk-board-visibility">
+                                        <input
+                                            type="checkbox"
+                                            class="toggle tooltip tooltip-right"
+                                        
+                                            :class="{
+                                                'cursor-not-allowed ':
+                                                    !checkAuthToken() ||
+                                                    !checkUserInAuthToken(
+                                                        board.owner.oid,
+                                                        userLogin
+                                                    ),
+                                            }"
+                                            :data-tip="
+                                                checkAuthToken() &&
+                                                checkUserInAuthToken(
+                                                    board.owner.oid,
+                                                    userLogin
+                                                )
+                                                    ? 'change Visibility Board'
+                                                    : 'You do not have permission to use this feature.'
+                                            "
+                                            v-model="board.isCheck"
+                                            @change="openConfirmModal(board)"
+                                        />
+                                    </div>
+                                    <div class="">
+                                        <p>{{ board.visibility }}</p>                                          
+                                    </div>
+                                     
+                                </div>                          
+                             
+                            </div>
                             {{ board.board }}
+                            
                             <div class="mb-4">
                                 <img
                                     :src="getImageUrl(index)"
@@ -552,53 +592,24 @@ watch(
                             <h3 class="text-lg font-bold mb-2">
                                 {{ board.board_name }}
                             </h3>
-                            <div class="flex justify-around">
+                            <p>Owner : {{ board.owner.name }}</p>
+                            <div class="flex justify-around mt-4">
                                 <button
-                                    class="bg-green-500 border text-xs border-slate-400 p-1 rounded-md"
+                                    class="bg-green-500 border text-xs border-slate-400 p-2 rounded-md text-white"
                                     @click="openBoardDetailModal(board.boardId)"
                                 >
                                     Board Detail
                                 </button>
                                 <button
-                                    class="bg-green-500 border text-xs border-slate-400 p-1 rounded-md"
+                                    class="bg-green-500 border text-xs border-slate-400 p-2 rounded-md text-white"
                                     @click="openBoardTaskModal(board.boardId)"
                                 >
                                     Board Tasks
                                 </button>
                             </div>
-                            <div>
-                                <p>{{ board.visibility }}</p>
-                            </div>
-                            <div class="itbkk-board-visibility">
-                                <input
-                                    type="checkbox"
-                                    class="toggle tooltip tooltip-right"
-                                
-                                    :class="{
-                                        'cursor-not-allowed ':
-                                            !checkAuthToken() ||
-                                            !checkUserInAuthToken(
-                                                board.owner.oid,
-                                                userLogin
-                                            ),
-                                    }"
-                                    :data-tip="
-                                        checkAuthToken() &&
-                                        checkUserInAuthToken(
-                                            board.owner.oid,
-                                            userLogin
-                                        )
-                                            ? 'change Visibility Board'
-                                            : 'You do not have permission to use this feature.'
-                                    "
-                                    v-model="board.isCheck"
-                                    @change="openConfirmModal(board)"
-                                />
-                            </div>{{ board.isCheck }}
-                            <p>Owner : {{ board.owner.name }}</p>
-                            {{
+                            <!-- {{
                                 checkUserInAuthToken(board.owner.oid, userLogin)
-                            }}
+                            }} -->
                         </div>
                     </div>
                 </div>
@@ -611,7 +622,7 @@ watch(
                     Collab Boards
                 </h1>
                 <div
-                    v-show="checkAuthToken()"
+                    v-show="checkAuthToken() && Store.collaborate.length > 0"
                     class="overflow-x-auto flex-grow p-4 border"
                 >
                     <div class="flex gap-4 flex-nowwrap">
@@ -622,25 +633,37 @@ watch(
                             class=" bg-white rounded-lg shadow p-6 min-w-[250px] max-w-[250px] flex flex-col items-center"
                             @click="openBoardTaskModal(boardcollab.boardId)"
                         >
-                            <div class="mb-4">
-                                <img
+                            <div class="mb-4 ">
+                                <!-- <img
                                     :src="getImageUrl(index)"
                                     alt="bg-board"
                                     class="w-full h-full object-cover rounded-2xl"
-                                />
+                                /> -->
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-20 stroke-blue-400">
+                                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                                </svg>
+
                             </div>
                             <p class="pt-2">No : {{ index + 1 }}</p>
                             <p class="text-lg font-bold">{{ boardcollab.board_name }}</p>
                             <p class="pt-2">Owner : {{ boardcollab.owner?.name }}</p>
                             <p class="pt-2">Access Right : {{ boardcollab.accessRight }}</p>
                             <button
-                                class="flex justify-center bg-gray-300 w-3/5 rounded-2xl mt-3"
+                                class="flex justify-center  w-3/5 rounded-2xl mt-3 text-red-500 hover:text-white border border-red-500 hover:bg-red-500 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
                             >
                                 Leave
                             </button>
                         </div>
                     </div>
                 </div>
+                <tbody
+                v-show="Store.collaborate.length === 0 && checkAuthToken()"
+                class=" bg-white rounded-lg shadow p-6 w-full flex flex-col items-center"
+            >
+                <tr>
+                    <td class="text-center" colspan="6">Don't Have collaborate Board ?</td>
+                </tr>
+            </tbody>
             </div>
         </main>
         <router-view />

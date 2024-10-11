@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch, onMounted } from "vue"
-import { addData, getTaskByBoard,getBoard } from "@/libs/fetchs.js"
+import { ref, onMounted } from "vue"
+import { addData, getTaskByBoard,getAllBoard } from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { validateTask } from "@/libs/varidateTask.js"
@@ -16,41 +16,10 @@ const DefualtStatus = ref()
 let TokenLogin = ref(false)
 let userLogin = Cookies.get("oid")
 
-async function fetchCheckBoardId() {
-    let result = await getBoard(`boards/${route.params.id}`);
- if (checkAuthToken()) {
-    if (result.status === 404) {
-        Store.errorPage404 = true;
-        Store.errorPrivate404Content = 'Board';
-        router.push({ name: "board", params: { id: route.params.id } });
-    } else if (result.status === 403) {
-        Store.errorPage403 = true;
-        router.push({ name: "notFound" });
-    } else if (result.status === 401) {
-        router.push({ name: "login" });
-        Store.errorToken = true;
-    }
- } else {
-    Store.errorPage401 = true;
-    router.push({ name: "notFound" });
- }
-    
-}
-
-
-// watch(
-//     boardId,
-//     async (newloadpage) => {
-//         if (newloadpage) {
-//             checkTokenLogin()
-//             checkrequestNewToken()
-//         }
-//     },
-//     { immediate: true }
-// )
-
 onMounted(() => {
     checkrequestNewToken(router)
+    fetchData()
+    setDefualtStatus()
 })
 
 async function setDefualtStatus() {
@@ -149,29 +118,39 @@ function errorPermition() {
 
 function checkOwner() {
     let userInboard = ""
-    for (const board of Store.boards) {
-        if (board.boardId === boardId.value) {
-            userInboard = board.owner.oid
-            console.log(userInboard)
-            break
-        } else {
-            // router.push({ name: "notFound" })
-        }
+    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
+    console.log(foundBoard)
+    
+    if (foundBoard.boardId === boardId.value) {
+        userInboard = foundBoard.owner.oid
+        
+    } else {
+        
     }
+    console.log(userInboard)
+    console.log(checkUserInAuthToken(userInboard, userLogin));
+    
+    
     return checkUserInAuthToken(userInboard, userLogin)
 }
 
-// function checkUserPermition() {
-//     console.log(checkAuthToken(),checkOwner());
-//     if (!checkAuthToken()) {
-//         router.push({ name: "notFound" })
-//     }
-//     if (checkAuthToken() && !checkOwner()) {
-//         router.push({ name: "notFound" })
-//     }
-// }
-// checkUserPermition()
-setDefualtStatus()
+function checkUserPermition() {
+    if (!checkAuthToken()||!checkOwner()) {
+        Store.errorPage403 = true
+        router.push({ name: "notFound" })
+    }
+}
+
+async function fetchData() {
+    let endpoint = "boards"
+
+        let resBoards = await getAllBoard(endpoint)
+        Store.boards = resBoards.boards
+        Store.collaborate = resBoards.collaborate
+        console.log(Store.boards)
+        
+        checkUserPermition()
+}
 </script>
 <template>
     <div
