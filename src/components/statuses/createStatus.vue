@@ -48,10 +48,10 @@ function closeModal() {
 
 function addToStore() {
     statusData.value.statusId = statusID.value
-    console.log(statusData.value);
+    // console.log(statusData.value);
     Store.statuses.push(statusData.value)
     Store.successAddStatus = true
-    console.log(Store.statuses);
+    // console.log(Store.statuses);
     clearData()
 }
 
@@ -59,7 +59,7 @@ function addToStore() {
 
 async function saveTaskData() {
     let checkStatusName = Store.statuses.filter((status) => status.name === statusData.value.name)
-    console.log(statusData.value,checkStatusName);
+    // console.log(statusData.value,checkStatusName);
     
         if(checkStatusName.length === 1){
             window.alert("An error has occurred, the status could not be added.")
@@ -82,7 +82,7 @@ async function saveTaskData() {
                 }
                 else {
                     statusID.value = result.statusId
-                    console.log(result)
+                    // console.log(result)
                     addToStore()
                     closeModal()  
                 }
@@ -107,7 +107,7 @@ async function fetchData() {
         let resBoards = await getAllBoard(endpoint)
         Store.boards = resBoards.boards
         Store.collaborate = resBoards.collaborate
-        console.log(Store.boards)
+        // console.log(Store.boards)
         
         checkUserPermition()
 }
@@ -124,7 +124,7 @@ function clearData() {
 function checkOwner() {
     let userInboard = ""
     const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
-    console.log(foundBoard)
+    // console.log(foundBoard)
     
     if (foundBoard.boardId === boardId.value) {
         userInboard = foundBoard.owner.oid
@@ -132,8 +132,8 @@ function checkOwner() {
     } else {
         
     }
-    console.log(userInboard)
-    console.log(checkUserInAuthToken(userInboard, userLogin));
+    // console.log(userInboard)
+    // console.log(checkUserInAuthToken(userInboard, userLogin));
     
     
     return checkUserInAuthToken(userInboard, userLogin)

@@ -85,7 +85,7 @@ async function saveTaskData() {
             router.push({ name: "login" })
             Store.errorToken = true
         } else {
-            console.log(result)
+            // console.log(result)
             TaskID.value = result.id
             addToStore()
         }
@@ -119,7 +119,7 @@ function errorPermition() {
 function checkOwner() {
     let userInboard = ""
     const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
-    console.log(foundBoard)
+    // console.log(foundBoard)
     
     if (foundBoard.boardId === boardId.value) {
         userInboard = foundBoard.owner.oid
@@ -127,8 +127,8 @@ function checkOwner() {
     } else {
         
     }
-    console.log(userInboard)
-    console.log(checkUserInAuthToken(userInboard, userLogin));
+    // console.log(userInboard)
+    // console.log(checkUserInAuthToken(userInboard, userLogin));
     
     
     return checkUserInAuthToken(userInboard, userLogin)
@@ -147,7 +147,7 @@ async function fetchData() {
         let resBoards = await getAllBoard(endpoint)
         Store.boards = resBoards.boards
         Store.collaborate = resBoards.collaborate
-        console.log(Store.boards)
+        // console.log(Store.boards)
         
         checkUserPermition()
 }

@@ -30,7 +30,7 @@ let userLogin = Cookies.get("name")
 // )
 
 function checkUserPermition() {
-    console.log(checkAuthToken());
+    // console.log(checkAuthToken());
     if (checkAuthToken() === false) {
         router.push({ name: "notFound" })
     } 
@@ -70,7 +70,7 @@ async function saveBoardData() {
             //     Store.errorToken = true;
             // }
             // else 
-            console.log(result)
+            // console.log(result)
             if(result.status === 400){
                 router.push({name: 'Board'})
             }

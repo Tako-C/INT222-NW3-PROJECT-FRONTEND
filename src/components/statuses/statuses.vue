@@ -76,7 +76,7 @@ function checkOwner() {
         }
         return checkUserInAuthToken(userInboard, userLogin)
     } else {
-            console.log(Store.boards);
+            // console.log(Store.boards);
             Store.errorPage404 = true
             Store.errortext404 = 'The Status does not exist'
             router.push({ name: "notFound" })
@@ -85,7 +85,7 @@ function checkOwner() {
 }
 
 function checkPublicCollab(resultAllBoard) {
-    console.log(resultAllBoard)
+    // console.log(resultAllBoard)
 
     // const foundBoardPublic = resultAllBoard.find((board) => board.boardId === boardId.value)
     // console.log(foundBoardPublic)
@@ -112,8 +112,8 @@ async function fetchData() {
     Store.statuses = resStatus
     Store.tasks = resTasks
     Store.collaborate = resBoards.collaborate
-    console.log(Store.collaborate)
-    console.log(Store.boards)
+    // console.log(Store.collaborate)
+    // console.log(Store.boards)
     checkOwner()
 
     switch (resStatus.status) {
@@ -122,18 +122,18 @@ async function fetchData() {
             Store.errorToken = true
             break
         case 400:
-            console.log("400 error")
+            // console.log("400 error")
             errorPermition()
             break
         case 404:
             Store.errortext404 = 'The Status does not exist'
             Store.errorPage404 = true
-            console.log("404 error")
+            // console.log("404 error")
             errorPermition()
             break
         case 403:
             Store.errorPage403 = true
-            console.log("403 error")
+            // console.log("403 error")
             errorPermition()
             break
         default:
@@ -206,7 +206,7 @@ async function removeStatus() {
 
     if (removeName.value === "No Status" || removeName.value === "Done") {
         Store.errorDeleteNoStatus = true
-        console.log(removeName.value)
+        // console.log(removeName.value)
         openStatuses(route.params.id)
         return
     }
@@ -631,7 +631,7 @@ function checkVariable() {
                     {{ checkAuthToken() ? username : "Login" }}
                 </p>
                 <div
-                    class="flex items-center justify-center right-0"
+                    class="itbkk-sign-out flex items-center justify-center right-0"
                     @click="logOut()"
                 >
                     <svg

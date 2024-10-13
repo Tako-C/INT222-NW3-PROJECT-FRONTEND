@@ -42,6 +42,7 @@ watch(
             await fetchData()
             getBoardName()
             loopBoardVisibility()
+            
             // checkTokenLogin()
         }
     },
@@ -76,10 +77,10 @@ function loopBoardVisibility() {
             foundBoard.isCheck = false
         }
         boardnow.value = foundBoard
-        console.log(boardnow.value)
+        // console.log(boardnow.value)
     }
 
-    console.log(Store.boards);
+    // console.log(Store.boards);
     
 }
 let visibilityBoard = ref({})
@@ -89,7 +90,7 @@ import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
 function openConfirmVisibilitymodal() {
     if (checkAuthToken) {
         visibilityBoard.value = boardnow.value
-        console.log(boardnow.value.visibility)
+        // console.log(boardnow.value.visibility)
         
         openConfirmedvisibility.value = true
         
@@ -191,9 +192,9 @@ async function fetchData() {
     Store.statuses = resStatuses
     Store.boards = resBoards.boards 
     Store.collaborate = resBoards.collaborate    
-    console.log(Store.tasks);
-    console.log(Store.boards);
-    console.log(Store.collaborate);
+    // console.log(Store.tasks);
+    // console.log(Store.boards);
+    // console.log(Store.collaborate);
 
          
     }
@@ -300,10 +301,10 @@ function getBoardName() {
     const board = Store.boards.find((b) => b.boardId === boardId.value) || 
                   Store.collaborate.find((b) => b.boardId === boardId.value);
     if (board) {
-        console.log(board)
+        // console.log(board)
         boardName.value = board.board_name
     } else {
-        console.log('ไม่พบบอร์ด')
+        // console.log('ไม่พบบอร์ด')
         boardName.value = ''
     }
 }
@@ -335,7 +336,7 @@ async function removeTask() {
                 else {
                     Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
                     successDelete.value = true
-                    console.log(successDelete.value)
+                    // console.log(successDelete.value)
                 }
             } 
             else{
@@ -373,13 +374,14 @@ function closeNotificationModal() {
     let board = Store.boards.find(
         (b) => b.boardId === visibilityBoard.value.boardId
     )
-    console.log(visibilityBoard.value.visibility)
+    // console.log(visibilityBoard.value.visibility)
     if (visibilityBoard.value.visibility === "public") {
         boardnow.value.isCheck = true
+        
     } else {
         boardnow.value.isCheck = false
     }
-    fetchData()
+    // fetchData()
 }
 
 function checkVariable() {
@@ -396,8 +398,8 @@ function checkVariable() {
 }
 
 function openConfirmModal(id, title) {
-console.log("open delete");
-    console.log(checkOwner());
+// console.log("open delete");
+    // console.log(checkOwner());
     
     openConfirmed.value = true
     taskTitle.value = title
@@ -654,7 +656,7 @@ onMounted(() => {
                 <p class="itbkk-fullname text-sm font-medium p-1">
                     {{ checkAuthToken() ? username : "Login" }}
                 </p>
-                <div class="flex items-center justify-center right-0" @click="logOut()">
+                <div class="itbkk-sign-out flex items-center justify-center right-0" @click="logOut()">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -935,7 +937,7 @@ onMounted(() => {
                         </div>
                     </template>
                     <button class="ml-2 bg-sky-200 rounded-lg p-2 itbkk-manage-status" @click="openStatuses(boardId)">Manage Status</button>
-                    <button class="ml-2 bg-yellow-200 rounded-lg p-2 itbkk-manage-status" @click="openCollaborator(boardId)">Manage Collaborator</button>
+                    <button class="ml-2 bg-yellow-200 rounded-lg p-2 itbkk-manage-collaborator" @click="openCollaborator(boardId)">Manage Collaborator</button>
                 </div>
             </div>
 

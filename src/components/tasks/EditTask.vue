@@ -160,7 +160,7 @@ function addToStore() {
     } else {
         Store.tasks.push(taskData.value)
     }
-    console.log(Store.tasks)
+    // console.log(Store.tasks)
 
     closeModal()
 }
@@ -174,7 +174,7 @@ function closeModal() {
 // }
 
 function checkUserPermition() {
-    console.log(checkAuthToken())
+    // console.log(checkAuthToken())
     if (checkAuthToken() === false) {
         errorPermition()
     } else {

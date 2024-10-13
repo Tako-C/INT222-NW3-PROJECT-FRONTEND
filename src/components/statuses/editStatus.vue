@@ -80,7 +80,7 @@ async function fetchData() {
             errorPermition()
         } else{
             Store.errorPage403 = true
-            console.log("not Permition");
+            // console.log("not Permition");
             
             errorPermition()
         }
@@ -102,7 +102,7 @@ async function updateStatus() {
             statusData.value.name = statusData.value.name.trim()
             statusData.value.description = statusData.value.description.trim()
         }
-        console.log(statusData.value)
+        // console.log(statusData.value)
 
         let result = await editDatas(
             `boards/${route.params.id}/statuses/${route.params.statusId}`,
@@ -110,7 +110,7 @@ async function updateStatus() {
         )
         ID.value = result.id
         Store.successUpdateStatus = true
-        console.log(result.status)
+        // console.log(result.status)
         if (result.status === 401) {
             router.push({ name: "login" })
             Store.errorToken = true

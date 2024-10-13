@@ -14,7 +14,7 @@ const boardId = ref(route.params.id)
 let userLogin = Cookies.get("oid")
 
 function checkUserPermition() {
-    console.log(checkAuthToken(),checkOwner());
+    // console.log(checkAuthToken(),checkOwner());
     if (!checkAuthToken() || !checkOwner()) {
         Store.errorPage403 = true
         errorPermition()
@@ -42,8 +42,8 @@ function checkUserIsCollab() {
     // console.log(foundBoard);
     for (let i = 0; i < Store.collaborate.length; i++) {
         if (Store.collaborate[i].oid === userLogin && Store.collaborate[i].boardsId === boardId.value) {
-            console.log(Store.collaborate[i].oid);
-        console.log(Store.collaborate[i].boardsId);
+            // console.log(Store.collaborate[i].oid);
+        // console.log(Store.collaborate[i].boardsId);
             return true 
         }
     }
@@ -52,7 +52,7 @@ function checkUserIsCollab() {
 function checkOwner() {
     let userInboard = ""
     const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
-    console.log(foundBoard)
+    // console.log(foundBoard)
     
     if (foundBoard.boardId === boardId.value) {
         userInboard = foundBoard.owner.oid
@@ -60,8 +60,8 @@ function checkOwner() {
     } else {
         
     }
-    console.log(userInboard)
-    console.log(checkUserInAuthToken(userInboard, userLogin));
+    // console.log(userInboard)
+    // console.log(checkUserInAuthToken(userInboard, userLogin));
     
     
     return checkUserInAuthToken(userInboard, userLogin)
@@ -73,31 +73,31 @@ async function fetchData() {
         let resBoards = await getAllBoard(endpoint)
         Store.boards = resBoards.boards
         Store.collaborate = resBoards.collaborate
-        console.log(Store.boards)
+        // console.log(Store.boards)
         
         checkUserPermition()
 }
 function addToStore(newBoard) {
-    console.log(newBoard);
+    // console.log(newBoard);
     Store.collaborate.push({ ...newBoard })
-    console.log(Store.collaborate);
+    // console.log(Store.collaborate);
 }
 
 
 async function saveBoardData() {
     
             collabData.value.boards = boardId.value
-     console.log(checkUserIsCollab());
+     // console.log(checkUserIsCollab());
      
             if (checkUserIsCollab()) {
-                console.log(checkUserIsCollab());
+                // console.log(checkUserIsCollab());
                 Store.errorPage403 = true
                 errorPermition()
             } 
             else {
                 let result = await addData(collabData.value, `${boardId.value}/collabs`)
-                console.log(result)
-              console.log(checkOwner(),checkAuthToken());
+                // console.log(result)
+              // console.log(checkOwner(),checkAuthToken());
 
 
     if (checkOwner() && checkAuthToken()) {
@@ -108,22 +108,22 @@ async function saveBoardData() {
             Store.errorToken = true
             break
         case 400:
-            console.log("400 error")
+            // console.log("400 error")
             errorPermition()
             break
         case 404:
             Store.errorPage404 = true
-            console.log("404 error")
+            // console.log("404 error")
             break
         case 409:
             Store.errorPage409 = true
-            console.log("409 error")
+            // console.log("409 error")
             break
         default:
-            console.log(Store.collaborate);
+            // console.log(Store.collaborate);
             
             addToStore(result)
-            console.log(result)
+            // console.log(result)
             closeModal()
             break
     }
@@ -186,7 +186,7 @@ onMounted(() => {
         class="z-30"
     />
     <div
-        class="class name : itbkk-* z-40 fixed w-screen h-screen top-0 left-0 flex justify-center items-center"
+        class="class name : itbkk-modal-alert z-40 fixed w-screen h-screen top-0 left-0 flex justify-center items-center"
     >
         <div
             class="bg-black bg-opacity-50 w-screen h-screen"
@@ -207,10 +207,10 @@ onMounted(() => {
             <div class=" mt-3 ml-7">
 
                     <div class=" font-bold">Collaburator e-mail</div>
-                    <input maxlength="120" v-model="collabData.email" class="itbkk-board-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
+                    <input maxlength="120" v-model="collabData.email" class="itbkk-collaborator-email w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
                     <p class=" flex justify-end pr-20 text-[10px]">{{ collabData.email.length}}/50</p>
 
-                    <select v-model="collabData.accessRight" class=" h-8 rounded-lg border-2 pl-2">
+                    <select v-model="collabData.accessRight" class="itbkk-access-right h-8 rounded-lg border-2 pl-2">
                         <option disabled value="">Select Access Permissions</option>
                         <option v-for="right in accessRightList" :key="right" :value="right">
                         {{ right }}

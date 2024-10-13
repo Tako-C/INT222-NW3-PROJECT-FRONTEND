@@ -47,7 +47,7 @@ async function fetchData() {
         fetchHaveData.value = true;
         createTimeInBrowserTimezone.value = convertToBrowserTimezone(result.createdOn);
         updateTimeInBrowserTimezone.value = convertToBrowserTimezone(result.updatedOn);
-        console.log(boardData.value);
+        // console.log(boardData.value);
     }
     checkOwner()
 }
