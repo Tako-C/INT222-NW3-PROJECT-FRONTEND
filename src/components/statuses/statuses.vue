@@ -631,7 +631,7 @@ function checkVariable() {
                     {{ checkAuthToken() ? username : "Login" }}
                 </p>
                 <div
-                    class="flex items-center justify-center right-0"
+                    class="itbkk-sign-out flex items-center justify-center right-0"
                     @click="logOut()"
                 >
                     <svg

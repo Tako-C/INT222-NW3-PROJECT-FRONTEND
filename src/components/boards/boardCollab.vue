@@ -366,7 +366,7 @@ onMounted(() => {
                 <p class="itbkk-fullname text-sm font-medium p-1">
                     {{ checkAuthToken() ? username : "Login" }}
                 </p>
-                <div class="flex items-center justify-center right-0" @click="logOut()">
+                <div class="itbkk-sign-out flex items-center justify-center right-0" @click="logOut()">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"

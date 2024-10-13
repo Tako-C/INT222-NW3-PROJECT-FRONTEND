@@ -452,7 +452,7 @@ watch(
 
             <!-- Login button -->
             <div
-                class="itbkk-log-out bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer"
+                class="itbkk-sign-out bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer"
                 @click="logOut()"
             >
                 <div class="flex items-center space-x-2 p-1">
