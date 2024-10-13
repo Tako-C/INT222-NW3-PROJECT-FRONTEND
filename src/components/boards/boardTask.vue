@@ -42,6 +42,7 @@ watch(
             await fetchData()
             getBoardName()
             loopBoardVisibility()
+            
             // checkTokenLogin()
         }
     },
@@ -376,10 +377,11 @@ function closeNotificationModal() {
     console.log(visibilityBoard.value.visibility)
     if (visibilityBoard.value.visibility === "public") {
         boardnow.value.isCheck = true
+        
     } else {
         boardnow.value.isCheck = false
     }
-    fetchData()
+    // fetchData()
 }
 
 function checkVariable() {
