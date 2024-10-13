@@ -23,10 +23,10 @@ const boardName = ref("")
 let resultAllBoard = {}
 
 function checkPublicCollab(resultAllBoard) {
-    console.log(resultAllBoard)
+    // console.log(resultAllBoard)
     const foundBoardPublic = resultAllBoard.find((board) => board.boardId === boardId.value)
-    console.log(foundBoardPublic)
-    console.log(boardId.value)
+    // console.log(foundBoardPublic)
+    // console.log(boardId.value)
     if (foundBoardPublic != undefined &&foundBoardPublic.visibility ==="private") {
         Store.errorPage403 = true
             errorPermition()
@@ -35,7 +35,7 @@ function checkPublicCollab(resultAllBoard) {
  
 function checkOwner() {
   const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value)
-  console.log(foundBoard)
+//   console.log(foundBoard)
   
   if (foundBoard) {
       const userInboard = foundBoard.owner.oid  
@@ -53,7 +53,7 @@ async function fetchData() {
         Store.collaborate = resultColab
         Store.boards = resBoards.boards
         Store.statuses = resStatuses
-        console.log(resultAllBoard)
+        // console.log(resultAllBoard)
         // console.log(Store.statuses)
         // console.log(Store.boards)
         // console.log(Store.collaborate)
@@ -71,7 +71,7 @@ async function fetchData() {
             Store.errorToken = true
             break
         case 400:
-            console.log("400 error")
+            // console.log("400 error")
             errorPermition()
             break
         case 404:
@@ -82,7 +82,7 @@ async function fetchData() {
             break
         case 403:
             Store.errorPage403 = true
-            console.log("403 error")
+            // console.log("403 error")
             errorPermition()
             break
         default:
@@ -95,14 +95,14 @@ function getBoardName() {
     const board = resultAllBoard.boards.find((b) => b.boardId === boardId.value) || 
                     resultAllBoard.collaborate.find((b) => b.boardId === boardId.value);
     if (board) {
-        console.log(board)
+        // console.log(board)
         boardName.value = board.board_name
     } else {
         console.log('ไม่พบบอร์ด')
         boardName.value = ''
     }
-    console.log(board)
-    console.log(resultAllBoard)
+    // console.log(board)
+    // console.log(resultAllBoard)
     
 }
 
@@ -156,7 +156,7 @@ watch(
         if (newBoardId) {
             await fetchData()
             getBoardName()
-            console.log(boardName.value);
+            // console.log(boardName.value);
             
         }
     },

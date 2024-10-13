@@ -14,7 +14,7 @@ const boardId = ref(route.params.id)
 let userLogin = Cookies.get("oid")
 
 function checkUserPermition() {
-    console.log(checkAuthToken(),checkOwner());
+    // console.log(checkAuthToken(),checkOwner());
     if (!checkAuthToken() || !checkOwner()) {
         Store.errorPage403 = true
         errorPermition()
@@ -42,8 +42,8 @@ function checkUserIsCollab() {
     // console.log(foundBoard);
     for (let i = 0; i < Store.collaborate.length; i++) {
         if (Store.collaborate[i].oid === userLogin && Store.collaborate[i].boardsId === boardId.value) {
-            console.log(Store.collaborate[i].oid);
-        console.log(Store.collaborate[i].boardsId);
+            // console.log(Store.collaborate[i].oid);
+        // console.log(Store.collaborate[i].boardsId);
             return true 
         }
     }
@@ -52,7 +52,7 @@ function checkUserIsCollab() {
 function checkOwner() {
     let userInboard = ""
     const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
-    console.log(foundBoard)
+    // console.log(foundBoard)
     
     if (foundBoard.boardId === boardId.value) {
         userInboard = foundBoard.owner.oid
@@ -60,8 +60,8 @@ function checkOwner() {
     } else {
         
     }
-    console.log(userInboard)
-    console.log(checkUserInAuthToken(userInboard, userLogin));
+    // console.log(userInboard)
+    // console.log(checkUserInAuthToken(userInboard, userLogin));
     
     
     return checkUserInAuthToken(userInboard, userLogin)
@@ -73,31 +73,31 @@ async function fetchData() {
         let resBoards = await getAllBoard(endpoint)
         Store.boards = resBoards.boards
         Store.collaborate = resBoards.collaborate
-        console.log(Store.boards)
+        // console.log(Store.boards)
         
         checkUserPermition()
 }
 function addToStore(newBoard) {
-    console.log(newBoard);
+    // console.log(newBoard);
     Store.collaborate.push({ ...newBoard })
-    console.log(Store.collaborate);
+    // console.log(Store.collaborate);
 }
 
 
 async function saveBoardData() {
     
             collabData.value.boards = boardId.value
-     console.log(checkUserIsCollab());
+     // console.log(checkUserIsCollab());
      
             if (checkUserIsCollab()) {
-                console.log(checkUserIsCollab());
+                // console.log(checkUserIsCollab());
                 Store.errorPage403 = true
                 errorPermition()
             } 
             else {
                 let result = await addData(collabData.value, `${boardId.value}/collabs`)
-                console.log(result)
-              console.log(checkOwner(),checkAuthToken());
+                // console.log(result)
+              // console.log(checkOwner(),checkAuthToken());
 
 
     if (checkOwner() && checkAuthToken()) {
@@ -108,22 +108,22 @@ async function saveBoardData() {
             Store.errorToken = true
             break
         case 400:
-            console.log("400 error")
+            // console.log("400 error")
             errorPermition()
             break
         case 404:
             Store.errorPage404 = true
-            console.log("404 error")
+            // console.log("404 error")
             break
         case 409:
             Store.errorPage409 = true
-            console.log("409 error")
+            // console.log("409 error")
             break
         default:
-            console.log(Store.collaborate);
+            // console.log(Store.collaborate);
             
             addToStore(result)
-            console.log(result)
+            // console.log(result)
             closeModal()
             break
     }

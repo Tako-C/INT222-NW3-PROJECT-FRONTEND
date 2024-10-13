@@ -74,7 +74,7 @@ async function fetchData() {
     if (checkAuthToken()) {
         let resultPrivateRaw = await getAllBoard(endpoint)
         let resultPublicRaw = await getAllBoardByPublic(endpoint)
-        console.log(resultPrivateRaw)
+        // console.log(resultPrivateRaw)
 
         resultCollab = resultPrivateRaw.collaborate
         resultPrivate = resultPrivateRaw.boards
@@ -94,12 +94,12 @@ async function fetchData() {
                     publicBoard.owner.oid !== privateBoard.owner.oid
             )
             finalResult = [...resultPrivate, ...resultPublic]
-            console.log(finalResult)
+            // console.log(finalResult)
         })
     } else {
         resultPublicRaw = await getAllBoard(endpoint)
         finalResult = resultPublicRaw.boards
-        console.log(finalResult)
+        // console.log(finalResult)
     }
 
     Store.boards = finalResult.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
@@ -115,7 +115,7 @@ async function fetchData() {
         }
     }
     checkFirstBoard()
-    console.log(Store.boards);
+    // console.log(Store.boards);
     
 }
 
@@ -129,7 +129,7 @@ function openBoardDetailModal(boardId) {
     router.push({ name: "BoardDetail", params: { id: boardId } })
 }
 function openCreateBoard(boardId) {
-    console.log(checkAuthToken())
+    // console.log(checkAuthToken())
 
     if (!checkAuthToken) {
         errorPermition()
@@ -165,7 +165,7 @@ async function updateVisibility() {
     let result = await updateBoard(`boards/${visibilityBoard.value.boardId}`, {
         visibility: visibilityBoard.value.visibility,
     })
-    console.log(visibilityBoard.value)
+    // console.log(visibilityBoard.value)
     
     if (
         checkAuthToken() &&
@@ -208,7 +208,7 @@ async function changeVisibility() {
 function openConfirmModal(board) {
     if (checkAuthToken() && checkUserInAuthToken(board.owner.oid, userLogin)) {    
         visibilityBoard.value = board
-        console.log(visibilityBoard.value.isCheck);
+        // console.log(visibilityBoard.value.isCheck);
         openConfirmed.value = true
         // openConfirmed.value = true
         

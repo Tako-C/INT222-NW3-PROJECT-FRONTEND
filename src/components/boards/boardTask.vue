@@ -77,10 +77,10 @@ function loopBoardVisibility() {
             foundBoard.isCheck = false
         }
         boardnow.value = foundBoard
-        console.log(boardnow.value)
+        // console.log(boardnow.value)
     }
 
-    console.log(Store.boards);
+    // console.log(Store.boards);
     
 }
 let visibilityBoard = ref({})
@@ -90,7 +90,7 @@ import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
 function openConfirmVisibilitymodal() {
     if (checkAuthToken) {
         visibilityBoard.value = boardnow.value
-        console.log(boardnow.value.visibility)
+        // console.log(boardnow.value.visibility)
         
         openConfirmedvisibility.value = true
         
@@ -192,9 +192,9 @@ async function fetchData() {
     Store.statuses = resStatuses
     Store.boards = resBoards.boards 
     Store.collaborate = resBoards.collaborate    
-    console.log(Store.tasks);
-    console.log(Store.boards);
-    console.log(Store.collaborate);
+    // console.log(Store.tasks);
+    // console.log(Store.boards);
+    // console.log(Store.collaborate);
 
          
     }
@@ -301,10 +301,10 @@ function getBoardName() {
     const board = Store.boards.find((b) => b.boardId === boardId.value) || 
                   Store.collaborate.find((b) => b.boardId === boardId.value);
     if (board) {
-        console.log(board)
+        // console.log(board)
         boardName.value = board.board_name
     } else {
-        console.log('ไม่พบบอร์ด')
+        // console.log('ไม่พบบอร์ด')
         boardName.value = ''
     }
 }
@@ -336,7 +336,7 @@ async function removeTask() {
                 else {
                     Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
                     successDelete.value = true
-                    console.log(successDelete.value)
+                    // console.log(successDelete.value)
                 }
             } 
             else{
@@ -374,7 +374,7 @@ function closeNotificationModal() {
     let board = Store.boards.find(
         (b) => b.boardId === visibilityBoard.value.boardId
     )
-    console.log(visibilityBoard.value.visibility)
+    // console.log(visibilityBoard.value.visibility)
     if (visibilityBoard.value.visibility === "public") {
         boardnow.value.isCheck = true
         
@@ -398,8 +398,8 @@ function checkVariable() {
 }
 
 function openConfirmModal(id, title) {
-console.log("open delete");
-    console.log(checkOwner());
+// console.log("open delete");
+    // console.log(checkOwner());
     
     openConfirmed.value = true
     taskTitle.value = title
