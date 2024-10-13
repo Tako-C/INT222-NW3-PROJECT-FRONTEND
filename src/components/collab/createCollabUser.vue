@@ -186,7 +186,7 @@ onMounted(() => {
         class="z-30"
     />
     <div
-        class="class name : itbkk-* z-40 fixed w-screen h-screen top-0 left-0 flex justify-center items-center"
+        class="class name : itbkk-modal-alert z-40 fixed w-screen h-screen top-0 left-0 flex justify-center items-center"
     >
         <div
             class="bg-black bg-opacity-50 w-screen h-screen"
@@ -207,10 +207,10 @@ onMounted(() => {
             <div class=" mt-3 ml-7">
 
                     <div class=" font-bold">Collaburator e-mail</div>
-                    <input maxlength="120" v-model="collabData.email" class="itbkk-board-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
+                    <input maxlength="120" v-model="collabData.email" class="itbkk-collaborator-email w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
                     <p class=" flex justify-end pr-20 text-[10px]">{{ collabData.email.length}}/50</p>
 
-                    <select v-model="collabData.accessRight" class=" h-8 rounded-lg border-2 pl-2">
+                    <select v-model="collabData.accessRight" class="itbkk-access-right h-8 rounded-lg border-2 pl-2">
                         <option disabled value="">Select Access Permissions</option>
                         <option v-for="right in accessRightList" :key="right" :value="right">
                         {{ right }}

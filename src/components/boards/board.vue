@@ -452,7 +452,7 @@ watch(
 
             <!-- Login button -->
             <div
-                class="bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer"
+                class="itbkk-log-out bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer"
                 @click="logOut()"
             >
                 <div class="flex items-center space-x-2 p-1">
@@ -617,7 +617,7 @@ watch(
                 <!-- collab row -->
                 <h1
                     v-show="checkAuthToken()"
-                    class="text-3xl font-bold text-black ml-2 mt-10 mb-6"
+                    class="itbkk-collab-board text-3xl font-bold text-black ml-2 mt-10 mb-6"
                 >
                     Collab Boards
                 </h1>
@@ -644,12 +644,12 @@ watch(
                                 </svg>
 
                             </div>
-                            <p class="pt-2">No : {{ index + 1 }}</p>
-                            <p class="text-lg font-bold">{{ boardcollab.board_name }}</p>
-                            <p class="pt-2">Owner : {{ boardcollab.owner?.name }}</p>
-                            <p class="pt-2">Access Right : {{ boardcollab.accessRight }}</p>
+                            <p class="itbkk-collab-item pt-2">No : {{ index + 1 }}</p>
+                            <p class="itbkk-board-name text-lg font-bold">{{ boardcollab.board_name }}</p>
+                            <p class="itbkk-owner-name pt-2">Owner : {{ boardcollab.owner?.name }}</p>
+                            <p class="itbkk-access-right pt-2">Access Right : {{ boardcollab.accessRight }}</p>
                             <button
-                                class="flex justify-center  w-3/5 rounded-2xl mt-3 text-red-500 hover:text-white border border-red-500 hover:bg-red-500 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
+                                class="itbkk-leave-board flex justify-center  w-3/5 rounded-2xl mt-3 text-red-500 hover:text-white border border-red-500 hover:bg-red-500 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
                             >
                                 Leave
                             </button>

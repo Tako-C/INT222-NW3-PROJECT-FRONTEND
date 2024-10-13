@@ -414,7 +414,7 @@ onMounted(() => {
                 <div
                     class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
                 >
-                <h1>{{ boardName }}</h1>
+                <h1 class="itbkk-board-name">{{ boardName }}</h1>
                     <div class="flex items-center justify-center">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -478,11 +478,11 @@ onMounted(() => {
                 class="flex flex-col"
                 >
                     <div class="grid grid-cols-6 gap-5 mt-5">
-                        <p class="flex justify-center">{{ index+1 }}</p>
-                        <p class="flex justify-center">{{ collab.name }}</p>
-                        <p class=" flex justify-center col-span-2">{{ collab.email }}</p>
-                        <p class="flex justify-center">{{ collab.accessRight }}</p>
-                        <button class="flex justify-center bg-gray-300 w-3/5 rounded-2xl">Remove</button>
+                        <p class="itbkk-item flex justify-center">{{ index+1 }}</p>
+                        <p class="itbkk-name flex justify-center">{{ collab.name }}</p>
+                        <p class="itbkk-email flex justify-center col-span-2">{{ collab.email }}</p>
+                        <p class="itbkk-access-right flex justify-center">{{ collab.accessRight }}</p>
+                        <button class="itbkk-collab-remove flex justify-center bg-gray-300 w-3/5 rounded-2xl">Remove</button>
 
                     </div>
                 </div>

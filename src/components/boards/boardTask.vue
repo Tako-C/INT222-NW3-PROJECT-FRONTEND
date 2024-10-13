@@ -935,7 +935,7 @@ onMounted(() => {
                         </div>
                     </template>
                     <button class="ml-2 bg-sky-200 rounded-lg p-2 itbkk-manage-status" @click="openStatuses(boardId)">Manage Status</button>
-                    <button class="ml-2 bg-yellow-200 rounded-lg p-2 itbkk-manage-status" @click="openCollaborator(boardId)">Manage Collaborator</button>
+                    <button class="ml-2 bg-yellow-200 rounded-lg p-2 itbkk-manage-collaborator" @click="openCollaborator(boardId)">Manage Collaborator</button>
                 </div>
             </div>
 
