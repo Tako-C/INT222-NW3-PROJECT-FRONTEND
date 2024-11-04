@@ -3,9 +3,8 @@ import { ref, onMounted, computed, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import {
-    getBoard,
     clearCookies,
-    updateBoard,
+    PatchData,
     getAllBoard,
     getAllBoardByPublic,
 } from "@/libs/fetchs.js"
@@ -17,8 +16,9 @@ import {
 } from "@/libs/authToken.js"
 
 import Cookies from "js-cookie"
-import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
+import BoardVisibilityConfirmation from "@/components/boards/boardVisibilityConfirmation.vue"
 import modalNotification from "@/components/modals/modalNotification.vue"
+import boardCollabLeave from "@/components/boards/modalConfirmedLeaveCollab.vue"
 
 const Store = useStore()
 const router = useRouter()
@@ -32,10 +32,13 @@ const isBoardPage = computed(() => route.path.startsWith("/board"))
 const isStatusPage = computed(() => route.path.endsWith("/status"))
 const isStatusDropdownOpen = ref(false)
 const isTaskDropdownOpen = ref(false)
-const openConfirmed = ref(false)
+const openConfirmedChangeVisibility = ref(false)
 let visibilityBoard = ref({})
 let userLogin = Cookies.get("oid")
 let resultPrivatTest = ref({})
+let CollabLeave = ref('')
+const openConfirmedLeaveCollab = ref(false)
+
 function getImageUrl(index) {
     //return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
     // return `/images/bg-theme-${(index % 5) + 1}.jpg`
@@ -65,10 +68,10 @@ function checkFirstBoard() {
 async function fetchData() {
     let endpoint = "boards"
     let finalResult = []
-    let resultCollab = {}
-    let resultPrivate = {}
-    let resultPublic = {}
-    let resultPublicRaw = []
+    let resultCollab = []
+    let resultPrivate = []
+    let resultPublic = []
+    let resultPublicRaw = {}
 
     
     if (checkAuthToken()) {
@@ -80,9 +83,9 @@ async function fetchData() {
         resultPrivate = resultPrivateRaw.boards
         resultPublic = resultPublicRaw.boards
 
-        // console.log(resultPrivate)
-        // console.log(resultCollab)
-        // console.log(resultPublicRaw)
+        console.log(resultPrivate)
+        console.log(resultCollab)
+        console.log(resultPublicRaw)
 
         // จำเป็น
         resultPrivatTest.value = resultPrivate
@@ -102,18 +105,28 @@ async function fetchData() {
         // console.log(finalResult)
     }
 
-    Store.boards = finalResult.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
+    Store.boards = finalResult.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn))
+    // console.log(Store.boards);
     // Store.collaborate = resultCollab
-    Store.collaborate = resultCollab.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
-    // console.log(Store.collaborate)
+
+    if (!resultCollab) {
+        // console.log(Store.boards);
+    } else {   
+        Store.collaborate = resultCollab.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
+        // console.log(Store.collaborate)
+    }
 
     for (const board of Store.boards) {
+    
         if (board.visibility === "public") {
             board.isCheck = true
         } else {
             board.isCheck = false
         }
     }
+    console.log(Store.boards)
+    Store.boards.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn))
+    console.log(Store.boards)
     checkFirstBoard()
     // console.log(Store.boards);
     
@@ -162,7 +175,7 @@ async function updateVisibility() {
         visibilityBoard.value.visibility = "private"
     }
 
-    let result = await updateBoard(`boards/${visibilityBoard.value.boardId}`, {
+    let result = await PatchData(`boards/${visibilityBoard.value.boardId}`, {
         visibility: visibilityBoard.value.visibility,
     })
     // console.log(visibilityBoard.value)
@@ -202,34 +215,54 @@ async function changeVisibility() {
     if (indexToUpdate !== -1) {
         Store.boards[indexToUpdate].visibility = board.visibility
     }
-    openConfirmed.value = false
+    openConfirmedChangeVisibility.value = false
 }
 
 function openConfirmModal(board) {
     if (checkAuthToken() && checkUserInAuthToken(board.owner.oid, userLogin)) {    
         visibilityBoard.value = board
         // console.log(visibilityBoard.value.isCheck);
-        openConfirmed.value = true
+        openConfirmedChangeVisibility.value = true
         // openConfirmed.value = true
         
     } else {
+        Store.errorPage403 = true
         errorPermition()
     }
 }
 
+function openConfirmLeaveCollabModal(boardcollab) {
+    console.log(boardcollab)
+    const foundBoard = Store.collaborate.find((board) => board.boardId === boardcollab.boardId)
+    console.log(foundBoard)
+
+    if (checkAuthToken()) {    
+        CollabLeave.value = boardcollab.board_name
+        openConfirmedLeaveCollab.value = true 
+    } else {
+        // errorPermition()
+    }
+}
+
 function closeNotificationModal() {
-    openConfirmed.value = false
+    openConfirmedChangeVisibility.value = false
+    openConfirmedLeaveCollab.value = false
     Store.errorPrivate404 = false
     Store.errorPrivate404Content = ""
 
     let board = Store.boards.find(
         (b) => b.boardId === visibilityBoard.value.boardId
     )
-    if (visibilityBoard.value.visibility === "public") {
-        board.isCheck = true
+    if (board) {
+        if (visibilityBoard.value.visibility === "public") {
+            board.isCheck = true
+        } else {
+            board.isCheck = false
+        }
     } else {
-        board.isCheck = false
+        
     }
+    
     checkFirstBoard()
     // fetchData()
 }
@@ -266,9 +299,16 @@ watch(
 <template>
     <BoardVisibilityConfirmation
         :changevisibility="visibilityBoard"
-        v-show="openConfirmed"
+        v-show="openConfirmedChangeVisibility"
         @closemodal="closeNotificationModal()"
         @confirmed="updateVisibility()"
+        class="z-40"
+    />
+    <boardCollabLeave
+        v-show="openConfirmedLeaveCollab"
+        :leaveCollab="CollabLeave"
+        @closemodal="closeNotificationModal()"
+        @confirmed=""
         class="z-40"
     />
     <modalNotification
@@ -556,14 +596,14 @@ watch(
                                                 'cursor-not-allowed ':
                                                     !checkAuthToken() ||
                                                     !checkUserInAuthToken(
-                                                        board.owner.oid,
+                                                        board.owner?.oid,
                                                         userLogin
                                                     ),
                                             }"
                                             :data-tip="
                                                 checkAuthToken() &&
                                                 checkUserInAuthToken(
-                                                    board.owner.oid,
+                                                    board.owner?.oid,
                                                     userLogin
                                                 )
                                                     ? 'change Visibility Board'
@@ -592,7 +632,7 @@ watch(
                             <h3 class="text-lg font-bold mb-2">
                                 {{ board.board_name }}
                             </h3>
-                            <p>Owner : {{ board.owner.name }}</p>
+                            <p>Owner : {{ board.owner?.name }}</p>
                             <div class="flex justify-around mt-4">
                                 <button
                                     class="bg-green-500 border text-xs border-slate-400 p-2 rounded-md text-white"
@@ -630,9 +670,10 @@ watch(
                         <div
                             v-for="(boardcollab, index) in Store.collaborate"
                             :key="index"
-                            class=" bg-white rounded-lg shadow p-6 min-w-[250px] max-w-[250px] flex flex-col items-center"
-                            @click="openBoardTaskModal(boardcollab.boardId)"
+                            class="bg-white rounded-lg shadow  flex flex-col items-center"
                         >
+                        <div class="p-6 min-w-[250px] max-w-[250px] flex flex-col items-center" 
+                        @click="openBoardTaskModal(boardcollab.boardId)">
                             <div class="mb-4 ">
                                 <!-- <img
                                     :src="getImageUrl(index)"
@@ -648,9 +689,11 @@ watch(
                             <p class="itbkk-board-name text-lg font-bold">{{ boardcollab.board_name }}</p>
                             <p class="itbkk-owner-name pt-2">Owner : {{ boardcollab.owner?.name }}</p>
                             <p class="itbkk-access-right pt-2">Access Right : {{ boardcollab.accessRight }}</p>
+                        </div>
                             <button
                                 class="itbkk-leave-board flex justify-center  w-3/5 rounded-2xl mt-3 text-red-500 hover:text-white border border-red-500 hover:bg-red-500 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
-                            >
+                                @click="openConfirmLeaveCollabModal(boardcollab)"
+                                >
                                 Leave
                             </button>
                         </div>

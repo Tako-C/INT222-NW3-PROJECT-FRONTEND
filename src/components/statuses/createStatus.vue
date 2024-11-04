@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref,watch } from "vue"
-import { createStatus,getAllBoard } from "@/libs/fetchs.js"
+import { addData,getAllBoard } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
 import {
@@ -16,7 +16,7 @@ const Store = useStore()
 const statusID = ref(0)
 const boardId = ref(route.params.id)
 let userLogin = Cookies.get("oid")
-
+const currentBoardId = ref({})
 
 watch(
     boardId,
@@ -41,6 +41,20 @@ let statusData = ref({
     description: ''
 })
 
+async function fetchData() {
+    let endpoint = "boards"
+
+        let resBoards = await getAllBoard(endpoint)
+        let resultBoard = await getAllBoard(`boards/${boardId.value}`)    
+        Store.boards = resBoards
+        currentBoardId.value = resultBoard 
+        // console.log(Store.boards)
+        
+        checkUserPermition()
+}
+
+
+
 function closeModal() {
     router.push({name: 'Status'})
     clearData()
@@ -48,10 +62,8 @@ function closeModal() {
 
 function addToStore() {
     statusData.value.statusId = statusID.value
-    // console.log(statusData.value);
     Store.statuses.push(statusData.value)
     Store.successAddStatus = true
-    // console.log(Store.statuses);
     clearData()
 }
 
@@ -59,8 +71,6 @@ function addToStore() {
 
 async function saveTaskData() {
     let checkStatusName = Store.statuses.filter((status) => status.name === statusData.value.name)
-    // console.log(statusData.value,checkStatusName);
-    
         if(checkStatusName.length === 1){
             window.alert("An error has occurred, the status could not be added.")
         }   
@@ -74,7 +84,7 @@ async function saveTaskData() {
             
             } 
             statusData.value.boards = boardId.value
-            let result = await createStatus(statusData.value, `${boardId.value}/statuses`)       
+            let result = await addData(statusData.value, `boards/${boardId.value}/statuses`)       
             if (checkOwner() && checkAuthToken()) {
                 if(result.status === 401){
                     router.push({name: 'login'})
@@ -101,16 +111,6 @@ async function saveTaskData() {
     }
 }
 
-async function fetchData() {
-    let endpoint = "boards"
-
-        let resBoards = await getAllBoard(endpoint)
-        Store.boards = resBoards.boards
-        Store.collaborate = resBoards.collaborate
-        // console.log(Store.boards)
-        
-        checkUserPermition()
-}
 function errorPermition() {
     router.push({ name: "notFound" })
 }
@@ -123,27 +123,50 @@ function clearData() {
 }
 function checkOwner() {
     let userInboard = ""
-    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
-    // console.log(foundBoard)
+    const foundBoard = Store.boards.boards.find((board) => board.boardId === boardId.value) || Store.boards.collaborate.find((board) => board.boardId === boardId.value)
+    console.log(foundBoard)
     
     if (foundBoard.boardId === boardId.value) {
         userInboard = foundBoard.owner.oid
         
-    } else {
-        
-    }
-    // console.log(userInboard)
-    // console.log(checkUserInAuthToken(userInboard, userLogin));
-    
-    
+    } else {}
     return checkUserInAuthToken(userInboard, userLogin)
 }
 
-
 function checkUserPermition() {
-    if (!checkAuthToken()||!checkOwner()) {
+    if (userCollab()||checkOwner()) {
+        console.log("gooo");       
+    } else {
         Store.errorPage403 = true
         router.push({ name: "notFound" })
+    }
+}
+
+
+function userCollab() {
+    const userCollab = Store.boards.boards.find((uCollab) => uCollab.boardId === currentBoardId.value.boardId)
+    || Store.boards.collaborate.find((uCollab) => uCollab.boardId ===  currentBoardId.value.boardId) 
+    console.log(userCollab);
+    
+    if (checkOwner()) {
+        return true
+    } else {
+        if (userCollab) {
+        if (userCollab.accessRight == "read") {
+            console.log("read")
+            return false     
+        } 
+        if (userCollab.accessRight == "write") {
+            console.log("write")
+            return true
+        }
+        else{
+            console.log("Erroe permition")
+            return false
+        }
+    } else {
+        return false
+    }
     }
 }
 

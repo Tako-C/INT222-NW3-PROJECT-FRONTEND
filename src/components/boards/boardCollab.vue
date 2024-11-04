@@ -2,10 +2,12 @@
 import { ref, onMounted, watch, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
-import { getBoard, getTaskByBoard,getAllBoard} from "@/libs/fetchs.js"
+import { getDataByBoard,getAllBoard,PatchData} from "@/libs/fetchs.js"
 import Cookies from "js-cookie"
-import { checkAuthToken,checkUserInAuthToken} from '@/libs/authToken.js'
+import { checkAuthToken,checkUserInAuthToken,checkrequestNewToken} from '@/libs/authToken.js'
 import modalNotification from "@/components/modals/modalNotification.vue"
+import boardCollabChangeAccessRight from "@/components/collab/modalCollabChangeAccessRight.vue"
+import boardCollabRemove from "@/components/collab/modalConfirmedDeleteCollab.vue"
  
 const Store = useStore()
 const router = useRouter()
@@ -20,7 +22,12 @@ const isStatusDropdownOpen = ref(false)
 const boardId = ref(route.params.id)
 let userLogin = Cookies.get("oid")
 const boardName = ref("")
+const openConfirmedAccessRight = ref(false)
+const openConfirmedRemove = ref(false)
 let resultAllBoard = {}
+let CollabDetail = ref({})
+let CollabRemove = ref('')
+let accessRightList = ref(['read','write'])
 
 function checkPublicCollab(resultAllBoard) {
     // console.log(resultAllBoard)
@@ -46,9 +53,9 @@ function checkOwner() {
 
 async function fetchData() {
     let endpoint = "boards"
-    let resultColab = await getBoard(`boards/${boardId.value}/collabs`)
-        let resStatuses = await getTaskByBoard(`${boardId.value}/statuses`)
-        let resBoards = await getBoard(`${endpoint}`)
+    let resultColab = await getAllBoard(`boards/${boardId.value}/collabs`)
+        let resStatuses = await getDataByBoard(`${boardId.value}/statuses`)
+        let resBoards = await getAllBoard(endpoint)
         resultAllBoard = await getAllBoard(endpoint)
         console.log(resultColab);
         
@@ -93,6 +100,56 @@ async function fetchData() {
         }
 
 }
+
+async function changeAccessRicht() {
+    let indexToUpdate = -1
+    for (let i = 0; i < Store.collaborate.length; i++) {
+        if (Store.collaborate[i].boardsId === boardId.value) {
+            indexToUpdate = i
+            // break;
+        }
+    }
+    if (indexToUpdate !== -1) {
+        Store.collaborate[indexToUpdate].accessRight = CollabDetail.value.accessRight
+    }
+    closeNotificationModal()
+}
+
+
+async function patchAccessRicht() {
+    
+    checkrequestNewToken(router)
+
+    let result = await PatchData(`boards/${boardId.value}/collabs/${CollabDetail.value.oid}`, {
+        accessRight: CollabDetail.value.accessRight,
+    })
+    // console.log(visibilityBoard.value)
+    
+    if (
+        checkAuthToken() &&
+        checkUserInAuthToken(CollabDetail.value.oid, userLogin)
+    ) {
+        if (result.status === 401) {
+            router.push({ name: "login" })
+            Store.errorToken = true
+        }
+        if (result.status === 404) {
+            errorPermition()
+            Store.errorPage404 = true
+        } 
+        else {
+            changeAccessRicht()
+        }
+    } else {
+        if (result.status === 403) {
+            Store.errorPage403 = true
+            errorPermition()
+        }
+    }
+    closeNotificationModal()
+}
+
+
 function getBoardName() {
     const board = resultAllBoard.boards.find((b) => b.boardId === boardId.value) || 
                     resultAllBoard.collaborate.find((b) => b.boardId === boardId.value);
@@ -148,8 +205,53 @@ function checkVariable() {
     return false
 }
 function closeNotificationModal() {
+    openConfirmedAccessRight.value = false
+    openConfirmedRemove.value = false
     Store.errorPage409 = false
+    fetchData()
     
+}
+function openConfirmAccessRightModal(collab) {
+    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value)
+    // console.log(collab);
+    // console.log(foundBoard);
+        // console.log(userLogin);
+    if (checkAuthToken() && checkUserInAuthToken(foundBoard.owner.oid, userLogin)) {    
+        // console.log(visibilityBoard.value.isCheck);
+        CollabDetail.value = collab
+        openConfirmedAccessRight.value = true
+        // openConfirmed.value = true   
+    } else {
+        // errorPermition()
+    }
+}
+
+function openConfirmDeleteCollabModal(collab) {
+    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value)
+    console.log(collab)
+    // console.log(foundBoard);
+        // console.log(userLogin);
+    if (checkAuthToken() && checkUserInAuthToken(foundBoard.owner.oid, userLogin)) {    
+        // console.log(visibilityBoard.value.isCheck);
+        CollabRemove.value = collab.name
+        openConfirmedRemove.value = true
+        // openConfirmed.value = true   
+    } else {
+        // errorPermition()
+    }
+}
+
+
+function handleAccessRightChange() {    
+    if (!checkOwner() || !checkAuthToken()) {
+      return true
+    } else{}
+}
+
+function handleDeleteCollab() {  
+    if (!checkOwner() || !checkAuthToken()) {
+      return true
+    } else{}
 }
 
 watch(
@@ -175,6 +277,21 @@ onMounted(() => {
         @closemodal="closeNotificationModal()"
         v-show="checkVariable()"
         class="z-30"
+    />
+    <
+    <boardCollabChangeAccessRight
+        v-show="openConfirmedAccessRight"
+        :changeAccessRight="CollabDetail"
+        @closemodal="closeNotificationModal()"
+        @confirmed="patchAccessRicht()"
+        class="z-40"
+    />
+    <boardCollabRemove
+        v-show="openConfirmedRemove"
+        :removeCollab ="CollabRemove"
+        @closemodal="closeNotificationModal()"
+        @confirmed=""
+        class="z-40"
     />
         <header
             name="header"
@@ -483,17 +600,31 @@ onMounted(() => {
                         <p class="itbkk-item flex justify-center">{{ index+1 }}</p>
                         <p class="itbkk-name flex justify-center">{{ collab.name }}</p>
                         <p class="itbkk-email flex justify-center col-span-2">{{ collab.email }}</p>
-                        <p class="itbkk-access-right flex justify-center">{{ collab.accessRight }}</p>
-                        <button class="itbkk-collab-remove flex justify-center bg-gray-300 w-3/5 rounded-2xl">Remove</button>
+                        <!-- <p class="itbkk-access-right flex justify-center" @click="openConfirmAccessRightModal(collab)">{{ collab.accessRight }}</p> -->
+                        
+                        <select v-model="collab.accessRight" class="itbkk-access-right h-8 rounded-lg border-2 pl-2" 
+                        :disabled="handleAccessRightChange()"
+                        @change="checkOwner() && checkAuthToken() ? openConfirmAccessRightModal(collab) : ''">
+                            <option  v-for="right in accessRightList" :key="right" :value="right">
+                                {{ right }}
+                            </option>
+                        </select>
+                        
+                        <button class="itbkk-collab-remove flex justify-center w-3/5 text-[12px] rounded-2xl btn btn-error"
+                        :disabled="handleDeleteCollab()"
+                        @click="checkOwner() && checkAuthToken() ? openConfirmDeleteCollabModal(collab) : ''"
+                        >
+                            Remove
+                        </button>
 
                     </div>
                 </div>
             </div>
             
             <tbody
-                v-show="Store.collaborate.length === 0"
+                v-show="Store.collaborate.length == 0"
                 class="w-full flex justify-center mt-16"
-            >
+            >{{ Store.collaborate }}
                 <tr>
                     <td class="text-center" colspan="6">Don't Have collaborate ?</td>
                 </tr>

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from "vue"
-import { addData, getTaskByBoard,getAllBoard } from "@/libs/fetchs.js"
+import { addData, getDataByBoard,getAllBoard} from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { validateTask } from "@/libs/varidateTask.js"
@@ -15,6 +15,7 @@ const TaskID = ref(0)
 const DefualtStatus = ref()
 let TokenLogin = ref(false)
 let userLogin = Cookies.get("oid")
+const currentBoardId = ref({})
 
 onMounted(() => {
     checkrequestNewToken(router)
@@ -23,12 +24,10 @@ onMounted(() => {
 })
 
 async function setDefualtStatus() {
-    Store.statuses = await getTaskByBoard(`${boardId.value}/statuses`)
+    Store.statuses = await getDataByBoard(`${boardId.value}/statuses`)
     DefualtStatus.value = Store.statuses.find(
         (status) => status.name === "No Status"
     )
-    // console.log(Store.statuses,DefualtStatus.value);
-
     taskData.value.status = DefualtStatus.value.statusId
     return DefualtStatus
 }
@@ -40,21 +39,57 @@ let taskData = ref({
     status: DefualtStatus,
 })
 
-function closeModal() {
-    router.push({ name: "BoardTask" })
-    clearData()
+
+async function fetchData() {
+    let endpoint = "boards"
+
+        let resBoards = await getAllBoard(endpoint)
+        let resultBoard = await getAllBoard(`boards/${boardId.value}`)    
+        Store.boards = resBoards
+        currentBoardId.value = resultBoard 
+        checkUserPermition()
 }
 
-function addToStore() {
-    taskData.value.id = TaskID.value
-    const statusObject = Store.statuses.find(
-        (status) => status.statusId === taskData.value.status
-    )
-    taskData.value.statusName = statusObject.name
-    Store.tasks.push(taskData.value)
-    Store.successAddTask = true
-    closeModal()
+function checkOwner() {
+    let userInboard = ""
+    const foundBoard = Store.boards.boards.find((board) => board.boardId === boardId.value) || Store.boards.collaborate.find((board) => board.boardId === boardId.value)
+    console.log(foundBoard)
+    
+    if (foundBoard.boardId === boardId.value) {
+        userInboard = foundBoard.owner.oid
+        
+    } else {}
+    return checkUserInAuthToken(userInboard, userLogin)
 }
+
+
+function userCollab() {
+    const userCollab = Store.boards.boards.find((uCollab) => uCollab.boardId === currentBoardId.value.boardId)
+    || Store.boards.collaborate.find((uCollab) => uCollab.boardId ===  currentBoardId.value.boardId) 
+    console.log(userCollab);
+    
+    if (checkOwner()) {
+        return true
+    } else {
+        if (userCollab) {
+        if (userCollab.accessRight == "read") {
+            console.log("read")
+            return false     
+        } 
+        if (userCollab.accessRight == "write") {
+            console.log("write")
+            return true
+        }
+        else{
+            console.log("Erroe permition")
+            return false
+        }
+    } else {
+        return false
+    }
+    }
+}
+
 
 async function saveTaskData() {
     if (!validateTask(taskData.value)) {
@@ -68,17 +103,7 @@ async function saveTaskData() {
         taskData.value.assignees = taskData.value.assignees.trim()
     }
 
-    // console.log(taskData.value);
-
-    let result = await addData(taskData.value, `${boardId.value}/tasks`)
-    // if(result.status === 401){
-    //   router.push({name: 'login'});
-    //   Store.errorToken = true;
-    // } else {
-    // console.log(result)
-    // TaskID.value = result.id
-    // addToStore()
-    // }
+    let result = await addData(taskData.value, `boards/${boardId.value}/tasks`)
 
     if (checkOwner() && checkAuthToken()) {
         if (result.status === 401) {
@@ -103,6 +128,31 @@ async function saveTaskData() {
     }
 }
 
+function closeModal() {
+    router.push({ name: "BoardTask" })
+    clearData()
+}
+
+function addToStore() {
+    taskData.value.id = TaskID.value
+    const statusObject = Store.statuses.find(
+        (status) => status.statusId === taskData.value.status
+    )
+    taskData.value.statusName = statusObject.name
+    Store.tasks.push(taskData.value)
+    Store.successAddTask = true
+    closeModal()
+}
+
+function checkUserPermition() {
+    if (userCollab()||checkOwner()) {
+        console.log("gooo");       
+    } else {
+        Store.errorPage403 = true
+        router.push({ name: "notFound" })
+    }
+}
+
 function clearData() {
     taskData.value = {
         title: "",
@@ -116,41 +166,6 @@ function errorPermition() {
     router.push({ name: "notFound" })
 }
 
-function checkOwner() {
-    let userInboard = ""
-    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
-    // console.log(foundBoard)
-    
-    if (foundBoard.boardId === boardId.value) {
-        userInboard = foundBoard.owner.oid
-        
-    } else {
-        
-    }
-    // console.log(userInboard)
-    // console.log(checkUserInAuthToken(userInboard, userLogin));
-    
-    
-    return checkUserInAuthToken(userInboard, userLogin)
-}
-
-function checkUserPermition() {
-    if (!checkAuthToken()||!checkOwner()) {
-        Store.errorPage403 = true
-        router.push({ name: "notFound" })
-    }
-}
-
-async function fetchData() {
-    let endpoint = "boards"
-
-        let resBoards = await getAllBoard(endpoint)
-        Store.boards = resBoards.boards
-        Store.collaborate = resBoards.collaborate
-        // console.log(Store.boards)
-        
-        checkUserPermition()
-}
 </script>
 <template>
     <div
@@ -241,7 +256,7 @@ async function fetchData() {
                         class="itbkk-button-confirm button buttonOK tooltip tooltip-left"
                         @click="saveTaskData()"
                         :data-tip="
-                            TokenLogin
+                            checkAuthToken()
                                 ? 'Create your task.'
                                 : 'You do not have permission to use this feature.'
                         "

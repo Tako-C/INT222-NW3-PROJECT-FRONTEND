@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { getBoard } from "@/libs/fetchs.js";
+import { getAllBoard } from "@/libs/fetchs.js";
 import { useStore } from "@/stores/store.js";
 import { useRoute, useRouter } from "vue-router";
 import { checkrequestNewToken } from '@/libs/authToken.js';
@@ -30,7 +30,7 @@ function convertToBrowserTimezone(utcTime) {
 }
 
 async function fetchData() {
-    let result = await getBoard(`boards/${route.params.id}`);
+    let result = await getAllBoard(`boards/${route.params.id}`);
 
     if (result.status === 404) {
         Store.errorPrivate404 = true;

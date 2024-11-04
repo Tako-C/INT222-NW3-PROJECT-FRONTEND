@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted  } from "vue"
-import { addBoard } from "@/libs/fetchs.js"
+import { addData } from "@/libs/fetchs.js"
 import { useRouter, useRoute } from "vue-router"
 import { useStore } from '@/stores/store.js'
 import Cookies from "js-cookie";
@@ -63,7 +63,7 @@ function addToStore(newBoard) {
 async function saveBoardData() {
 
             boardData.value.boards = boardId.value
-            let result = await addBoard(boardData.value, `boards`)
+            let result = await addData(boardData.value, `boards`)
             // console.log(result.status)
             // if(result.status === 401){
             //     router.push({name: 'login'})

@@ -2,7 +2,7 @@
 import { ref, onMounted, watch, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
-import { getBoard, getTaskByBoard, removeData,updateBoard } from "@/libs/fetchs.js"
+import { getAllBoard, getDataByBoard, removeData,PatchData } from "@/libs/fetchs.js"
 import Cookies from "js-cookie"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import modalconfirmed from "@/components/modals/modalConfirmed.vue"
@@ -33,6 +33,11 @@ const isStatusPage = computed(() =>
     route.path.startsWith(`/board/${boardId.value}/status`)
 )
 
+let boardnow = ref({})
+let visibilityBoard = ref({})
+let openConfirmedvisibility = ref(false)
+import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
+
 
 // Watch for changes in boardId and fetch data accordingly
 watch(
@@ -59,7 +64,7 @@ watch(
 // }
 
 // ต้องทำเพราะ cypress  ====================================================================================================
-let boardnow = ref({})
+
 // function loopBoardVisibility() {
 //     for (const board of Store.boards) {
 //         if (board.boardId == boardId.value) {
@@ -67,95 +72,8 @@ let boardnow = ref({})
 //         }
 //     }
 // }
-function loopBoardVisibility() {
-    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value) 
-    if (foundBoard) {      
-        if (foundBoard.visibility === "public") {
-            foundBoard.isCheck = true
-        } 
-        if(foundBoard.visibility === "private") {
-            foundBoard.isCheck = false
-        }
-        boardnow.value = foundBoard
-        // console.log(boardnow.value)
-    }
-
-    // console.log(Store.boards);
-    
-}
-let visibilityBoard = ref({})
-let openConfirmedvisibility = ref(false)
-import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue"
-
-function openConfirmVisibilitymodal() {
-    if (checkAuthToken) {
-        visibilityBoard.value = boardnow.value
-        // console.log(boardnow.value.visibility)
-        
-        openConfirmedvisibility.value = true
-        
-    } else {
-        errorPermition()
-    }
-}
-
-async function updateVisibility() {
-    checkrequestNewToken(router)
-    if (visibilityBoard.value.isCheck === true) {
-        visibilityBoard.value.visibility = "public"
-    } else {
-        visibilityBoard.value.visibility = "private"
-    }
-
-    let result = await updateBoard(`boards/${visibilityBoard.value.boardId}`, {
-        visibility: visibilityBoard.value.visibility,
-    })
-    if (
-        checkAuthToken() &&
-        checkUserInAuthToken(visibilityBoard.value.owner.oid, userLogin)
-    ) {
-        if (result.status === 401) {
-            router.push({ name: "login" })
-            Store.errorToken = true
-        } else {
-            changeVisibility()
-        }
-    } else {
-        if (result.status === 403) {
-            Store.errorPage403 = true
-            errorPermition()
-        }
-        if (result.status === 401) {
-            Store.errorPage401 = true
-            errorPermition()
-        }
-    }
-}
-async function changeVisibility() {
-    let indexToUpdate = -1
-
-    // Find the board by ID
-    let board = Store.boards.find(
-        (b) => b.boardId === visibilityBoard.value.boardId
-    )
-    board.visibility = visibilityBoard.value.visibility
-    for (let i = 0; i < Store.boards.length; i++) {
-        if (Store.boards[i].boardId === board.boardId) {
-            indexToUpdate = i
-            // break;
-        }
-    }
-    if (indexToUpdate !== -1) {
-        Store.boards[indexToUpdate].visibility = board.visibility
-    }
-    openConfirmed.value = false
-}
-// ====================================================================================================
-
-
 
 async function fetchData() {
-
     let endpoint = `${boardId.value}/tasks`
     if (filterList.value.length > 0) {
         endpoint = `${
@@ -164,14 +82,14 @@ async function fetchData() {
             .map((status) => status.trim())
             .join("&FilterStatuses=")}`
     } 
-    let resBoards = await getBoard("boards")
-    let resTasks = await getTaskByBoard(endpoint)
-    let resStatuses = await getTaskByBoard(`${boardId.value}/statuses`)
-    
+    let resBoards = await getAllBoard("boards")
+    let resTasks = await getDataByBoard(endpoint)
+    let resStatuses = await getDataByBoard(`${boardId.value}/statuses`)
+
     // console.log(resTasks);
     // console.log(resStatuses);
     // console.log(resBoards);
-    
+
     if(resTasks.status === 401){
         router.push({name: 'login'})
         Store.errorToken = true
@@ -188,21 +106,18 @@ async function fetchData() {
 
     }
     else {
-    Store.tasks = resTasks
-    Store.statuses = resStatuses
-    Store.boards = resBoards.boards 
-    Store.collaborate = resBoards.collaborate    
+        Store.tasks = resTasks
+        Store.statuses = resStatuses
+        Store.boards = resBoards 
+        Store.collaborate = resBoards.collaborate    
     // console.log(Store.tasks);
     // console.log(Store.boards);
     // console.log(Store.collaborate);
 
-         
+        
     }
-    checkOwner()
     loopBoardVisibility()
 }
-
-
 
 function toggleSort() {
     sortStatus.value = (sortStatus.value + 1) % 3
@@ -249,6 +164,89 @@ function removeAllFilter() {
     fetchData()
 }
 
+function loopBoardVisibility() {
+    const foundBoard = Store.boards.boards.find((board) => board.boardId === boardId.value) || Store.boards.collaborate.find((board) => board.boardId === boardId.value) 
+    if (foundBoard) {      
+        if (foundBoard.visibility === "public") {
+            foundBoard.isCheck = true
+        } 
+        if(foundBoard.visibility === "private") {
+            foundBoard.isCheck = false
+        }
+        boardnow.value = foundBoard
+        // console.log(boardnow.value)
+    }
+
+    // console.log(Store.boards);
+    
+}
+
+function openConfirmVisibilitymodal() {
+    if (checkAuthToken) {
+        visibilityBoard.value = boardnow.value
+        // console.log(boardnow.value.visibility)
+        
+        openConfirmedvisibility.value = true
+        
+    } else {
+        errorPermition()
+    }
+}
+
+async function updateVisibility() {
+    checkrequestNewToken(router)
+    
+    if (visibilityBoard.value.isCheck == true) {
+        visibilityBoard.value.visibility = "public"
+    } else {
+        visibilityBoard.value.visibility = "private"
+    }
+
+    let result = await PatchData(`boards/${visibilityBoard.value.boardId}`, {
+        visibility: visibilityBoard.value.visibility,
+    })
+    if (
+        checkAuthToken() &&
+        checkUserInAuthToken(visibilityBoard.value.owner.oid, userLogin)
+    ) {
+        if (result.status === 401) {
+            router.push({ name: "login" })
+            Store.errorToken = true
+        } else {
+            changeVisibility()
+        }
+    } else {
+        if (result.status === 403) {
+            Store.errorPage403 = true
+            errorPermition()
+        }
+        if (result.status === 401) {
+            Store.errorPage401 = true
+            errorPermition()
+        }
+    }
+    closeNotificationModal()
+}
+async function changeVisibility() {
+    let indexToUpdate = -1
+
+    // Find the board by ID
+    let board = Store.boards.boards.find((b) => b.boardId === visibilityBoard.value.boardId)
+    || Store.boards.collaborate.find((b) => b.boardId === visibilityBoard.value.boardId)
+
+    board.visibility = visibilityBoard.value.visibility
+    for (let i = 0; i < Store.boards.length; i++) {
+        if (Store.boards[i].boardId === board.boardId) {
+            indexToUpdate = i
+            // break;
+        }
+    }
+    if (indexToUpdate !== -1) {
+        Store.boards[indexToUpdate].visibility = board.visibility
+    }
+    openConfirmed.value = false
+}
+
 function openBoards() {
     router.push({ name: "Board" })
 }
@@ -280,26 +278,10 @@ function toggleTaskDropdown() {
     isTaskDropdownOpen.value = !isTaskDropdownOpen.value
 }
 
-// function getBoardName() {
-    
-//     const board = Store.boards.find((b) => b.boardId === boardId.value)
-//     console.log(board)
 
-//     if (!board) {
-//         const board = Store.collaborate.find((b) => b.boardId === boardId.value)
-//         console.log(board)
-//         boardName.value = board.board_name
-//     } else {
-//       if (board) {
-//         boardName.value = board.board_name
-//     }      
-//     }
-    
-    
-// }
 function getBoardName() {
-    const board = Store.boards.find((b) => b.boardId === boardId.value) || 
-                  Store.collaborate.find((b) => b.boardId === boardId.value);
+    const board = Store.boards.boards.find((b) => b.boardId === boardId.value) || 
+                  Store.boards.collaborate.find((b) => b.boardId === boardId.value);
     if (board) {
         // console.log(board)
         boardName.value = board.board_name
@@ -339,16 +321,16 @@ async function removeTask() {
                     // console.log(successDelete.value)
                 }
             } 
-            else{
-                if (removedTask.status === 403) {
-                Store.errorPage403 = true
-                errorPermition()
-                }
-                if (removedTask.status === 401) {
-                Store.errorPage401 = true
-                errorPermition()
-                }
+    else{
+            if (removedTask.status === 403) {
+            Store.errorPage403 = true
+            errorPermition()
             }
+            if (removedTask.status === 401) {
+            Store.errorPage401 = true
+            errorPermition()
+            }
+        }
             
 }
 
@@ -365,23 +347,32 @@ function closeNotificationModal() {
     Store.errorPage404 = false
     
 
-
+    // fetchData()
     // เพิ่มจากcypress
     openConfirmedvisibility.value = false
     Store.errorPrivate404 = false
     Store.errorPrivate404Content = ""
     
-    let board = Store.boards.find(
-        (b) => b.boardId === visibilityBoard.value.boardId
-    )
-    // console.log(visibilityBoard.value.visibility)
-    if (visibilityBoard.value.visibility === "public") {
-        boardnow.value.isCheck = true
+    console.log(Store.boards);
+    console.log(visibilityBoard.value);
+    
+    
+    let board = Store.boards.boards.find((b) => b.boardId === visibilityBoard.value.boardId)
+    || Store.boards.collaborate.find((b) => b.boardId === visibilityBoard.value.boardId)
+
+    console.log(board)
+    if (board) {
+        if (board.visibility === "public") {
+        boardnow.isCheck = true
         
     } else {
-        boardnow.value.isCheck = false
+        boardnow.isCheck = false
     }
-    // fetchData()
+    } else {
+        boardnow.isCheck = false
+    }
+    fetchData()
+    
 }
 
 function checkVariable() {
@@ -416,24 +407,47 @@ function errorPermition() {
 }
 
 function checkOwner() {
-    let userInboard = null
-    let boardFound = false
-    
-    for (const board of Store.boards) {
-        if (board.boardId === boardId.value) {
-            userInboard = board.owner.oid
-            boardFound = true
-            // console.log(userInboard);
-            // break
-        } 
-        
+    const foundBoard = Store.boards.boards.find((board) => board.boardId === boardId.value) || Store.boards.collaborate.find((board) => board.boardId === boardId.value) 
+    if (foundBoard) {
+        const userInboard = foundBoard.owner.oid
+        return checkUserInAuthToken(userInboard, userLogin)
+    } else {
+            // console.log(Store.boards);
+            Store.errorPage404 = true
+            Store.errortext404 = 'The Status does not exist'
+            router.push({ name: "notFound" })
+        // }
     }
-   if (!getAuthToken() && !boardFound) {
-       router.push({ name: "notFound" })
-   }
-    
-    return checkUserInAuthToken(userInboard,userLogin)
 }
+
+function userCollab() {
+    const userCollab = Store.boards.boards.find((uCollab) => uCollab.boardId === boardId.value)
+    || Store.boards.collaborate.find((uCollab) => uCollab.boardId === boardId.value) 
+
+    if (checkOwner()) {
+        return true
+    } else {
+        if (userCollab) {
+        if (userCollab.accessRight == "read") {
+            console.log("read")
+            return false     
+        } 
+        if (userCollab.accessRight == "write") {
+            console.log("write")
+            return true
+        }
+        else{
+            console.log("Erroe permition")
+            return false
+        }
+    } else {
+        return false
+    }
+    }
+}
+
+
+
 onMounted(() => {
     checkrequestNewToken(router)
     fetchData()
@@ -460,7 +474,7 @@ onMounted(() => {
         :changevisibility="visibilityBoard"
         v-show="openConfirmedvisibility"
         @closemodal="closeNotificationModal()"
-        @confirmed="updateVisibility(),closeNotificationModal()"
+        @confirmed="updateVisibility()"
         class="z-40"
     />
     <div class=" w-screen bg-white h-screen flex">
@@ -557,7 +571,7 @@ onMounted(() => {
                             All
                         </li>
                         <li
-                            v-for="(board, index) in Store.boards"
+                            v-for="(board, index) in Store.boards.boards || Store.boards.collaborate"
                             :key="index"
                             class="py-2 text-slate-400 hover:text-black cursor-pointer"
                             @click="openBoardDetailModal(board.boardId)"
@@ -625,7 +639,7 @@ onMounted(() => {
                 >
                     <ul>
                         <li
-                            v-for="(board, index) in Store.boards"
+                            v-for="(board, index) in Store.boards.boards || Store.boards.collaborate"
                             :key="index"
                             class="py-2 text-slate-400 hover:text-black cursor-pointer"
                             @click="openStatuses(board.boardId)"
@@ -741,10 +755,10 @@ onMounted(() => {
                     <p>Tasks Lists</p>
                 </div>
                 <button
-                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
-                    :data-tip="checkAuthToken() ? 'Create your task.' : 'You do not have permission to use this feature.'"          
-                    @click="openCreateTask"
-                    :disabled="!checkAuthToken() || !checkOwner()"
+                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"     
+                    @click="userCollab() || checkOwner() ? openCreateTask():''"
+                    :data-tip="checkAuthToken() ? 'Create your task.' : 'You do not have permission to use this feature.'"     
+                    :disabled="!checkAuthToken()"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -857,16 +871,14 @@ onMounted(() => {
                                 class=" toggle tooltip tooltip-right "
                                 :class="{
                                     'cursor-not-allowed ':
-                                        !checkAuthToken() ||
-                                        !checkOwner()
+                                        !checkAuthToken()
                                 }"
                                 :data-tip="
-                                    checkAuthToken() &&
-                                    checkOwner()
+                                    checkAuthToken()
                                         ? 'change Visibility Board'
                                         : 'You do not have permission to use this feature.'
                                 "
-                                :disabled="!checkAuthToken() || !checkOwner()"
+                                :disabled="!checkAuthToken()"
                                 v-model="boardnow.isCheck"
                                 @change="openConfirmVisibilitymodal()"
                                 
@@ -997,20 +1009,20 @@ onMounted(() => {
                             <div class="itbkk-button-delete tooltip tooltip-top"
                             :class="{
                                     'cursor-not-allowed':
-                                        !checkAuthToken() || !checkOwner(),
+                                        !checkAuthToken(),
                                     'cursor-pointer':
-                                        checkAuthToken() && checkOwner(),
+                                        checkAuthToken(),
 
                                 }"
-                                :disabled="!checkAuthToken() || !checkOwner() "
-                                :data-tip="checkAuthToken() && checkOwner() ? 'Delete your task.' : 'You do not have permission to use this feature.'"   >
+                                :disabled="!checkAuthToken() "
+                                :data-tip="checkAuthToken()  ? 'Delete your task.' : 'You do not have permission to use this feature.'"   >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke-width="1.5"
                                 stroke="currentColor"
-                                @click="checkAuthToken() && checkOwner() ? openConfirmModal(task.id, task.title) : ''"
+                                @click="checkAuthToken() && userCollab() ? openConfirmModal(task.id, task.title) : ''"
                                 class="size-6 text-red-500 "
                             >
                                 <path
