@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUpdated, watch, computed } from "vue"
-import { getBoard, editDatas } from "@/libs/fetchs.js"
+import { getAllBoard, editDatas } from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import {
@@ -16,10 +16,10 @@ const router = useRouter()
 const Store = useStore()
 const ID = ref(0)
 const isEdited = ref(false)
-const boardUrl = ref(route.params, "id")
 const TokenLogin = computed(() => getAuthToken())
-const boardId = ref({})
+const currentBoardId = ref({})
 let userLogin = Cookies.get("oid")
+const boardId = ref(route.params.id)
 
 let statusData = ref({
     name: "",
@@ -31,7 +31,7 @@ const originalStatusData = ref({
 })
 
 // watch(
-//     route.params.id,
+//     boardId.value,
 //     async (newBoardId) => {
 //         if (newBoardId) {
 //             await fetchData()
@@ -42,49 +42,122 @@ const originalStatusData = ref({
 
 async function fetchData() {
 
-    let resultBoard = await getBoard(`boards/${route.params.id}`)
-        boardId.value = resultBoard     
-        let result = await getBoard(
-            `boards/${route.params.id}/statuses/${route.params.statusId}`
-        )
+    let resultBoard = await getAllBoard(`boards/${boardId.value}`)
+    currentBoardId.value = resultBoard     
+    // let result = await getBoard(
+    //         `boards/${boardId.value}/statuses/${route.params.statusId}`
+    // )
 
-    if (
-        checkAuthToken() &&
-        checkUserInAuthToken(userLogin, boardId.value.owner.oid)
-    ) {
-        let resultBoard = await getBoard(`boards/${route.params.id}`)
-        boardId.value = resultBoard     
-        let result = await getBoard(
-            `boards/${route.params.id}/statuses/${route.params.statusId}`
-        )
+        // พึ่งเพิ่ม
+    let resultBoardAll = await getAllBoard(`boards`)
+    let resultColab = await getAllBoard(`boards/${boardId.value}/collabs`)
+    console.log(resultBoardAll);
+    
+    Store.boards = resultBoardAll 
+    Store.collaborate = resultColab
+        // console.log(Store.boards)
+        // console.log(Store.collaborate)
 
-        if (result.name === "No status" || result.name === "Done") {
-            window.alert("You can not edit this Status.")
-            router.push({ name: "StatusTable" })
-        }
-        if (result.status === 404) {
-            router.push({ name: "Status", params: { id: route.params.id } })
-            Store.errorNotfoundStatus = true
-        }
-        else {
-            statusData.value = result
-            originalStatusData.value = { ...statusData.value }
-        }
-    } else {
-        if (result.status === 403) {
-            Store.errorPage403 = true
-            errorPermition()
-        }
-        if (result.status === 401) {
-            Store.errorPage401 = true
-            errorPermition()
-        } else{
-            Store.errorPage403 = true
-            // console.log("not Permition");
+        
+
+    // if (checkAuthToken() && checkUserInAuthToken(userLogin, currentBoardId.value.owner.oid)) {
+    //     let resultBoard = await getBoard(`boards/${boardId.value}`)
+    //     currentBoardId.value = resultBoard     
+    //     let result = await getBoard(
+    //         `boards/${boardId.value}/statuses/${route.params.statusId}`
+    //     )
+
+    //     if (result.name === "No status" || result.name === "Done") {
+    //         window.alert("You can not edit this Status.")
+    //         router.push({ name: "StatusTable" })
+    //     }
+    //     if (result.status === 404) {
+    //         router.push({ name: "Status", params: { id: boardId.value } })
+    //         Store.errorNotfoundStatus = true
+    //     }
+    //     else {
+    //         statusData.value = result
+    //         originalStatusData.value = { ...statusData.value }
+    //     }
+    // } else {
+    //     if (result.status === 403) {
+    //         Store.errorPage403 = true
+    //         errorPermition()
+    //     }
+    //     if (result.status === 401) {
+    //         Store.errorPage401 = true
+    //         errorPermition()
+    //     } 
+    //         // else{
+    //         // Store.errorPage403 = true
+    //         // // console.log("not Permition");
             
-            errorPermition()
+    //         // errorPermition()
+    //         // }
+    // }
+
+    let currentStatus = await getAllBoard(`boards/${boardId.value}/statuses/${route.params.statusId}`)
+
+    if (checkAuthToken()) {
+        if (checkUserInAuthToken(userLogin, currentBoardId.value.owner.oid)) {  
+            }if (userCollab()) {     
+                console.log("Usercollab accessRight is write")
+        
+                if (currentStatus.name == "No Status" || currentStatus.name == "Done") {
+                    window.alert("You can not edit this Status.")
+                    openStatuses()
+                }
+                if (currentStatus.status === 404) {
+                    openStatuses()
+                    Store.errorNotfoundStatus = true
+                }
+                else {
+                    statusData.value = currentStatus
+                    originalStatusData.value = { ...statusData.value }
+                }
+            } else {
+                console.log("Usercollab accessRight is read or not permition")
+
+                if (currentBoardId.value.visibility === "private") {
+                    Store.errorPage403 = true
+                    errorPermition()
+                }
+                if (currentBoardId.value.visibility === "public") {
+                    if (currentStatus.name === "No Status" || currentStatus.name === "Done") {
+                        window.alert("You can not edit this Status.")
+                        openStatuses()
+                    }
+                    if (currentStatus.status === 404) {
+                        openStatuses()
+                        Store.errorNotfoundStatus = true
+                    }
+                    else {
+                        statusData.value = currentStatus
+                        originalStatusData.value = { ...statusData.value }
+                    }
+                }
+            }
+        
+        } else {
+            if (currentBoardId.value.visibility === "private") {
+                Store.errorPage403 = true
+                errorPermition()
+            }
+            if (currentBoardId.value.visibility === "public") {
+                if (currentStatus.name === "No Status" || currentStatus.name === "Done") {
+                    window.alert("You can not edit this Status.")
+                    openStatuses()
+                }
+                if (currentStatus.status === 404) {
+                    openStatuses()
+                    Store.errorNotfoundStatus = true
+                }
+                else {
+                    statusData.value = currentStatus
+                    originalStatusData.value = { ...statusData.value }
+                }
+            }
         }
-    }
 }
 
 async function updateStatus() {
@@ -105,7 +178,7 @@ async function updateStatus() {
         // console.log(statusData.value)
 
         let result = await editDatas(
-            `boards/${route.params.id}/statuses/${route.params.statusId}`,
+            `boards/${boardId.value}/statuses/${route.params.statusId}`,
             statusData.value
         )
         ID.value = result.id
@@ -116,7 +189,7 @@ async function updateStatus() {
             Store.errorToken = true
         } else {
             addToStore()
-            closeModal()
+            openStatuses()
         }
     }
 }
@@ -137,9 +210,11 @@ function addToStore() {
     }
 }
 
-function closeModal() {
-    router.push({ name: "Status", params: { id: route.params.id } })
+function openStatuses() {
+    clearData()
+    router.push({ name: "Status", params: { id: boardId.value } })
 }
+
 
 function clearData() {
     statusData.value = {
@@ -147,6 +222,7 @@ function clearData() {
         description: "",
     }
 }
+
 function errorPermition() {
     router.push({ name: "notFound" })
 }
@@ -154,15 +230,50 @@ function errorPermition() {
 
 function checkOwner() {
     let userInboard = ''
-    for (const board of Store.boards) {
-        if (board.boardId === boardId.value) {
-            userInboard = board.owner.oid
-        } else{
-        }
+    // for (const board of Store.boards.boards) {
+    //     if (board.boardId === currentBoardId.value) {
+    //         userInboard = board.owner.oid
+    //     } else{
+    //     }
+    // }  
+    const OwnerBoard = Store.boards.boards.find((uCollab) => uCollab.boardId === currentBoardId.value.boardId)
+    || Store.boards.collaborate.find((uCollab) => uCollab.boardId === currentBoardId.value.boardId) 
 
-    }  
+    if (OwnerBoard) {
+        userInboard = OwnerBoard.owner.oid
+    } else {
+        
+    }
     return checkUserInAuthToken(userInboard,userLogin)
 }
+
+function userCollab() {
+
+    const userCollab = Store.boards.boards.find((uCollab) => uCollab.boardId === currentBoardId.value.boardId)
+    || Store.boards.collaborate.find((uCollab) => uCollab.boardId === currentBoardId.value.boardId) 
+
+    if (checkOwner()) {
+        return true
+    } else {
+        if (userCollab) {
+        if (userCollab.accessRight == "read") {
+            console.log("read")
+            return false     
+        } 
+        if (userCollab.accessRight == "write") {
+            console.log("write")
+            return true
+        }
+        else{
+            console.log("Erroe permition")
+            return false
+        }
+    } else {
+        return false
+    }
+    }
+}
+
 onMounted(fetchData, checkrequestNewToken(router))
 
 onUpdated(() => {
@@ -192,7 +303,7 @@ onUpdated(() => {
     >
         <div
             class="bg-black bg-opacity-50 w-screen h-screen"
-            @click="closeModal()"
+            @click="openStatuses()"
         ></div>
         <div
             class="fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
@@ -248,7 +359,7 @@ onUpdated(() => {
                     <button
                         type="submit"
                         class="itbkk-button-cancel button buttonClose btn"
-                        @click="closeModal()"
+                        @click="openStatuses()"
                     >
                         Close
                     </button>
@@ -257,7 +368,7 @@ onUpdated(() => {
                         type="submit"
                         class="itbkk-button-confirm button buttonOK"
                         @click="TokenLogin ? updateStatus() : null"
-                        :disabled="!isEdited || !TokenLogin || !checkOwner()"
+                        :disabled="!isEdited || !TokenLogin || !userCollab()"
                         :class="{
                             'cursor-not-allowed tooltip tooltip-left':
                                 !TokenLogin,

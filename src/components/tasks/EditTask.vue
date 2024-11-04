@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUpdated, watch } from "vue"
-import { getBoard, editDatas } from "@/libs/fetchs.js"
+import { getAllBoard, editDatas } from "@/libs/fetchs.js"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import { validateTask } from "@/libs/varidateTask.js"
@@ -18,6 +18,7 @@ const DefualtStatus = 3
 const boardId = ref(route.params.id)
 let statusObject = ref()
 let userLogin = Cookies.get("oid")
+const currentBoardId = ref({})
 
 let taskData = ref({
     id: "",
@@ -54,48 +55,195 @@ function convertToBrowserTimezone(utcTime) {
 }
 // console.log(route.params.taskId)
 
+// function checkOwner() {
+//     let userInboard = ''
+//     for (const board of Store.boards) {
+//         if (board.boardId === boardId.value) {
+//             userInboard = board.owner.oid
+//             // console.log(userInboard);
+//             // break
+//         } else{
+//             // router.push({ name: "notFound" })
+//         }
+
+//     }  
+//     return checkUserInAuthToken(userInboard,userLogin)
+// }
+
 function checkOwner() {
     let userInboard = ''
-    for (const board of Store.boards) {
-        if (board.boardId === boardId.value) {
-            userInboard = board.owner.oid
-            // console.log(userInboard);
-            // break
-        } else{
-            // router.push({ name: "notFound" })
-        }
+    // for (const board of Store.boards.boards) {
+    //     if (board.boardId === currentBoardId.value) {
+    //         userInboard = board.owner.oid
+    //     } else{
+    //     }
+    // }  
+    const OwnerBoard = Store.boards.boards.find((uCollab) => uCollab.board_name === currentBoardId.value.boardName)
+    || Store.boards.collaborate.find((uCollab) => uCollab.board_name === currentBoardId.value.boardName) 
 
-    }  
+    if (OwnerBoard) {
+        userInboard = OwnerBoard.owner.oid      
+    } else {
+        
+    }
     return checkUserInAuthToken(userInboard,userLogin)
 }
 
+function userCollab() {
+    const userCollab = Store.boards.boards.find((uCollab) => uCollab.board_name == currentBoardId.value.boardName)
+    || Store.boards.collaborate.find((uCollab) => uCollab.board_name == currentBoardId.value.boardName) 
+
+    if (checkOwner()) {
+        return true
+    } else {
+        if (userCollab) {
+            return true
+        } else {
+            return false
+            }
+        }
+}
+
+function userCollabWrite() {
+    const userCollab = Store.boards.boards.find((uCollab) => uCollab.board_name == currentBoardId.value.boardName)
+    || Store.boards.collaborate.find((uCollab) => uCollab.board_name == currentBoardId.value.boardName)
+    
+    if (checkOwner()) {
+        return true
+    } else {
+        if (userCollab) {
+            if (userCollab.accessRight === "read") {
+                console.log("read")
+                return false     
+            } 
+            if (userCollab.accessRight === "write") {
+                console.log("write")
+                return true
+            }
+            else{
+                console.log("Public Borard")
+                return false
+            }
+        } else {
+            return false
+            }
+        } 
+
+}
 
 async function fetchData() {
+    let currentBoardVisibility = ''
+    let resultBoardAll = await getAllBoard(`boards`)
+    let result = await getAllBoard(`boards/${route.params.id}/tasks/${route.params.taskId}`)
+    let resultStatuses = await getAllBoard(`boards/${route.params.id}/statuses`)
 
-        let result = await getBoard(
-        `boards/${route.params.id}/tasks/${route.params.taskId}`
-    )
-    let resultStatuses = await getBoard(`boards/${route.params.id}/statuses`)
-
+    Store.boards = resultBoardAll
     Store.statuses = resultStatuses
+    currentBoardId.value = result
 
-    if (result.status === 404) {
-        router.push({ name: "BoardTask", params: { id: route.params.id } })
-        Store.errorUpdateTask = true
-    }
-    if (result.status === 401) {
-        router.push({ name: "login" })
-        Store.errorToken = true
+    // console.log(currentBoardId.value)
+    // console.log(Store.boards)
+    // console.log(userCollab());
+
+    const BoardVisibility = Store.boards.boards.find((BV) => BV.board_name == currentBoardId.value.boardName)
+    || Store.boards.collaborate.find((BV) => BV.board_name == currentBoardId.value.boardName) 
+
+    if (BoardVisibility) {
+        currentBoardVisibility = BoardVisibility.visibility     
     } else {
-        statusObject = Store.statuses.find(
-            (status) => status.name === result.statusName
-        )
-        result.status = statusObject.statusId
-        taskData.value = result
-        originalTaskData.value = { ...taskData.value }
-        createTimeInBrowserTimezone = convertToBrowserTimezone(result.createdOn)
-        updateTimeInBrowserTimezone = convertToBrowserTimezone(result.updatedOn)
+        
     }
+    
+    if (checkAuthToken()) {
+        if (checkUserInAuthToken(userLogin, currentBoardId.value.owner?.oid)) {  
+            }if (userCollab()) {     
+                console.log("Usercollab accessRight is write or read")
+                if (currentBoardId.value.status === 404) {
+                    closeModal()
+                    Store.errorPage403 = true
+                }
+                else {
+                    // taskData.value = currentBoardId
+                    // originalStatusData.value = { ...statusData.value }
+
+                    statusObject = Store.statuses.find((status) => status.name === currentBoardId.value.statusName)
+                    // console.log( Store.statuses );
+                    // console.log(currentBoardId.value.statusName);
+                    // console.log(statusObject);
+
+                    currentBoardId.value.status = statusObject.statusId
+                    taskData.value = currentBoardId.value
+                    originalTaskData.value = { ...taskData.value }
+                    createTimeInBrowserTimezone = convertToBrowserTimezone(result.createdOn)
+                    updateTimeInBrowserTimezone = convertToBrowserTimezone(result.updatedOn)
+                    
+                }
+            } else {
+                console.log("Usercollab accessRight is not permition")
+
+
+                if (currentBoardVisibility === "private") {
+                    Store.errorPage403 = true
+                    errorPermition()
+                }
+                if (currentBoardVisibility === "public") {
+                    if (currentBoardId.status === 404) {
+                        closeModal()
+                        Store.errorPage404 = true
+                    }
+                    else {                  
+                        statusObject = Store.statuses.find((status) => status.name === currentBoardId.value.statusName)
+                        currentBoardId.value.status = statusObject.statusId
+                        taskData.value = currentBoardId.value
+                        originalTaskData.value = { ...taskData.value }
+                        createTimeInBrowserTimezone = convertToBrowserTimezone(result.createdOn)
+                        updateTimeInBrowserTimezone = convertToBrowserTimezone(result.updatedOn)
+                    }
+                }
+            }
+        
+        } else {
+            if (currentBoardVisibility === "private") {
+                Store.errorPage403 = true
+                errorPermition()
+            }
+            if (currentBoardVisibility === "public") {
+                if (currentStatus.status === 404) {
+                    closeModal()
+                    // Store.errorNotfoundStatus = true
+                }
+                else {
+                    statusObject = Store.statuses.find((status) => status.name === currentBoardId.value.statusName)
+                    currentBoardId.value.status = statusObject.statusId
+                    taskData.value = currentBoardId.value
+                    originalTaskData.value = { ...taskData.value }
+                    createTimeInBrowserTimezone = convertToBrowserTimezone(result.createdOn)
+                    updateTimeInBrowserTimezone = convertToBrowserTimezone(result.updatedOn)
+                }
+            }
+        }
+
+
+
+
+    // if (result.status === 404) {
+    //     router.push({ name: "BoardTask", params: { id: route.params.id } })
+    //     Store.errorUpdateTask = true
+    // }
+    // if (result.status === 401) {
+    //     router.push({ name: "login" })
+    //     Store.errorToken = true
+    // } else {
+    //     statusObject = Store.statuses.find(
+    //         (status) => status.name === result.statusName
+    //     )
+    //     result.status = statusObject.statusId
+    //     taskData.value = result
+    //     originalTaskData.value = { ...taskData.value }
+    //     createTimeInBrowserTimezone = convertToBrowserTimezone(result.createdOn)
+    //     updateTimeInBrowserTimezone = convertToBrowserTimezone(result.updatedOn)
+    // }
+
     // } else {
     //     router.push({ name: "notFound" })
     // }
@@ -185,16 +333,16 @@ function errorPermition() {
     router.push({ name: "notFound" })
 }
 
-watch(
-    boardId,
-    async (newBoardId) => {
-        if (newBoardId) {
-            await fetchData()
-            // checkTokenLogin()
-        }
-    },
-    { immediate: true }
-)
+// watch(
+//     boardId,
+//     async (newBoardId) => {
+//         if (newBoardId) {
+//             await fetchData()
+//             // checkTokenLogin()
+//         }
+//     },
+//     { immediate: true }
+// )
 
 onMounted(() => {
     checkrequestNewToken(router)
@@ -346,12 +494,12 @@ onUpdated(() => {
                 <button
                     type="submit"
                     class="itbkk-button-confirm button buttonOK tooltip "
-                    :disabled="!isEdited || !checkAuthToken() || !checkOwner()"
+                    :disabled="!isEdited || !checkAuthToken() || !userCollabWrite()"
                     :class="{
                         'tooltip-left': !checkAuthToken(),
                     }"
                     :data-tip="
-                        checkAuthToken() && checkOwner()
+                        checkAuthToken()
                             ? 'Update Task Data.'
                             : 'You do not have permission to use this feature.'
                     "

@@ -3,8 +3,8 @@ import { ref, onMounted, watch, computed } from "vue"
 import { useRoute, useRouter, onBeforeRouteUpdate } from "vue-router"
 import { useStore } from "@/stores/store.js"
 import {
-    getBoard,
-    getTaskByBoard,
+    getAllBoard,
+    getDataByBoard,
     removeData,
     clearCookies,
 } from "@/libs/fetchs.js"
@@ -35,6 +35,7 @@ const transferModal = ref(false)
 const errorDeleteStatus = ref(false)
 const successDeleteStatus = ref(false)
 let userLogin = Cookies.get("oid")
+const currentStatus = ref({})
 
 const isBoardPage = computed(() => route.path.endsWith(`/board`))
 const isStatusPage = computed(() =>
@@ -42,38 +43,27 @@ const isStatusPage = computed(() =>
 )
 
 
-watch(
-    boardId,
-    async (newBoardId) => {
-        if (newBoardId) {
-            await fetchData()
-            getBoardName()
-            // checkAuthToken()
-        }
-    },
-    { immediate: true }
-)
+// watch(
+//     boardId,
+//     async (newBoardId) => {
+//         if (newBoardId) {
+//             await fetchData()
+//         }
+//     },
+//     { immediate: true }
+// )
 
 onMounted(() => {
     fetchData()
-    getBoardName()
     checkrequestNewToken(router)
 })
 
 function checkOwner() {
-  
-    const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value)
-
+    const foundBoard = Store.boards.boards.find((board) => board.boardId === boardId.value) || Store.boards.collaborate.find((board) => board.boardId === boardId.value)
+    console.log(Store.boards)
+    
     if (foundBoard) {
         const userInboard = foundBoard.owner.oid
-        if (getAuthToken() && !foundBoard) {
-            Store.errorPrivate404 = true
-            Store.errorPrivate404Content = "Statuses"
-            router.push({ name: "Board" })
-        }
-        if (!getAuthToken() && !foundBoard) {
-            router.push({ name: "notFound" })
-        }
         return checkUserInAuthToken(userInboard, userLogin)
     } else {
             // console.log(Store.boards);
@@ -83,39 +73,46 @@ function checkOwner() {
         // }
     }
 }
+function userCollab() {
+    const userCollab = Store.boards.boards.find((uCollab) => uCollab.boardId === boardId.value)
+    || Store.boards.collaborate.find((uCollab) => uCollab.boardId === boardId.value) 
 
-function checkPublicCollab(resultAllBoard) {
-    // console.log(resultAllBoard)
-
-    // const foundBoardPublic = resultAllBoard.find((board) => board.boardId === boardId.value)
-    // console.log(foundBoardPublic)
-    // console.log(boardId.value)
-    // if (foundBoardPublic != undefined) {
-    //     return true
-    // }
-    // else{
-    //     return false
-    // }
+    if (checkOwner()) {
+        return true
+    } else {
+        if (userCollab) {
+        if (userCollab.accessRight == "read") {
+            console.log("read")
+            return false     
+        } 
+        if (userCollab.accessRight == "write") {
+            console.log("write")
+            return true
+        }
+        else{
+            console.log("Erroe permition")
+            return false
+        }
+    } else {
+        return false
+    }
+    }
 }
 
-// let isFetchingData = false;
 async function fetchData() {
-    // if (isFetchingData) return; // ป้องกันการเรียกซ้ำ
-    // isFetchingData = true; // ตั้งค่าว่ากำลังดึงข้อมูลอยู่
-
     const endpoint = `${boardId.value}/statuses`
-    let resStatus = await getTaskByBoard(endpoint)
-    let resTasks = await getTaskByBoard(`${boardId.value}/tasks`)
-    let resBoards = await getBoard("boards")
+    let resStatus = await getDataByBoard(endpoint)
+    let resTasks = await getDataByBoard(`${boardId.value}/tasks`)
+    let resBoards = await getAllBoard("boards")
 
-    Store.boards = resBoards.boards
+    Store.boards = resBoards
     Store.statuses = resStatus
     Store.tasks = resTasks
-    Store.collaborate = resBoards.collaborate
+    // Store.collaborate = resBoards.collaborate
     // console.log(Store.collaborate)
-    // console.log(Store.boards)
-    checkOwner()
+    console.log(Store.boards)
 
+    getBoardName()
     switch (resStatus.status) {
         case 401:
             router.push({ name: "login" })
@@ -140,57 +137,7 @@ async function fetchData() {
             
             break
     }
-    // if(checkOwner){
-    //     // router.push({name: 'login'})
-    //     // Store.errorToken = true
-    //     Store.statuses = resStatus
-    //     Store.tasks = resTasks
-    //     Store.boards = resBoards
 
-    // }
-    // else if (checkOwner() == false && resTasks.status == 403) {
-    //     Store.errorPage403 = true
-    //     router.push({name: 'notFound'})
-
-    // }
-    // else if  (checkOwner() == false && resTasks.status == 404) {
-    //     Store.errorPage404 = true
-    //     router.push({name: 'notFound'})
-
-    // }
-    // else {
-    //     Store.statuses = resStatus
-    //     Store.tasks = resTasks
-    //     Store.boards = resBoards
-    // }
-
-    // if (resTasks.status == 401) {
-    //     // if (checkOwner() == false) {
-    //     //     Store.errorPage404 = true
-    //     //     router.push({name: 'notFound'})
-    //     // } else {
-    //     //     window.alert("Tako")
-    //     // }
-    // }
-    // else if (resTasks.status == 403) {
-    //     if (!checkOwner()) {
-    //         Store.errorPage403 = true
-    //         router.push({name: 'notFound'})
-    //     } else {
-    //         window.alert("Tako")
-    //     }
-    // }
-    // else if (resTasks.status == 404){
-    //     if (checkOwner() === false) {
-    //         Store.errorPage404 = true
-    //         router.push({name: 'notFound'})
-
-    //     } else {
-    //         window.alert("Tako")
-    //     }
-    //     console.log(resTasks)
-    // console.log(checkOwner());
-    // }
 }
 
 // =======================================================================================================================
@@ -369,7 +316,7 @@ function toggleTaskDropdown() {
 }
 
 function getBoardName() {
-    const board = Store.boards.find((b) => b.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value)
+    const board = Store.boards.boards.find((board) => board.boardId === boardId.value) || Store.boards.collaborate.find((board) => board.boardId === boardId.value)
     if (board) {
         boardName.value = board.board_name
     }
@@ -403,13 +350,6 @@ function checkVariable() {
     return false
 }
 
-
-// Fetch data every time the route changes (but the same component remains active)
-// onBeforeRouteUpdate((to, from, next) => {
-//     fetchData() // Re-fetch data when navigating within the same component
-//     console.log(Store.statuses)
-//     next()
-// })
 </script>
 
 <template>
@@ -529,7 +469,7 @@ function checkVariable() {
                             All
                         </li>
                         <li
-                            v-for="(board, index) in Store.boards"
+                            v-for="(board, index) in Store.boards.boards || Store.boards.collaborate"
                             :key="index"
                             class="py-2 text-slate-400 hover:text-black cursor-pointer"
                             @click="openBoardDetailModal(board.boardId)"
@@ -597,7 +537,7 @@ function checkVariable() {
                 >
                     <ul>
                         <li
-                            v-for="(board, index) in Store.boards"
+                            v-for="(board, index) in Store.boards.boards || Store.boards.collaborate"
                             :key="index"
                             class="py-2 text-slate-400 hover:text-black cursor-pointer"
                             @click="openStatuses(board.boardId)"
@@ -724,7 +664,7 @@ function checkVariable() {
                             : 'You do not have permission to use this feature.'
                     "
                     
-                    @click="checkAuthToken() && checkOwner() ? openCreateStatus():''"
+                    @click="userCollab() || checkOwner() ? openCreateStatus():''"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -743,7 +683,7 @@ function checkVariable() {
                     <p
                         class="pl-2"
                         :class="{
-                            'cursor-not-allowed': !checkAuthToken(),
+                            'cursor-not-allowed': !checkAuthToken() ,
                             'cursor-pointer': checkAuthToken(),
                         }"
                     >
@@ -806,13 +746,13 @@ function checkVariable() {
                                 class="itbkk-button-delete tooltip tooltip-top"
                                 :class="{
                                     'cursor-not-allowed':
-                                        !checkAuthToken() || !checkOwner(),
+                                        !checkAuthToken(),
                                     'cursor-pointer':
-                                        checkAuthToken() && checkOwner(),
+                                        checkAuthToken() ,
                                 }"
                                 :disabled="!checkAuthToken()"
                                 :data-tip="
-                                    checkAuthToken() && checkOwner()
+                                    checkAuthToken() 
                                         ? 'Delete your status.'
                                         : 'You do not have permission to use this feature.'
                                 "
@@ -823,7 +763,7 @@ function checkVariable() {
                                     viewBox="0 0 24 24"
                                     stroke-width="1.5"
                                     stroke="currentColor"
-                                    @click=" checkAuthToken() && checkOwner() ?
+                                    @click=" checkAuthToken() && userCollab()  ?
                                         openConfirmModal(
                                             status.statusId,
                                             status.name
@@ -832,9 +772,9 @@ function checkVariable() {
                                     class="size-6 text-red-500"
                                     :class="{
                                         'cursor-not-allowed':
-                                            !checkAuthToken() || !checkOwner(),
+                                            !checkAuthToken(),
                                         'cursor-pointer':
-                                            checkAuthToken() && checkOwner(),
+                                            checkAuthToken(),
                                     }"
                                     :disabled="!checkAuthToken()"
                                 >

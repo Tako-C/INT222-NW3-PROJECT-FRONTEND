@@ -29,7 +29,7 @@ function checkUserPermition() {
 let accessRightList = ref(['read','write'])
 let collabData = ref({
     email: '',
-    accessRight : ''
+    accessRight : 'read'
 })
 
 function closeModal() {
@@ -95,7 +95,7 @@ async function saveBoardData() {
                 errorPermition()
             } 
             else {
-                let result = await addData(collabData.value, `${boardId.value}/collabs`)
+                let result = await addData(collabData.value, `boards/${boardId.value}/collabs`)
                 // console.log(result)
               // console.log(checkOwner(),checkAuthToken());
 
@@ -151,7 +151,7 @@ function errorPermition() {
 function clearData() {
     collabData = ref({
     email: '',
-    accessRight : ''
+    accessRight : 'read'
 })
 }
 
@@ -211,7 +211,7 @@ onMounted(() => {
                     <p class=" flex justify-end pr-20 text-[10px]">{{ collabData.email.length}}/50</p>
 
                     <select v-model="collabData.accessRight" class="itbkk-access-right h-8 rounded-lg border-2 pl-2">
-                        <option disabled value="">Select Access Permissions</option>
+                        <!-- <option disabled value="">Select Access Permissions</option> -->
                         <option v-for="right in accessRightList" :key="right" :value="right">
                         {{ right }}
                         </option>

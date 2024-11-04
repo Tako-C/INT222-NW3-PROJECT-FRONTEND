@@ -4,48 +4,6 @@ import { getAuthToken,clearCookies,setAuthToken} from '@/libs/authToken.js'
 // Path URL
 const url = import.meta.env.VITE_BASE_URL
 
-
-// function getAuthToken() {
-//     return (token.value = Cookies.get("token"))
-// }
-
-// function setAuthToken(result) {
-//     const token_raw = JSON.parse(result) // Parse result into JSON before using
-//     const decodedToken = jwtDecode(token_raw.access_token) // Decode access_token
-//     const now = Math.floor(Date.now() / 1000)
-//     const exp = decodedToken.exp
-
-//     const cookieExpiresInSeconds = exp - now
-//     const cookieExpiresInDays = cookieExpiresInSeconds / (60 * 60 * 24)
-
-//     Cookies.set("token", token_raw.access_token, {
-//         expires: cookieExpiresInDays,
-//     })
-//     // Store the decoded claims in cookies
-//     Cookies.set("name", decodedToken.name, { expires: cookieExpiresInDays })
-//     Cookies.set("oid", decodedToken.oid, { expires: cookieExpiresInDays })
-//     Cookies.set("iss", decodedToken.iss, { expires: cookieExpiresInDays })
-//     Cookies.set("email", decodedToken.email, { expires: cookieExpiresInDays })
-//     Cookies.set("role", decodedToken.role, { expires: cookieExpiresInDays })
-//     Cookies.set("iat", decodedToken.iat, { expires: cookieExpiresInDays })
-//     Cookies.set("exp", decodedToken.exp, { expires: cookieExpiresInDays })
-// }
-
-// function clearCookies() {
-//     const cookieNames = [
-//         "token",
-//         "name",
-//         "oid",
-//         "iss",
-//         "email",
-//         "role",
-//         "iat",
-//         "exp",
-//     ]
-//     cookieNames.forEach((name) => {
-//         Cookies.remove(name)
-//     })
-// }
 async function requestToken(refresh_token) {
     console.log(refresh_token)
     
@@ -60,7 +18,6 @@ async function requestToken(refresh_token) {
     if (res.ok) {
         const result = await res.json()
         if (result) {
-            // setAuthToken(result)
 
             console.log("request successful:", result)
         } else {
@@ -105,43 +62,8 @@ async function login(username, password) {
     }
 }
 
-async function getBoard(path) {
+async function getDataByBoard(path) {
     getAuthToken()
-
-    if (!getAuthToken()) {
-        console.error("Token not found")
-       // throw new Error("Token not found")
-    }
-
-    const response = await fetch(`${url}/v3/${path}`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getAuthToken()}`, // Add the token in the Authorization header
-        },
-    })
-
-    if (!response.ok) {
-        const error = await response.json()
-        // console.error(
-        //     "Error fetching data:",
-        //     error.message || "Failed to fetch data"
-        // )
-        // throw new Error(error.message || "Failed to fetch data")
-        return error
-    }
-
-    const data = await response.json()
-    return data
-}
-
-async function getTaskByBoard(path) {
-    getAuthToken()
-    // if (!getAuthToken()) {
-    //     console.error("Token not found")
-    //    // throw new Error("Token not found")
-    // }
-
     const response = await fetch(`${url}/v3/boards/${path}`, {
         method: "GET",
         headers: {
@@ -152,44 +74,11 @@ async function getTaskByBoard(path) {
 
     if (!response.ok) {
         const error = await response.json()
-        // console.error(
-        //     "Error fetching data:",
-        //     error.message || "Failed to fetch data"
-        // )
-        // throw new Error(error.message || "Failed to fetch data")
         return error
     }
 
     const data = await response.json()
     return data
-}
-
-async function createStatus(data, path) {
-    getAuthToken()
-    if (!getAuthToken()) {
-        console.error("Token not found")
-       // throw new Error("Token not found")
-    }
-
-    const response = await fetch(`${url}/v3/boards/${path}`, {
-        method: "POST", // or 'PUT' if needed
-        headers: {
-            Authorization: `Bearer ${getAuthToken()}`, // Add the token in the Authorization header
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    })
-
-    if (!response.ok) {
-        const error = await response.json()
-        // console.error("Error:", error.message || "Failed to create status")
-        // throw new Error(error.message || "Failed to create status")
-        return error
-    }
-
-    const result = await response.json()
-    console.log("Success:", result)
-    return result
 }
 
 async function addData(data, path) {
@@ -197,10 +86,9 @@ async function addData(data, path) {
 
     if (!getAuthToken()) {
         console.error("Token not found")
-       // throw new Error("Token not found")
     }
 
-    const response = await fetch(`${url}/v3/boards/${path}`, {
+    const response = await fetch(`${url}/v3/${path}`, {
         method: "POST", // or 'PUT' if needed
         headers: {
             "Content-Type": "application/json",
@@ -211,8 +99,6 @@ async function addData(data, path) {
 
     if (!response.ok) {
         const error = await response.json()
-        // console.error("Error:", error.message || "Failed to add data")
-        // throw new Error(error.message || "Failed to add data")
         return error;
     }
 
@@ -222,10 +108,10 @@ async function addData(data, path) {
 }
 
 async function editDatas(path, data) {
-    getAuthToken() // Ensure token is retrieved
+    getAuthToken()
 
     if (!getAuthToken()) {
-       // throw new Error("Token not found");
+
     }
 
     const response = await fetch(`${url}/v3/${path}`, {
@@ -247,54 +133,21 @@ async function editDatas(path, data) {
     return result;
 }
 
-
-async function addBoard(data, path) {
-    getAuthToken() // Get the token from the getAuthToken function
-
-    console.log(getAuthToken())
-    if (!getAuthToken()) {
-        console.error("Token not found");
-       // throw new Error("Token not found");
-    }
-
-    const response = await fetch(`${url}/v3/${path}`, {
-        method: "POST", // or 'PUT' if needed
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getAuthToken()}`, // Add the token in Authorization header
-        },
-        body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-        const error = await response.json();
-        return error
-    }
-
-    const result = await response.json();
-    console.log("Success:", result);
-    return result;
-}
-
-
 async function removeData(path) {
     getAuthToken()
     if (!getAuthToken()) {
         console.error("Token not found")
-       // throw new Error("Token not found")
     }
 
     const response = await fetch(`${url}/v3/${path}`, {
         method: "DELETE",
         headers: {
-            Authorization: `Bearer ${getAuthToken()}`, // Add the token in the Authorization header
+            Authorization: `Bearer ${getAuthToken()}`, 
         },
     })
 
     if (!response.ok) {
         const error = await response.json()
-        // console.error("Error:", error.message || "Failed to delete task")
-        // throw new Error(error.message || "Failed to delete task")
         return error;
         
     }
@@ -303,11 +156,10 @@ async function removeData(path) {
     return response
 }
 
-async function updateBoard(path,data) {
+async function PatchData(path,data) {
     getAuthToken()
     if (!getAuthToken()) {
         console.error("Token not found")
-       // throw new Error("Token not found")
     }
 
     const response = await fetch(`${url}/v3/${path}`, {
@@ -321,8 +173,6 @@ async function updateBoard(path,data) {
 
     if (!response.ok) {
         const error = await response.json()
-        // console.error("Error:", error.message || "Failed to delete task")
-        // throw new Error(error.message || "Failed to delete task")
         return error;
         
     }
@@ -334,7 +184,6 @@ async function getAllBoard(path) {
 
     if (!getAuthToken()) {
         console.error("Token not found")
-       // throw new Error("Token not found")
     }
 
     const response = await fetch(`${url}/v3/${path}`, {
@@ -348,11 +197,6 @@ async function getAllBoard(path) {
 
     if (!response.ok) {
         const error = await response.json()
-        // console.error(
-        //     "Error fetching data:",
-        //     error.message || "Failed to fetch data"
-        // )
-        // throw new Error(error.message || "Failed to fetch data")
         return error
     }
 
@@ -364,7 +208,6 @@ async function getAllBoardByPublic(path) {
 
     if (!getAuthToken()) {
         console.error("Token not found")
-       // throw new Error("Token not found")
     }
 
     const response = await fetch(`${url}/v3/${path}`, {
@@ -378,14 +221,8 @@ async function getAllBoardByPublic(path) {
 
     if (!response.ok) {
         const error = await response.json()
-        // console.error(
-        //     "Error fetching data:",
-        //     error.message || "Failed to fetch data"
-        // )
-        // throw new Error(error.message || "Failed to fetch data")
         return error
     }
-
     const data = await response.json()
     return data
 }
@@ -394,14 +231,11 @@ export {
     addData,
     requestToken,
     login,
-    getBoard,
     getAllBoardByPublic,
-    getTaskByBoard,
-    createStatus,
+    getDataByBoard,
     editDatas,
-    addBoard,
     removeData,
     clearCookies,
-    updateBoard,
+    PatchData,
     getAllBoard,
 }
