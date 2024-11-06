@@ -7,6 +7,7 @@ import {
     PatchData,
     getAllBoard,
     getAllBoardByPublic,
+    removeData
 } from "@/libs/fetchs.js"
 
 import {
@@ -36,7 +37,7 @@ const openConfirmedChangeVisibility = ref(false)
 let visibilityBoard = ref({})
 let userLogin = Cookies.get("oid")
 let resultPrivatTest = ref({})
-let CollabLeave = ref('')
+let CollabLeave = ref({})
 const openConfirmedLeaveCollab = ref(false)
 
 function getImageUrl(index) {
@@ -237,11 +238,34 @@ function openConfirmLeaveCollabModal(boardcollab) {
     console.log(foundBoard)
 
     if (checkAuthToken()) {    
-        CollabLeave.value = boardcollab.board_name
+        CollabLeave = boardcollab
         openConfirmedLeaveCollab.value = true 
+
     } else {
         // errorPermition()
     }
+}
+async function leaveConfirm() {
+    console.log('leaveConfirm')
+
+    let collabOid 
+    let boardTest = await getAllBoard(`boards/${CollabLeave.boardId}/collabs`)
+    for(let i = 0; i< boardTest.collaborators.length; i++) {
+
+        console.log(userLogin)
+        console.log(boardTest.collaborators[i])
+        if(userLogin === boardTest.collaborators[i].oid){
+            console.log(boardTest.collaborators[i])
+            collabOid = boardTest.collaborators[i].oid
+        }
+    }
+
+    let leaveCollab = await removeData(`boards/${CollabLeave.boardId}/collabs/${collabOid}`
+    )
+
+    // console.log(leaveCollab)
+    fetchData()
+    closeNotificationModal()
 }
 
 function closeNotificationModal() {
@@ -308,7 +332,7 @@ watch(
         v-show="openConfirmedLeaveCollab"
         :leaveCollab="CollabLeave"
         @closemodal="closeNotificationModal()"
-        @confirmed=""
+        @confirmed="leaveConfirm()"
         class="z-40"
     />
     <modalNotification

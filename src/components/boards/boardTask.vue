@@ -312,7 +312,7 @@ async function removeTask() {
                     Store.errorToken = true
                 }
                 if (removedTask.status === 404) {
-                    onsole.log("result :", removedTask.status)
+                    console.log("result :", removedTask.status)
                     errorDelete.value = true
                 }
                 else {
@@ -331,6 +331,8 @@ async function removeTask() {
             errorPermition()
             }
         }
+        fetchData()
+        closeNotificationModal()
             
 }
 

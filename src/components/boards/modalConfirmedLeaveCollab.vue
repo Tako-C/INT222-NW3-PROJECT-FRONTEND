@@ -2,7 +2,7 @@
 import { defineEmits, ref } from 'vue'
 const props = defineProps({
   leaveCollab:{
-    type: String}
+    type: Object}
 })
 const emits = defineEmits(['closemodal', 'confirmed'])
 </script>
@@ -13,7 +13,7 @@ const emits = defineEmits(['closemodal', 'confirmed'])
         <h3 class="text-lg font-bold">Change access right</h3>
         <p class="border-b mt-2"></p>
         <p class="itbkk-message py-4">
-            Do you want to leave <strong>"{{ leaveCollab }}"</strong> board ?
+            Do you want to leave <strong>"{{ leaveCollab.board_name }}"</strong> board ?
         </p>
         <div class="boxButton">
           <button
