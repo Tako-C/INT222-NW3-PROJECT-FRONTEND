@@ -123,9 +123,12 @@ async function saveTaskData() {
             Store.errorPage401 = true
             errorPermition()
         }
+        addToStore()
 
         // errorPermition()
     }
+    fetchData()
+    closeModal()
 }
 
 function closeModal() {

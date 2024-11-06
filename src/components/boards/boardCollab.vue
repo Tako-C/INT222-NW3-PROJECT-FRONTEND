@@ -278,7 +278,6 @@ onMounted(() => {
         v-show="checkVariable()"
         class="z-30"
     />
-    <
     <boardCollabChangeAccessRight
         v-show="openConfirmedAccessRight"
         :changeAccessRight="CollabDetail"

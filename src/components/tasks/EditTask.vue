@@ -273,8 +273,18 @@ if (checkOwner() && checkAuthToken()) {
         Store.successUpdateTask = true
         addToStore()
     }
-} else{
-
+} if (userCollabWrite()) {
+    if(result.status === 401){
+        router.push({name: 'login'})
+        Store.errorToken = true
+    }
+     else {
+        // TaskID.value = result.id
+        Store.successUpdateTask = true
+        addToStore()
+    }
+}
+else{
     if (result.status === 403) {
         Store.errorPage403 = true
         errorPermition()
