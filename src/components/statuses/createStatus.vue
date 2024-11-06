@@ -69,7 +69,7 @@ function addToStore() {
 
 
 
-async function saveTaskData() {
+async function saveStatusData() {
     let checkStatusName = Store.statuses.filter((status) => status.name === statusData.value.name)
         if(checkStatusName.length === 1){
             window.alert("An error has occurred, the status could not be added.")
@@ -106,9 +106,14 @@ async function saveTaskData() {
                 Store.errorPage401 = true
                 errorPermition()
                 }
+                statusID.value = result.statusId
+                addToStore()
+                closeModal()
 
             }
+            
     }
+    
 }
 
 function errorPermition() {
@@ -226,7 +231,7 @@ function userCollab() {
                     <button 
                         type="submit"
                         class="itbkk-button-confirm button buttonOK tooltip tooltip-left"
-                        @click="saveTaskData()"
+                        @click="saveStatusData()"
                         :disabled="statusData.name.length === 0"
                         :class="{ 'cursor-not-allowed ': !checkAuthToken() }"
                         :data-tip="checkAuthToken() ? '' : 'You do not have permission to use this feature.'"
