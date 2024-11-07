@@ -2,7 +2,7 @@
 import { defineEmits, ref } from 'vue'
 const props = defineProps({
   removeCollab:{
-    type: String}
+    type: Object}
 })
 const emits = defineEmits(['closemodal', 'confirmed'])
 </script>
@@ -13,7 +13,7 @@ const emits = defineEmits(['closemodal', 'confirmed'])
         <h3 class="text-lg font-bold">Change access right</h3>
         <p class="border-b mt-2"></p>
         <p class="itbkk-message py-4">
-          Do you want to remove  <strong>"{{ removeCollab }}"</strong> from the board ?
+          Do you want to remove  <strong>"{{ removeCollab.name }}"</strong> from the board ?
         </p>
         <div class="boxButton">
           <button

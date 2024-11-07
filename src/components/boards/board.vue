@@ -249,14 +249,14 @@ async function leaveConfirm() {
     console.log('leaveConfirm')
 
     let collabOid 
-    let boardTest = await getAllBoard(`boards/${CollabLeave.boardId}/collabs`)
-    for(let i = 0; i< boardTest.collaborators.length; i++) {
+    let collabBoard = await getAllBoard(`boards/${CollabLeave.boardId}/collabs`)
+    for(let i = 0; i< collabBoard.collaborators.length; i++) {
 
         console.log(userLogin)
-        console.log(boardTest.collaborators[i])
-        if(userLogin === boardTest.collaborators[i].oid){
-            console.log(boardTest.collaborators[i])
-            collabOid = boardTest.collaborators[i].oid
+        console.log(collabBoard.collaborators[i])
+        if(userLogin === collabBoard.collaborators[i].oid){
+            console.log(collabBoard.collaborators[i])
+            collabOid = collabBoard.collaborators[i].oid
         }
     }
 

@@ -2,7 +2,7 @@
 import { ref, onMounted, watch, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
-import { getDataByBoard,getAllBoard,PatchData} from "@/libs/fetchs.js"
+import { getDataByBoard,getAllBoard,PatchData, removeData} from "@/libs/fetchs.js"
 import Cookies from "js-cookie"
 import { checkAuthToken,checkUserInAuthToken,checkrequestNewToken} from '@/libs/authToken.js'
 import modalNotification from "@/components/modals/modalNotification.vue"
@@ -26,7 +26,7 @@ const openConfirmedAccessRight = ref(false)
 const openConfirmedRemove = ref(false)
 let resultAllBoard = {}
 let CollabDetail = ref({})
-let CollabRemove = ref('')
+let CollabRemove = ref({})
 let accessRightList = ref(['read','write'])
 
 function checkPublicCollab(resultAllBoard) {
@@ -233,12 +233,19 @@ function openConfirmDeleteCollabModal(collab) {
         // console.log(userLogin);
     if (checkAuthToken() && checkUserInAuthToken(foundBoard.owner.oid, userLogin)) {    
         // console.log(visibilityBoard.value.isCheck);
-        CollabRemove.value = collab.name
+        CollabRemove.value = collab
         openConfirmedRemove.value = true
         // openConfirmed.value = true   
     } else {
         // errorPermition()
     }
+}
+
+async function removeCollabUser() {
+    console.log('remove collab')
+    let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`)
+
+    closeNotificationModal()
 }
 
 
@@ -289,7 +296,7 @@ onMounted(() => {
         v-show="openConfirmedRemove"
         :removeCollab ="CollabRemove"
         @closemodal="closeNotificationModal()"
-        @confirmed=""
+        @confirmed="removeCollabUser()"
         class="z-40"
     />
         <header
