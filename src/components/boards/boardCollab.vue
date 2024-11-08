@@ -62,10 +62,10 @@ async function fetchData() {
         Store.collaborate = resultColab.collaborators
         Store.boards = resBoards.boards
         Store.statuses = resStatuses
-        console.log(resultAllBoard)
-        console.log(Store.statuses)
-        console.log(Store.boards)
-        console.log(Store.collaborate)
+        // console.log(resultAllBoard)
+        // console.log(Store.statuses)
+        // console.log(Store.boards)
+        // console.log(Store.collaborate)
 
         
         // if (!resultAllBoard.collaborate) {    
