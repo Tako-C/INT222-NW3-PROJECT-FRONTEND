@@ -41,8 +41,8 @@ function checkPublicCollab(resultAllBoard) {
 }
  
 function checkOwner() {
-  const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId === boardId.value)
-//   console.log(foundBoard)
+  const foundBoard = Store.boards?.find((board) => board.boardId === boardId.value) || Store.collaborate?.find((board) => board.boardId === boardId.value)
+//   console.log(Store.boards)
   
   if (foundBoard) {
       const userInboard = foundBoard.owner.oid  
@@ -243,9 +243,33 @@ function openConfirmDeleteCollabModal(collab) {
 
 async function removeCollabUser() {
     console.log('remove collab')
-    let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`)
+    // let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`)
 
-    closeNotificationModal()
+    // closeNotificationModal()
+    console.log(CollabRemove.value);
+    
+    if (checkAuthToken()) {
+        let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`)
+        if (checkUserInAuthToken(userLogin, CollabRemove.value.oid)) { 
+            
+            if (collabBoard.status === 401) {
+                router.push({ name: "login" })
+                Store.errorToken = true
+            }
+            if (collabBoard.status === 404) {
+                errorPermition()
+                Store.errorPage404 = true
+            } 
+            closeNotificationModal()
+        } else {     
+                collabBoard.status === 403 
+                Store.errorPage403 = true
+                errorPermition()
+                
+           
+            closeNotificationModal()
+        }
+    }
 }
 
 
