@@ -124,7 +124,7 @@ watch([usernameCount, passwordCount], ([username, password]) => {
           </span>
         </div>
       </div>
-      <div class="text-center mt-8">
+      <div class="text-center mt-6">
         <button
           @click="usernameAndpasswordCheck()"
           :disabled="!up_check"
@@ -139,6 +139,14 @@ watch([usernameCount, passwordCount], ([username, password]) => {
         >
           Sign In
         </button>
+      </div>
+      <div class="flex items-center mt-4">
+        <div class="border-t  border-gray-300 flex-grow"></div>
+        <div class="px-3 text-gray-800 font-bold text-xl">OR</div>
+        <div class="border-t border-gray-300 flex-grow"></div>
+      </div>
+      <div class="flex justify-center mt-2 underline text-blue-500 cursor-pointer" @click="switchToTaskBoard()">
+        <p>login without password</p>
       </div>
     </div>
   </div>

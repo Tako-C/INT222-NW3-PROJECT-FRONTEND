@@ -41,7 +41,11 @@ function checkPublicCollab(resultAllBoard) {
 }
  
 function checkOwner() {
-  const foundBoard = Store.boards?.find((board) => board.boardId === boardId.value) || Store.collaborate?.find((board) => board.boardId === boardId.value)
+    const boardsArray = Array.isArray(Store.boards) ? Store.boards : [];
+    const collaborateArray = Array.isArray(Store.collaborate) ? Store.collaborate : [];
+
+    const foundBoard = boardsArray.find((board) => board.boardId === boardId.value) 
+                   || collaborateArray.find((board) => board.boardId === boardId.value);
 //   console.log(Store.boards)
   
   if (foundBoard) {
@@ -60,7 +64,7 @@ async function fetchData() {
         console.log(resultColab);
         
         Store.collaborate = resultColab.collaborators
-        Store.boards = resBoards.boards
+        Store.boards = [...resBoards.boards]
         Store.statuses = resStatuses
         // console.log(resultAllBoard)
         // console.log(Store.statuses)
@@ -262,10 +266,10 @@ async function removeCollabUser() {
             } 
             closeNotificationModal()
         } else {     
-                collabBoard.status === 403 
+                if(collabBoard.status === 403) {
                 Store.errorPage403 = true
                 errorPermition()
-                
+            }    
            
             closeNotificationModal()
         }
