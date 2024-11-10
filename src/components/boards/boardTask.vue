@@ -251,6 +251,10 @@ function openBoards() {
     router.push({ name: "Board" })
 }
 
+function goBack(){
+    router.go(-1);
+}
+
 function openCreateTask() {
     router.push({ name: "createTask" })
 }
@@ -709,7 +713,7 @@ onMounted(() => {
                     />
                 </svg>
 
-                <p class="pl-2" @click="openBoards()">Back</p>
+                <p class="pl-2" @click="goBack()">Back</p>
             </div>
         </header>
 

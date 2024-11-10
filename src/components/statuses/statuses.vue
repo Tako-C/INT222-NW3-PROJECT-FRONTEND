@@ -246,6 +246,10 @@ function openBoards() {
     router.push({ name: "Board" })
 }
 
+function goBack(){
+    router.go(-1);
+}
+
 function openCreateStatus() {
     router.push({ name: "createStatus" })
 }
@@ -609,7 +613,7 @@ function checkVariable() {
                     />
                 </svg>
 
-                <p class="pl-2" @click="openBoards()">Back</p>
+                <p class="pl-2" @click="goBack()">Back</p>
             </div>
         </header>
 

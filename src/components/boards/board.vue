@@ -516,10 +516,11 @@ watch(
 
             <!-- Login button -->
             <div
-                class="itbkk-sign-out bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer"
+                class="itbkk-sign-out bg-orange-400 p-2 flex my-14 w-3/4 cursor-pointer"
+                :class="{'justify-between sign-out' : checkAuthToken(), 'justify-center items-center' : !checkAuthToken()}"
                 @click="logOut()"
             >
-                <div class="flex items-center space-x-2 p-1">
+                <div class="flex items-center space-x-2 p-1" v-show="checkAuthToken()">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -535,10 +536,10 @@ watch(
                         />
                     </svg>
                 </div>
-                <p class="itbkk-fullname text-sm font-medium p-1">
+                <p class="itbkk-fullname text-sm font-medium p-2">
                     {{ checkAuthToken() ? username : "Login" }}
                 </p>
-                <div class="flex items-center justify-center right-0">
+                <div class="flex items-center justify-center right-0" v-show="checkAuthToken()">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -737,4 +738,36 @@ watch(
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.sign-out {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+/* Hover effect */
+.sign-out:hover .itbkk-fullname,
+.sign-out:hover svg {
+    opacity: 0;
+}
+
+/* Display the Logout text */
+.sign-out::after {
+    content: 'Logout';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    opacity: 0;
+
+}
+
+/* Show the Logout text on hover */
+.sign-out:hover::after {
+    opacity: 1;
+}
+
+
+</style>

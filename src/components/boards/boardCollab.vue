@@ -192,6 +192,9 @@ function openBoardTasks(id) {
 function openBoards() {
     router.push({ name: "Board" })
 }
+function goBack(){
+    router.go(-1);
+}
 async function logOut(){
     router.push({ name:'login'})
 }
@@ -556,7 +559,7 @@ onMounted(() => {
                     />
                 </svg>
  
-                <p class="pl-2" @click="openBoards()">Back</p>
+                <p class="pl-2" @click="goBack()">Back</p>
             </div>
         </header>
  
@@ -588,7 +591,7 @@ onMounted(() => {
                 </div>
                 <button
                     class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
-                    :data-tip="checkAuthToken() ? 'Add user in Collaburate.' : 'You do not have permission to use this feature.'"          
+                    :data-tip="checkAuthToken() && checkOwner() ? 'Add user in Collaborate.' : 'You do not have permission to use this feature.'"          
                     @click="openCreateCollabUser"
                     :disabled="!checkAuthToken() || !checkOwner()"
                 >
@@ -644,7 +647,8 @@ onMounted(() => {
                             </option>
                         </select>
                         
-                        <button class="itbkk-collab-remove flex justify-center w-3/5 text-[12px] rounded-2xl btn btn-error"
+                        <button class="itbkk-collab-remove flex justify-center w-3/5 text-[12px] rounded-2xl btn btn-error tooltip tooltip-top"
+                        :data-tip="checkAuthToken() && checkOwner() ? 'remove user' : 'You do not have permission to use this feature.'"    
                         :disabled="handleDeleteCollab()"
                         @click="checkOwner() && checkAuthToken() ? openConfirmDeleteCollabModal(collab) : ''"
                         >
