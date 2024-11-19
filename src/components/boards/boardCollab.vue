@@ -620,12 +620,13 @@ onMounted(() => {
             <div class=" flex flex-col mt-5 ml-16 w-5/6">
                 <!-- Table Header -->
                 <div class="bg-gray-100 p-4 rounded-t-lg shadow-md">
-                    <div class="grid grid-cols-6 gap-5">
+                    <div class="grid grid-cols-7 gap-5">
                         <h3 class="font-bold flex justify-center">No</h3>
                         <h3 class="font-bold flex justify-center">Name</h3>
                         <h3 class="font-bold flex justify-center col-span-2">Email</h3>
                         <h3 class="font-bold flex justify-center">Access Rigths</h3>
                         <h3 class="font-bold flex justify-center">Action</h3>
+                        <h3 class="font-bold flex justify-center">Status</h3>
                     </div>
                 </div>
                 <!-- Table Body -->
@@ -633,7 +634,7 @@ onMounted(() => {
                 :key="index"
                 class="flex flex-col"
                 >
-                    <div class="grid grid-cols-6 gap-5 mt-5">
+                    <div class="grid grid-cols-7 gap-5 mt-5">
                         <p class="itbkk-item flex justify-center">{{ index+1 }}</p>
                         <p class="itbkk-name flex justify-center">{{ collab.name }}</p>
                         <p class="itbkk-email flex justify-center col-span-2">{{ collab.email }}</p>
@@ -654,7 +655,7 @@ onMounted(() => {
                         >
                             Remove
                         </button>
-
+                        <h3 class="font-bold flex justify-center">{{ collab.statusInvite }}</h3>
                     </div>
                 </div>
             </div>

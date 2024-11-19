@@ -20,6 +20,7 @@ import Cookies from "js-cookie"
 import BoardVisibilityConfirmation from "@/components/boards/boardVisibilityConfirmation.vue"
 import modalNotification from "@/components/modals/modalNotification.vue"
 import boardCollabLeave from "@/components/boards/modalConfirmedLeaveCollab.vue"
+import modalAcceptInvite from "../collab/modalAcceptInvite.vue"
 
 const Store = useStore()
 const router = useRouter()
@@ -339,6 +340,13 @@ watch(
         @closemodal="closeNotificationModal()"
         v-show="checkVariable()"
         class="z-30"
+    />
+    <modalAcceptInvite
+        :changevisibility="visibilityBoard"
+        v-show="openConfirmedChangeVisibility"
+        @closemodal="closeNotificationModal()"
+        @confirmed="updateVisibility()"
+        class="z-40"
     />
 
     <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
