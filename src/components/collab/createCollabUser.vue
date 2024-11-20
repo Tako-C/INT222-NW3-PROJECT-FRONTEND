@@ -80,9 +80,9 @@ async function fetchData() {
         checkUserPermition()
 }
 function addToStore(newBoard) {
-    // console.log(newBoard);
+    console.log(newBoard);
     Store.collaborate.push({ ...newBoard })
-    // console.log(Store.collaborate);
+    console.log(Store.collaborate);
 }
 
 
@@ -104,7 +104,7 @@ async function saveBoardData() {
             else {
                 let result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
                 console.log(collabData.value)
-                // console.log(result)
+                console.log(result)
               // console.log(checkOwner(),checkAuthToken());
 
 
@@ -184,8 +184,6 @@ onMounted(() => {
     checkrequestNewToken(router)
     checkAuthToken()
     fetchData()
-
-    
     
 })
 
