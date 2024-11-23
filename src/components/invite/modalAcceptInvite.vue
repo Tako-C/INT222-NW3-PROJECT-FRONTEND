@@ -1,7 +1,7 @@
 <script setup>
 import { defineEmits, ref } from 'vue'
 const props = defineProps({
-  changeAccessRight:{
+  Invitation:{
     type: Object}
 })
 const emits = defineEmits(['closemodal', 'confirmed'])
@@ -13,7 +13,7 @@ const emits = defineEmits(['closemodal', 'confirmed'])
         <h3 class="text-lg font-bold">Invited Collaboration</h3>
         <p class="border-b mt-2"></p>
         <p class="itbkk-message py-4">
-        <strong>User</strong> has invited you to collab board with access right <strong>board access</strong> in <strong> board name</strong>
+        <strong>{{ Invitation.owner?.name }}</strong> has invited you to collab board with <strong>{{ Invitation.accessRight }}</strong> access in <strong> {{ Invitation.board_name }}</strong>
         </p>
         <div class="boxButton">
           <button

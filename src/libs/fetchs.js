@@ -227,6 +227,29 @@ async function getAllBoardByPublic(path) {
     return data
 }
 
+async function accept(path) {
+    getAuthToken()
+    if (!getAuthToken()) {
+        console.error("Token not found")
+    }
+
+    const response = await fetch(`${url}/v3/${path}`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${getAuthToken()}`, 
+        },
+    })
+
+    if (!response.ok) {
+        const error = await response.json()
+        return error;
+        
+    }
+
+    console.log("Task deleted successfully")
+    return response
+}
+
 export {
     addData,
     requestToken,
@@ -238,4 +261,5 @@ export {
     clearCookies,
     PatchData,
     getAllBoard,
+    accept
 }

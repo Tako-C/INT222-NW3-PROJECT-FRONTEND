@@ -2,12 +2,13 @@
 import { ref, onMounted, watch, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useStore } from "@/stores/store.js"
-import { getDataByBoard,getAllBoard,PatchData, removeData} from "@/libs/fetchs.js"
+import { getDataByBoard,getAllBoard,PatchData, removeData, accept} from "@/libs/fetchs.js"
 import Cookies from "js-cookie"
 import { checkAuthToken,checkUserInAuthToken,checkrequestNewToken} from '@/libs/authToken.js'
 import modalNotification from "@/components/modals/modalNotification.vue"
 import boardCollabChangeAccessRight from "@/components/collab/modalCollabChangeAccessRight.vue"
 import boardCollabRemove from "@/components/collab/modalConfirmedDeleteCollab.vue"
+import modalAcceptInvite from "./modalAcceptInvite.vue"
  
 const Store = useStore()
 const router = useRouter()
@@ -21,13 +22,14 @@ const isTaskDropdownOpen = ref(false)
 const isStatusDropdownOpen = ref(false)
 const boardId = ref(route.params.id)
 let userLogin = Cookies.get("oid")
+let userToken = ref()
 const boardName = ref("")
 const openConfirmedAccessRight = ref(false)
 const openConfirmedRemove = ref(false)
+let openAcceptInvitation = ref(false)
 let resultAllBoard = {}
 let CollabDetail = ref({})
 let CollabRemove = ref({})
-let accessRightList = ref(['read','write'])
 
 function checkPublicCollab(resultAllBoard) {
     // console.log(resultAllBoard)
@@ -55,28 +57,48 @@ function checkOwner() {
   return false
 }
 
+let invite = ref()
 async function fetchData() {
     let endpoint = "boards"
     let resultColab = await getAllBoard(`boards/${boardId.value}/collabs`)
         let resStatuses = await getDataByBoard(`${boardId.value}/statuses`)
-        let resBoards = await getAllBoard(endpoint)
+        // let resBoards = await getAllBoard(endpoint)
         resultAllBoard = await getAllBoard(endpoint)
         console.log(resultColab);
+        console.log(resultAllBoard);
+        
         
         Store.collaborate = resultColab.collaborators
-        Store.boards = [...resBoards.boards]
+        Store.boards = resultAllBoard
         Store.statuses = resStatuses
         // console.log(resultAllBoard)
         // console.log(Store.statuses)
-        // console.log(Store.boards)
+        console.log(Store.boards)
         console.log(Store.collaborate)
 
+        for (let i = 0; i < Store.collaborate.length; i++) {
+            console.log(Store.collaborate[i].token)
+            if(userLogin === Store.collaborate[i].oid){
+                userToken.value = Store.collaborate[i].token
+            }
+            
+        }
         
+
+            
+        invite.value = Store.boards.collaborate.map(collab => ({
+            ...collab, status: "PENDING" 
+        })) 
+            
+
+
+        console.log(invite.value)
         // if (!resultAllBoard.collaborate) {    
         // }else{
         //     checkPublicCollab(resultAllBoard.collaborate)
         // } 
   
+
         
         switch (resultColab.status) {
         case 401:
@@ -104,6 +126,9 @@ async function fetchData() {
         }
 
 }
+
+
+
 
 async function changeAccessRicht() {
     let indexToUpdate = -1
@@ -214,6 +239,7 @@ function checkVariable() {
 function closeNotificationModal() {
     openConfirmedAccessRight.value = false
     openConfirmedRemove.value = false
+    openAcceptInvitation = false
     Store.errorPage409 = false
     fetchData()
     
@@ -292,6 +318,36 @@ function handleDeleteCollab() {
     } else{}
 }
 
+let infoInvite = ref({})
+let information = ref({})
+function modalAccept(info) {
+    infoInvite.value = info
+    information.value = {
+        boardId: infoInvite.value.boardId,
+        token: userToken.value
+    }
+
+    // console.log(information.value)
+    // console.log(infoInvite.value)
+    openAcceptInvitation = true
+}
+
+async function acceptInvite(){
+    let resultRemove = await accept(`boards/${infoInvite.value.boardId}/collabs/invitations/accept?token=${userToken.value}`)
+    // console.log(infoInvite.value.boardId, userToken)
+    console.log(resultRemove)
+
+    
+    closeNotificationModal()
+}
+async function declineInvite(){
+    console.log(infoInvite.value.boardId)
+    console.log(userToken.value)
+    let resultRemove = await accept(`boards/${infoInvite.value.boardId}/collabs/invitations/decline?token=${userToken.value}`)
+    console.log(resultRemove)
+    closeNotificationModal()
+}
+
 watch(
     boardId,
     async (newBoardId) => {
@@ -328,6 +384,13 @@ onMounted(() => {
         :removeCollab ="CollabRemove"
         @closemodal="closeNotificationModal()"
         @confirmed="removeCollabUser()"
+        class="z-40"
+    />
+      <modalAcceptInvite
+        :Invitation="infoInvite"
+        v-show="openAcceptInvitation"
+        @closemodal="declineInvite()"
+        @confirmed="acceptInvite()"
         class="z-40"
     />
         <header
@@ -570,7 +633,7 @@ onMounted(() => {
                 <div
                     class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
                 >
-                <h1 class="itbkk-board-name">{{ boardName }}</h1>
+                <h1 class="itbkk-board-name">{{ username }}</h1>
                     <div class="flex items-center justify-center">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -587,30 +650,8 @@ onMounted(() => {
                             />
                         </svg>
                     </div>
-                    <p>Collaborator</p>
+                    <p>Invitations</p>
                 </div>
-                <button
-                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
-                    :data-tip="checkAuthToken() && checkOwner() ? 'Add user in Collaborate.' : 'You do not have permission to use this feature.'"          
-                    @click="openCreateCollabUser"
-                    :disabled="!checkAuthToken() || !checkOwner()"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="size-6"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                        />
-                    </svg>
-                    <p class="pl-2">Add User</p>
-                </button>
             </div>
  
             <div class="flex justify-between">
@@ -620,42 +661,35 @@ onMounted(() => {
             <div class=" flex flex-col mt-5 ml-16 w-5/6">
                 <!-- Table Header -->
                 <div class="bg-gray-100 p-4 rounded-t-lg shadow-md">
-                    <div class="grid grid-cols-7 gap-5">
+                    <div class="grid grid-cols-6 gap-5">
                         <h3 class="font-bold flex justify-center">No</h3>
                         <h3 class="font-bold flex justify-center">Name</h3>
-                        <h3 class="font-bold flex justify-center col-span-2">Email</h3>
+                        <h3 class="font-bold flex justify-center col-span-2">Board</h3>
                         <h3 class="font-bold flex justify-center">Access Rigths</h3>
-                        <h3 class="font-bold flex justify-center">Action</h3>
                         <h3 class="font-bold flex justify-center">Status</h3>
                     </div>
                 </div>
                 <!-- Table Body -->
-                <div v-for="(collab, index) in Store.collaborate"
+                <div v-for="(invitation, index) in invite"
                 :key="index"
                 class="flex flex-col"
                 >
-                    <div class="grid grid-cols-7 gap-5 mt-5">
+                    <div class="grid grid-cols-6 gap-5 mt-5" @click="modalAccept(invitation)">
                         <p class="itbkk-item flex justify-center">{{ index+1 }}</p>
-                        <p class="itbkk-name flex justify-center">{{ collab.name }}</p>
-                        <p class="itbkk-email flex justify-center col-span-2">{{ collab.email }}</p>
+                        <p class="itbkk-name flex justify-center">{{ invitation.owner?.name }}</p>
+                        <p class="itbkk-email flex justify-center col-span-2">{{ invitation.board_name }}</p>
                         <!-- <p class="itbkk-access-right flex justify-center" @click="openConfirmAccessRightModal(collab)">{{ collab.accessRight }}</p> -->
                         
-                        <select v-model="collab.accessRight" class="itbkk-access-right h-8 rounded-lg border-2 pl-2" 
+                        <!-- <select v-model="collab.accessRight" class="itbkk-access-right h-8 rounded-lg border-2 pl-2" 
                         :disabled="handleAccessRightChange()"
                         @change="checkOwner() && checkAuthToken() ? openConfirmAccessRightModal(collab) : ''">
                             <option  v-for="right in accessRightList" :key="right" :value="right">
                                 {{ right }}
                             </option>
-                        </select>
-                        
-                        <button class="itbkk-collab-remove flex justify-center w-3/5 text-[12px] rounded-2xl btn btn-error tooltip tooltip-top"
-                        :data-tip="checkAuthToken() && checkOwner() ? 'remove user' : 'You do not have permission to use this feature.'"    
-                        :disabled="handleDeleteCollab()"
-                        @click="checkOwner() && checkAuthToken() ? openConfirmDeleteCollabModal(collab) : ''"
-                        >
-                            Remove
-                        </button>
-                        <h3 class="font-bold flex justify-center">{{ collab.status }}</h3>
+                        </select> -->
+                        <p class="itbkk-email flex justify-center">{{ invitation.accessRight }}</p>
+                        <h3 class="font-bold flex justify-center">{{ invitation.status }}</h3>
+
                     </div>
                 </div>
             </div>

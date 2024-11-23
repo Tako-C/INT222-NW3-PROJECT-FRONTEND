@@ -20,7 +20,7 @@ import Cookies from "js-cookie";
 import BoardVisibilityConfirmation from "@/components/boards/boardVisibilityConfirmation.vue";
 import modalNotification from "@/components/modals/modalNotification.vue";
 import boardCollabLeave from "@/components/boards/modalConfirmedLeaveCollab.vue";
-import modalAcceptInvite from "../collab/modalAcceptInvite.vue";
+import modalAcceptInvite from "../invite/modalAcceptInvite.vue";
 
 const Store = useStore();
 const router = useRouter();
@@ -67,6 +67,7 @@ function checkFirstBoard() {
   // }
 }
 
+let statusInvite = ref([])
 async function fetchData() {
   let endpoint = "boards";
   let finalResult = [];
@@ -74,8 +75,8 @@ async function fetchData() {
   let resultPrivate = [];
   let resultPublic = [];
   let resultPublicRaw = {};
-  let allBoard = [];
-  let collabInvite = [];
+//   let allBoard = [];
+//   let collabInvite = [];
 
   if (checkAuthToken()) {
     let resultPrivateRaw = await getAllBoard(endpoint);
@@ -92,22 +93,62 @@ async function fetchData() {
     console.log(resultCollab);
     console.log(resultPublicRaw);
 
-    for (const board of resultCollab) {
-      let resultColab = await getAllBoard(`boards/${board.boardId}/collabs`);
+    for (let i = 0; i < resultCollab.length; i++) {
+    // เรียกข้อมูล collaborators
+    let resultColab = await getAllBoard(`boards/${resultCollab[i].boardId}/collabs`);
+    console.log(resultColab.collaborators);
 
-      // รวม collaborators ทั้งหมดในอาร์เรย์แบนราบ
-      allBoard = resultColab.collaborators;
+    // ดึงค่า collaborators จาก object
+    const collaborators = Object.values(resultColab.collaborators);
 
-      // ค้นหา collaborator ที่มี oid ตรงกับ userLogin
-      const matchingCollab = allBoard.find(
-        (collab) => collab.oid === userLogin
-      );
-      if (matchingCollab) {
-        collabInvite.push(matchingCollab);
-      }
+    // Loop ผ่าน collaborators
+    for (let j = 0; j < collaborators.length; j++) {
+        const collaborator = collaborators[j];
 
-      console.log(collabInvite);
+        // ตรวจสอบเงื่อนไข เช่น oid
+        if (collaborator.oid === userLogin) {
+            console.log("User found:", collaborator);
+            statusInvite.value.push({
+                boardId: resultCollab[i].boardId,
+                ...collaborator, // เพิ่มข้อมูล collaborator
+            });
+        } else {
+            // console.log("Other user:", collaborator);
+        }
     }
+
+    // แสดงผลจำนวน collaborators
+    // console.log("Total collaborators:", collaborators.length);
+    console.log(statusInvite.value)
+}
+
+resultCollab.forEach(collab => {
+    // ใช้ .find() เพื่อค้นหา boardId ที่ตรงใน statusInvite
+    const matchingStatus = statusInvite.value.find(invite => invite.boardId === collab.boardId);
+
+    // ถ้าพบ matchingStatus ให้เพิ่ม key status
+    collab.status = matchingStatus ? matchingStatus.status : "not-found";
+});
+
+console.log("Updated resultCollab:", resultCollab);
+
+    
+    // for (const board of resultCollab) {
+    //   let resultColab = await getAllBoard(`boards/${board.boardId}/collabs`);
+
+    //   // รวม collaborators ทั้งหมดในอาร์เรย์แบนราบ
+    //   allBoard = resultColab.collaborators;
+
+    //   // ค้นหา collaborator ที่มี oid ตรงกับ userLogin
+    //   const matchingCollab = allBoard.find(
+    //     (collab) => collab.oid === userLogin
+    //   );
+    //   if (matchingCollab) {
+    //     collabInvite.push(matchingCollab);
+    //   }
+
+    //   console.log(collabInvite);
+    // }
 
     // จำเป็น
     resultPrivatTest.value = resultPrivate;
@@ -120,6 +161,7 @@ async function fetchData() {
       finalResult = [...resultPrivate, ...resultPublic];
       // console.log(finalResult)
     });
+    
   } else {
     resultPublicRaw = await getAllBoard(endpoint);
     finalResult = resultPublicRaw.boards;
@@ -359,7 +401,6 @@ watch(
     v-show="checkVariable()"
     class="z-30"
   />
-
   <!-- <modalAcceptInvite
         :changevisibility="visibilityBoard"
         v-show="openConfirmedChangeVisibility"
@@ -707,8 +748,9 @@ watch(
           <div class="flex gap-4 flex-nowwrap">
             <!-- เพิ่ม flex-wrap และ justify-center -->
             <div
-              v-for="(boardcollab, index) in Store.collaborate"
+              v-for="(boardcollab, index) in Store.collaborate" 
               :key="index"
+              v-show="boardcollab.boardId === 'l9mD3y_IM0'"
               class="bg-white rounded-lg shadow flex flex-col items-center"
             >
               <div
@@ -736,7 +778,7 @@ watch(
                     />
                   </svg>
                 </div>
-                <p class="itbkk-collab-item pt-2">No : {{ index + 1 }}</p>
+                <!-- <p class="itbkk-collab-item pt-2">No : {{ index + 1 }}</p> -->
                 <p class="itbkk-board-name text-lg font-bold">
                   {{ boardcollab.board_name }}
                 </p>
@@ -821,6 +863,7 @@ watch(
                 </p>
                 <p class="itbkk-owner-name pt-2">
                   From : {{ boardcollab.owner?.name }}
+                  {{ boardcollab }}
                 </p>
               </div>
               <button
