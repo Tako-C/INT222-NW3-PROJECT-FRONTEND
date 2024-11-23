@@ -308,6 +308,23 @@ function openConfirmLeaveCollabModal(boardcollab) {
     // errorPermition()
   }
 }
+
+function openInvitation(boardcollab) {
+  console.log(boardcollab.boardId);
+  router.push({ name: "collabInvite", params: { id: boardcollab.boardId } });
+//   const foundBoard = Store.collaborate.find(
+//     (board) => board.boardId === boardcollab.boardId
+//   );
+//   console.log(foundBoard);
+
+//   if (checkAuthToken()) {
+//     CollabLeave = boardcollab;
+//     openConfirmedLeaveCollab.value = true;
+//   } else {
+//     errorPermition()
+//   }
+}
+
 async function leaveConfirm() {
   console.log("leaveConfirm");
 
@@ -750,7 +767,7 @@ watch(
             <div
               v-for="(boardcollab, index) in Store.collaborate" 
               :key="index"
-              v-show="boardcollab.boardId === 'l9mD3y_IM0'"
+              v-show="boardcollab.status === 'ACCEPTED'"
               class="bg-white rounded-lg shadow flex flex-col items-center"
             >
               <div
@@ -788,9 +805,7 @@ watch(
                 <p class="itbkk-access-right pt-2">
                   Access Right : {{ boardcollab.accessRight }}
                 </p>
-                <p class="itbkk-access-right pt-2">
-                  Access Right : {{ console.log(Store.collaborate) }}
-                </p>
+
               </div>
               <button
                 class="itbkk-leave-board flex justify-center w-3/5 rounded-2xl mt-3 text-red-500 hover:text-white border border-red-500 hover:bg-red-500 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
@@ -828,11 +843,12 @@ watch(
             <div
               v-for="(boardcollab, index) in Store.collaborate"
               :key="index"
+              v-show="boardcollab.status === 'PENDING'"
               class="bg-white rounded-lg shadow flex flex-col items-center"
             >
               <div
                 class="p-6 min-w-[250px] max-w-[250px] flex flex-col items-center"
-                @click="openBoardTaskModal(boardcollab.boardId)"
+                @click="openInvitation(boardcollab)"
               >
                 <div class="mb-4">
                   <!-- <img
@@ -863,14 +879,13 @@ watch(
                 </p>
                 <p class="itbkk-owner-name pt-2">
                   From : {{ boardcollab.owner?.name }}
-                  {{ boardcollab }}
                 </p>
               </div>
               <button
                 class="itbkk-leave-board flex justify-center w-3/5 rounded-2xl mt-3 text-red-500 hover:text-white border border-red-500 hover:bg-red-500 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
-                @click="openConfirmLeaveCollabModal(boardcollab)"
+                @click="openInvitation(boardcollab)"
               >
-                Accept
+                Info
               </button>
             </div>
           </div>
@@ -881,7 +896,7 @@ watch(
         >
           <tr>
             <td class="text-center" colspan="6">
-              Don't Have collaborate Board ?
+              Don't Have Invited collaborate Board ?
             </td>
           </tr>
         </tbody>

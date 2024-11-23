@@ -333,6 +333,7 @@ function modalAccept(info) {
 }
 
 async function acceptInvite(){
+    checkrequestNewToken(router)
     let resultRemove = await accept(`boards/${infoInvite.value.boardId}/collabs/invitations/accept?token=${userToken.value}`)
     // console.log(infoInvite.value.boardId, userToken)
     console.log(resultRemove)
@@ -361,7 +362,9 @@ watch(
     { immediate: true }
 )
 onMounted(() => {
+    checkrequestNewToken(router)
     fetchData()
+
     
 })
 </script>

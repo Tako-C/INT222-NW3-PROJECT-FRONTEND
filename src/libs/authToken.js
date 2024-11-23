@@ -95,7 +95,7 @@ async function fetchToken(token) {
     console.log(result)
 
     const token_raw = result.access_token // Parse result into JSON before using
-    // console.log(token_raw);
+    console.log(token_raw);
 
     const decodedToken = jwtDecode(token_raw); // Decode access_token
     console.log(decodedToken);
