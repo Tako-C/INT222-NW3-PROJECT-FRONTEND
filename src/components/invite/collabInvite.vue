@@ -31,16 +31,6 @@ let resultAllBoard = {}
 let CollabDetail = ref({})
 let CollabRemove = ref({})
 
-function checkPublicCollab(resultAllBoard) {
-    // console.log(resultAllBoard)
-    const foundBoardPublic = resultAllBoard.find((board) => board.boardId === boardId.value)
-    // console.log(foundBoardPublic)
-    // console.log(boardId.value)
-    if (foundBoardPublic != undefined &&foundBoardPublic.visibility ==="private") {
-        Store.errorPage403 = true
-            errorPermition()
-    }
-}
  
 function checkOwner() {
     const boardsArray = Array.isArray(Store.boards) ? Store.boards : [];
@@ -87,9 +77,8 @@ async function fetchData() {
 
             
         invite.value = Store.boards.collaborate.map(collab => ({
-            ...collab, status: "PENDING" 
+            ...collab
         })) 
-            
 
 
         console.log(invite.value)
@@ -126,58 +115,6 @@ async function fetchData() {
         }
 
 }
-
-
-
-
-async function changeAccessRicht() {
-    let indexToUpdate = -1
-    for (let i = 0; i < Store.collaborate.length; i++) {
-        if (Store.collaborate[i].boardsId === boardId.value) {
-            indexToUpdate = i
-            // break;
-        }
-    }
-    if (indexToUpdate !== -1) {
-        Store.collaborate[indexToUpdate].accessRight = CollabDetail.value.accessRight
-    }
-    closeNotificationModal()
-}
-
-
-async function patchAccessRicht() {
-    
-    checkrequestNewToken(router)
-
-    let result = await PatchData(`boards/${boardId.value}/collabs/${CollabDetail.value.oid}`, {
-        accessRight: CollabDetail.value.accessRight,
-    })
-    // console.log(visibilityBoard.value)
-    
-    if (
-        checkAuthToken() &&
-        checkUserInAuthToken(CollabDetail.value.oid, userLogin)
-    ) {
-        if (result.status === 401) {
-            router.push({ name: "login" })
-            Store.errorToken = true
-        }
-        if (result.status === 404) {
-            errorPermition()
-            Store.errorPage404 = true
-        } 
-        else {
-            changeAccessRicht()
-        }
-    } else {
-        if (result.status === 403) {
-            Store.errorPage403 = true
-            errorPermition()
-        }
-    }
-    closeNotificationModal()
-}
-
 
 function getBoardName() {
     const board = resultAllBoard.boards.find((b) => b.boardId === boardId.value) || 
@@ -321,6 +258,7 @@ function handleDeleteCollab() {
 let infoInvite = ref({})
 let information = ref({})
 function modalAccept(info) {
+    // checkrequestNewToken(router)
     infoInvite.value = info
     information.value = {
         boardId: infoInvite.value.boardId,
@@ -334,19 +272,35 @@ function modalAccept(info) {
 
 async function acceptInvite(){
     checkrequestNewToken(router)
-    let resultRemove = await accept(`boards/${infoInvite.value.boardId}/collabs/invitations/accept?token=${userToken.value}`)
-    // console.log(infoInvite.value.boardId, userToken)
-    console.log(resultRemove)
+    console.log(Store.errorToken)
+    // console.log(checkrequestNewToken())
+    console.log(checkAuthToken)
 
-    
-    closeNotificationModal()
+    // if(checkAuthToken) {
+        let resultRemove = await accept(`boards/${infoInvite.value.boardId}/collabs/invitations/accept?token=${userToken.value}`)
+        console.log(resultRemove)
+         // console.log(infoInvite.value.boardId, userToken)
+    // closeNotificationModal()
+    // router.push({ name: "BoardTask", params: { id: infoInvite.value.boardId } });         
+    // } else {
+    //     console.Console.log("Mai dai")
+    // }    
+
 }
 async function declineInvite(){
+    // checkrequestNewToken(router)
+
+    if(checkAuthToken) {
     console.log(infoInvite.value.boardId)
     console.log(userToken.value)
     let resultRemove = await accept(`boards/${infoInvite.value.boardId}/collabs/invitations/decline?token=${userToken.value}`)
-    console.log(resultRemove)
-    closeNotificationModal()
+    // console.log(resultRemove)
+    } else {
+        console.log("Mai dai")
+    }
+
+    // closeNotificationModal()
+    // router.push({ name: "Board"});
 }
 
 watch(
@@ -374,13 +328,6 @@ onMounted(() => {
         @closemodal="closeNotificationModal()"
         v-show="checkVariable()"
         class="z-30"
-    />
-    <boardCollabChangeAccessRight
-        v-show="openConfirmedAccessRight"
-        :changeAccessRight="CollabDetail"
-        @closemodal="closeNotificationModal()"
-        @confirmed="patchAccessRicht()"
-        class="z-40"
     />
     <boardCollabRemove
         v-show="openConfirmedRemove"
@@ -691,7 +638,7 @@ onMounted(() => {
                             </option>
                         </select> -->
                         <p class="itbkk-email flex justify-center">{{ invitation.accessRight }}</p>
-                        <h3 class="font-bold flex justify-center">{{ invitation.status }}</h3>
+                        <h3 class="font-bold flex justify-center">{{ invitation }}</h3>
 
                     </div>
                 </div>

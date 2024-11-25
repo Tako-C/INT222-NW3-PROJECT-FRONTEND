@@ -37,9 +37,9 @@ const isTaskDropdownOpen = ref(false);
 const openConfirmedChangeVisibility = ref(false);
 let visibilityBoard = ref({});
 let userLogin = Cookies.get("oid");
-let resultPrivatTest = ref({});
 let CollabLeave = ref({});
 const openConfirmedLeaveCollab = ref(false);
+let AllListBoardTaskBar = ref([]);
 
 function getImageUrl(index) {
   //return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
@@ -47,27 +47,10 @@ function getImageUrl(index) {
   return `/images/${(index % 5) + 1}.png`;
 }
 
-function checkFirstBoard() {
-  // let boardFirst = []
-  // for (const board of resultPrivatTest.value) {
-  //     if (board.owner.oid == userLogin) {
-  //         console.log(board.owner.oid ,userLogin)
-  //         console.log(board)
-  //         boardFirst.push({...board})
-  //     } else{
-  //     }
-  // }
-  // console.log(boardFirst.length);
-  // if (boardFirst.length === 1) {
-  //     console.log(boardFirst[0].boardId)
-  //     openBoardTaskModal(boardFirst[0].boardId)
-  // }
-  // else{
-  //     console.log("Not have board")
-  // }
-}
+let statusInvite = ref([]);
+let PersonalBoard = ref([]);
+let OtherBoard = ref([]);
 
-let statusInvite = ref([])
 async function fetchData() {
   let endpoint = "boards";
   let finalResult = [];
@@ -75,64 +58,65 @@ async function fetchData() {
   let resultPrivate = [];
   let resultPublic = [];
   let resultPublicRaw = {};
-//   let allBoard = [];
-//   let collabInvite = [];
+  //   let allBoard = [];
+  //   let collabInvite = [];
 
   if (checkAuthToken()) {
     let resultPrivateRaw = await getAllBoard(endpoint);
     let resultPublicRaw = await getAllBoardByPublic(endpoint);
-    // let resultColab = await getAllBoard(`boards/${resultCollab.boardId}/collabs`)
-
-    // console.log(resultPrivateRaw)
 
     resultCollab = resultPrivateRaw.collaborate;
     resultPrivate = resultPrivateRaw.boards;
     resultPublic = resultPublicRaw.boards;
+    let collaborators = [];
 
     console.log(resultPrivate);
     console.log(resultCollab);
     console.log(resultPublicRaw);
 
     for (let i = 0; i < resultCollab.length; i++) {
-    // เรียกข้อมูล collaborators
-    let resultColab = await getAllBoard(`boards/${resultCollab[i].boardId}/collabs`);
-    console.log(resultColab.collaborators);
+      // เรียกข้อมูล collaborators
+      let resultColab = await getAllBoard(
+        `boards/${resultCollab[i].boardId}/collabs`
+      );
+      console.log(resultColab.collaborators);
 
-    // ดึงค่า collaborators จาก object
-    const collaborators = Object.values(resultColab.collaborators);
+      // ดึงค่า collaborators จาก object
+      collaborators = Object.values(resultColab.collaborators);
 
-    // Loop ผ่าน collaborators
-    for (let j = 0; j < collaborators.length; j++) {
+      // Loop ผ่าน collaborators
+      for (let j = 0; j < collaborators.length; j++) {
         const collaborator = collaborators[j];
 
         // ตรวจสอบเงื่อนไข เช่น oid
         if (collaborator.oid === userLogin) {
-            console.log("User found:", collaborator);
-            statusInvite.value.push({
-                boardId: resultCollab[i].boardId,
-                ...collaborator, // เพิ่มข้อมูล collaborator
-            });
+          console.log("User found:", collaborator);
+          statusInvite.value.push({
+            boardId: resultCollab[i].boardId,
+            ...collaborator, // เพิ่มข้อมูล collaborator
+          });
         } else {
-            // console.log("Other user:", collaborator);
+          // console.log("Other user:", collaborator);
         }
+      }
+
+      // แสดงผลจำนวน collaborators
+      // console.log("Total collaborators:", collaborators.length);
+      console.log(statusInvite.value);
     }
 
-    // แสดงผลจำนวน collaborators
-    // console.log("Total collaborators:", collaborators.length);
-    console.log(statusInvite.value)
-}
+    resultCollab.forEach((collab) => {
+      // ใช้ .find() เพื่อค้นหา boardId ที่ตรงใน statusInvite
+      const matchingStatus = statusInvite.value.find(
+        (invite) => invite.boardId === collab.boardId
+      );
 
-resultCollab.forEach(collab => {
-    // ใช้ .find() เพื่อค้นหา boardId ที่ตรงใน statusInvite
-    const matchingStatus = statusInvite.value.find(invite => invite.boardId === collab.boardId);
+      // ถ้าพบ matchingStatus ให้เพิ่ม key status
+      collab.status = matchingStatus ? matchingStatus.status : "not-found";
+    });
 
-    // ถ้าพบ matchingStatus ให้เพิ่ม key status
-    collab.status = matchingStatus ? matchingStatus.status : "not-found";
-});
+    console.log("Updated resultCollab:", resultCollab);
 
-console.log("Updated resultCollab:", resultCollab);
-
-    
     // for (const board of resultCollab) {
     //   let resultColab = await getAllBoard(`boards/${board.boardId}/collabs`);
 
@@ -151,7 +135,6 @@ console.log("Updated resultCollab:", resultCollab);
     // }
 
     // จำเป็น
-    resultPrivatTest.value = resultPrivate;
     //
 
     resultPrivate.forEach((privateBoard) => {
@@ -159,9 +142,8 @@ console.log("Updated resultCollab:", resultCollab);
         (publicBoard) => publicBoard.owner.oid !== privateBoard.owner.oid
       );
       finalResult = [...resultPrivate, ...resultPublic];
-      // console.log(finalResult)
+      console.log(finalResult);
     });
-    
   } else {
     resultPublicRaw = await getAllBoard(endpoint);
     finalResult = resultPublicRaw.boards;
@@ -193,8 +175,9 @@ console.log("Updated resultCollab:", resultCollab);
   console.log(Store.boards);
   Store.boards.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
   console.log(Store.boards);
-  checkFirstBoard();
+  //   checkFirstBoard();
   // console.log(Store.boards);
+  extractGroupBoard();
 }
 
 function openBoardTaskModal(boardId) {
@@ -312,17 +295,17 @@ function openConfirmLeaveCollabModal(boardcollab) {
 function openInvitation(boardcollab) {
   console.log(boardcollab.boardId);
   router.push({ name: "collabInvite", params: { id: boardcollab.boardId } });
-//   const foundBoard = Store.collaborate.find(
-//     (board) => board.boardId === boardcollab.boardId
-//   );
-//   console.log(foundBoard);
+  //   const foundBoard = Store.collaborate.find(
+  //     (board) => board.boardId === boardcollab.boardId
+  //   );
+  //   console.log(foundBoard);
 
-//   if (checkAuthToken()) {
-//     CollabLeave = boardcollab;
-//     openConfirmedLeaveCollab.value = true;
-//   } else {
-//     errorPermition()
-//   }
+  //   if (checkAuthToken()) {
+  //     CollabLeave = boardcollab;
+  //     openConfirmedLeaveCollab.value = true;
+  //   } else {
+  //     errorPermition()
+  //   }
 }
 
 async function leaveConfirm() {
@@ -366,7 +349,7 @@ function closeNotificationModal() {
   } else {
   }
 
-  checkFirstBoard();
+  //   checkFirstBoard();
   // fetchData()
 }
 
@@ -380,6 +363,16 @@ function checkVariable() {
     return true;
   }
   return false;
+}
+function extractGroupBoard() {
+  PersonalBoard.value = Store.boards.filter(
+    (board) => board.owner.oid === userLogin
+  );
+  OtherBoard.value = Store.boards.filter(
+    (board) => board.owner.oid != userLogin
+  );
+  console.log(PersonalBoard.value);
+  console.log(OtherBoard.value);
 }
 
 onMounted(() => {
@@ -643,201 +636,290 @@ watch(
 
     <!-- Table สำหรับแสดงข้อมูลของ board -->
     <main class="w-full h-screen overflow-y-auto flex flex-col">
-      <div class="flex justify-between text-white">
-        <h1 class="text-3xl font-bold text-black ml-10 mt-10">
-          {{ checkAuthToken() ? `${username} Personal Board` : "Public Board" }}
-        </h1>
-        <button
-          class="itbkk-button-create right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
-          :data-tip="
-            checkAuthToken()
-              ? 'Create your board.'
-              : 'You do not have permission to use this feature.'
-          "
-          :disabled="!checkAuthToken()"
-          @click="openCreateBoard()"
+      <button
+        class="itbkk-button-create right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
+        :data-tip="
+          checkAuthToken()
+            ? 'Create your board.'
+            : 'You do not have permission to use this feature.'
+        "
+        :disabled="!checkAuthToken()"
+        @click="openCreateBoard()"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="size-6"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="size-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
-          <p class="pl-2">Create Board</p>
-          <!-- {{ visibilityBoard.value }} -->
-        </button>
-      </div>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+          />
+        </svg>
+        <p class="pl-2">Create Board</p>
+        <!-- {{ visibilityBoard.value }} -->
+      </button>
 
-      <div class="flex-grow p-8 overflow-y-auto">
-        <!-- Personal boards -->
-        <div class="overflow-x-auto flex-grow p-4 border mb-8">
-          <div class="flex gap-4 flex-nowwrap">
-            <!-- เพิ่ม flex-wrap และ justify-center -->
-            <div
-              v-for="(board, index) in Store.boards"
-              :key="index"
-              class="bg-white rounded-lg shadow p-6 min-w-[250px] max-w-[250px] flex flex-col"
-            >
-              <div class="flex justify-between">
-                <div
-                  class="relative w-1/4 h-[60%] bg-orange-300 rounded-xl p-1"
-                >
-                  No: {{ index + 1 }}
-                </div>
-                <div class="">
-                  <div class="itbkk-board-visibility">
-                    <input
-                      type="checkbox"
-                      class="toggle tooltip tooltip-right"
-                      :class="{
-                        'cursor-not-allowed ':
-                          !checkAuthToken() ||
-                          !checkUserInAuthToken(board.owner?.oid, userLogin),
-                      }"
-                      :data-tip="
-                        checkAuthToken() &&
-                        checkUserInAuthToken(board.owner?.oid, userLogin)
-                          ? 'change Visibility Board'
-                          : 'You do not have permission to use this feature.'
-                      "
-                      v-model="board.isCheck"
-                      @change="openConfirmModal(board)"
-                    />
+      <div name="PersonalBoard" v-show="checkAuthToken()">
+        <div class="flex justify-between text-white">
+          <h1 class="text-3xl font-bold text-black ml-10 mt-10">
+            {{
+              checkAuthToken() ? `${username} Personal Board` : "Public Board"
+            }}
+          </h1>
+        </div>
+        <div class="flex-grow p-8 overflow-y-auto">
+          <div class="overflow-x-auto flex-grow p-4 border mb-8">
+            <div class="flex gap-4 flex-nowwrap">
+              <!-- เพิ่ม flex-wrap และ justify-center -->
+
+              <!-- OterBoars -->
+              <div
+                v-for="(board, index) in PersonalBoard"
+                :key="index"
+                class="bg-white rounded-lg shadow p-6 min-w-[250px] max-w-[250px] flex flex-col"
+              >
+                <div class="flex justify-between">
+                  <div
+                    class="relative w-1/4 h-[60%] bg-orange-300 rounded-xl p-1"
+                  >
+                    No: {{ index + 1 }}
                   </div>
                   <div class="">
-                    <p>{{ board.visibility }}</p>
+                    <div class="itbkk-board-visibility">
+                      <input
+                        type="checkbox"
+                        class="toggle tooltip tooltip-right"
+                        :class="{
+                          'cursor-not-allowed ':
+                            !checkAuthToken() ||
+                            !checkUserInAuthToken(board.owner?.oid, userLogin),
+                        }"
+                        :data-tip="
+                          checkAuthToken() &&
+                          checkUserInAuthToken(board.owner?.oid, userLogin)
+                            ? 'change Visibility Board'
+                            : 'You do not have permission to use this feature.'
+                        "
+                        v-model="board.isCheck"
+                        @change="openConfirmModal(board)"
+                      />
+                    </div>
+                    <div class="">
+                      <p>{{ board.visibility }}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              {{ board.board }}
+                {{ board.board }}
 
-              <div class="mb-4">
-                <img
-                  :src="getImageUrl(index)"
-                  alt="bg-board"
-                  class="w-full h-full object-cover rounded-2xl"
-                />
-              </div>
-              <h3 class="text-lg font-bold mb-2">
-                {{ board.board_name }}
-              </h3>
-              <p>Owner : {{ board.owner?.name }}</p>
-              <div class="flex justify-around mt-4">
-                <button
-                  class="bg-green-500 border text-xs border-slate-400 p-2 rounded-md text-white"
-                  @click="openBoardDetailModal(board.boardId)"
-                >
-                  Board Detail
-                </button>
-                <button
-                  class="bg-green-500 border text-xs border-slate-400 p-2 rounded-md text-white"
-                  @click="openBoardTaskModal(board.boardId)"
-                >
-                  Board Tasks
-                </button>
-              </div>
-              <!-- {{
+                <div class="mb-4">
+                  <img
+                    :src="getImageUrl(index)"
+                    alt="bg-board"
+                    class="w-full h-full object-cover rounded-2xl"
+                  />
+                </div>
+                <h3 class="text-lg font-bold mb-2">
+                  {{ board.board_name }}
+                </h3>
+                <p>Owner : {{ board.owner?.name }}</p>
+                <div class="flex justify-around mt-4">
+                  <button
+                    class="bg-green-500 border text-xs border-slate-400 p-2 rounded-md text-white"
+                    @click="openBoardDetailModal(board.boardId)"
+                  >
+                    Board Detail
+                  </button>
+                  <button
+                    class="bg-green-500 border text-xs border-slate-400 p-2 rounded-md text-white"
+                    @click="openBoardTaskModal(board.boardId)"
+                  >
+                    Board Tasks
+                  </button>
+                </div>
+                <!-- {{
                                 checkUserInAuthToken(board.owner.oid, userLogin)
                             }} -->
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- collab row -->
-        <h1
-          v-show="checkAuthToken()"
-          class="itbkk-collab-board text-3xl font-bold text-black ml-2 mt-10 mb-6"
-        >
-          Collab Boards
-        </h1>
-        <div
-          v-show="checkAuthToken() && Store.collaborate.length > 0"
-          class="overflow-x-auto flex-grow p-4 border"
-        >
-          <div class="flex gap-4 flex-nowwrap">
-            <!-- เพิ่ม flex-wrap และ justify-center -->
-            <div
-              v-for="(boardcollab, index) in Store.collaborate" 
-              :key="index"
-              v-show="boardcollab.status === 'ACCEPTED'"
-              class="bg-white rounded-lg shadow flex flex-col items-center"
-            >
+      <div name="OtherBoard">
+        <div class="flex justify-between text-white">
+          <h1 class="text-3xl font-bold text-black ml-10 mt-10">
+            Public Board
+          </h1>
+        </div>
+        <div class="flex-grow p-8 overflow-y-auto">
+          <div class="overflow-x-auto flex-grow p-4 border mb-8">
+            <div class="flex gap-4 flex-nowwrap">
+              <!-- เพิ่ม flex-wrap และ justify-center -->
+
+              <!-- OterBoars -->
               <div
-                class="p-6 min-w-[250px] max-w-[250px] flex flex-col items-center"
-                @click="openBoardTaskModal(boardcollab.boardId)"
+                v-for="(board, index) in OtherBoard"
+                :key="index"
+                class="bg-white rounded-lg shadow p-6 min-w-[250px] max-w-[250px] flex flex-col"
               >
+                <div class="flex justify-between">
+                  <div
+                    class="relative w-1/4 h-[60%] bg-orange-300 rounded-xl p-1"
+                  >
+                    No: {{ index + 1 }}
+                  </div>
+                  <div class="">
+                    <div class="itbkk-board-visibility">
+                      <input
+                        type="checkbox"
+                        class="toggle tooltip tooltip-right"
+                        :class="{
+                          'cursor-not-allowed ':
+                            !checkAuthToken() ||
+                            !checkUserInAuthToken(board.owner?.oid, userLogin),
+                        }"
+                        :data-tip="
+                          checkAuthToken() &&
+                          checkUserInAuthToken(board.owner?.oid, userLogin)
+                            ? 'change Visibility Board'
+                            : 'You do not have permission to use this feature.'
+                        "
+                        v-model="board.isCheck"
+                        @change="openConfirmModal(board)"
+                      />
+                    </div>
+                    <div class="">
+                      <p>{{ board.visibility }}</p>
+                    </div>
+                  </div>
+                </div>
+                {{ board.board }}
+
                 <div class="mb-4">
-                  <!-- <img
+                  <img
+                    :src="getImageUrl(index)"
+                    alt="bg-board"
+                    class="w-full h-full object-cover rounded-2xl"
+                  />
+                </div>
+                <h3 class="text-lg font-bold mb-2">
+                  {{ board.board_name }}
+                </h3>
+                <p>Owner : {{ board.owner?.name }}</p>
+                <div class="flex justify-around mt-4">
+                  <button
+                    class="bg-green-500 border text-xs border-slate-400 p-2 rounded-md text-white"
+                    @click="openBoardDetailModal(board.boardId)"
+                  >
+                    Board Detail
+                  </button>
+                  <button
+                    class="bg-green-500 border text-xs border-slate-400 p-2 rounded-md text-white"
+                    @click="openBoardTaskModal(board.boardId)"
+                  >
+                    Board Tasks
+                  </button>
+                </div>
+                <!-- {{
+                                checkUserInAuthToken(board.owner.oid, userLogin)
+                            }} -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+ 
+
+      <!-- collab row -->
+      <h1
+        v-show="checkAuthToken()"
+        class="itbkk-collab-board text-3xl font-bold text-black ml-2 mt-10 mb-6"
+      >
+        Collab Boards
+      </h1>
+      <div
+        v-show="checkAuthToken() && Store.collaborate.length > 0"
+        class="overflow-x-auto flex-grow p-4 border"
+      >
+        <div class="flex gap-4 flex-nowwrap">
+          <!-- เพิ่ม flex-wrap และ justify-center -->
+          <div
+            v-for="(boardcollab, index) in Store.collaborate"
+            :key="index"
+            v-show="boardcollab.status === 'ACCEPTED'"
+            class="bg-white rounded-lg shadow flex flex-col items-center"
+          >
+            <div
+              class="p-6 min-w-[250px] max-w-[250px] flex flex-col items-center"
+              @click="openBoardTaskModal(boardcollab.boardId)"
+            >
+              <div class="mb-4">
+                <!-- <img
                                     :src="getImageUrl(index)"
                                     alt="bg-board"
                                     class="w-full h-full object-cover rounded-2xl"
                                 /> -->
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-20 stroke-blue-400"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
-                    />
-                  </svg>
-                </div>
-                <!-- <p class="itbkk-collab-item pt-2">No : {{ index + 1 }}</p> -->
-                <p class="itbkk-board-name text-lg font-bold">
-                  {{ boardcollab.board_name }}
-                </p>
-                <p class="itbkk-owner-name pt-2">
-                  Owner : {{ boardcollab.owner?.name }}
-                </p>
-                <p class="itbkk-access-right pt-2">
-                  Access Right : {{ boardcollab.accessRight }}
-                </p>
-
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-20 stroke-blue-400"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
+                  />
+                </svg>
               </div>
-              <button
-                class="itbkk-leave-board flex justify-center w-3/5 rounded-2xl mt-3 text-red-500 hover:text-white border border-red-500 hover:bg-red-500 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
-                @click="openConfirmLeaveCollabModal(boardcollab)"
-              >
-                Leave
-              </button>
+              <!-- <p class="itbkk-collab-item pt-2">No : {{ index + 1 }}</p> -->
+              <p class="itbkk-board-name text-lg font-bold">
+                {{ boardcollab.board_name }}
+              </p>
+              <p class="itbkk-owner-name pt-2">
+                Owner : {{ boardcollab.owner?.name }}
+              </p>
+              <p class="itbkk-access-right pt-2">
+                Access Right : {{ boardcollab.accessRight }}
+              </p>
             </div>
+            <button
+              class="itbkk-leave-board flex justify-center w-3/5 rounded-2xl mt-3 text-red-500 hover:text-white border border-red-500 hover:bg-red-500 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900"
+              @click="openConfirmLeaveCollabModal(boardcollab)"
+            >
+              Leave
+            </button>
           </div>
         </div>
-        <tbody
-          v-show="Store.collaborate.length === 0 && checkAuthToken()"
-          class="bg-white rounded-lg shadow p-6 w-full flex flex-col items-center"
-        >
-          <tr>
-            <td class="text-center" colspan="6">
-              Don't Have collaborate Board ?
-            </td>
-          </tr>
-        </tbody>
+      </div>
+      <tbody
+        v-show="Store.collaborate.length === 0 && checkAuthToken()"
+        class="bg-white rounded-lg shadow p-6 w-full flex flex-col items-center"
+      >
+        <tr>
+          <td class="text-center" colspan="6">
+            Don't Have collaborate Board ?
+          </td>
+        </tr>
+      </tbody>
 
-        <!-- Invite row -->
+      <!-- Invite row -->
+      <div v-show="Store.collaborate.length > 0 && checkAuthToken()">
         <h1
           v-show="checkAuthToken()"
           class="itbkk-collab-board text-3xl font-bold text-black ml-2 mt-10 mb-6"
         >
           Invite Collab Boards
         </h1>
-        <div
-          v-show="checkAuthToken() && Store.collaborate.length > 0"
-          class="overflow-x-auto flex-grow p-4 border"
-        >
+        <div class="overflow-x-auto flex-grow p-4 border">
           <div class="flex gap-4 flex-nowwrap">
             <!-- เพิ่ม flex-wrap และ justify-center -->
             <div
@@ -890,16 +972,6 @@ watch(
             </div>
           </div>
         </div>
-        <tbody
-          v-show="Store.collaborate.length === 0 && checkAuthToken()"
-          class="bg-white rounded-lg shadow p-6 w-full flex flex-col items-center"
-        >
-          <tr>
-            <td class="text-center" colspan="6">
-              Don't Have Invited collaborate Board ?
-            </td>
-          </tr>
-        </tbody>
       </div>
     </main>
     <router-view />
