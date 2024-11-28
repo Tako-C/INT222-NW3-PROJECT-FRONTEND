@@ -96,11 +96,17 @@ const router = createRouter({
         },
       ]
     },
+    // {
+    //   path: '/board/:id/collab/invitation',
+    //   name: 'collabInvite',
+    //   component: collabInvite
+    // },
+
     {
-      path: '/board/:id/collab/invitation',
+      path: '/collab/invitation',
       name: 'collabInvite',
       component: collabInvite
-    },
+    },    
     {
         path: "/",
         redirect: "/board",

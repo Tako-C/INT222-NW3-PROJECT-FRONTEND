@@ -124,7 +124,7 @@ async function patchAccessRicht() {
     
     checkrequestNewToken(router)
 
-    let result = await PatchData(`boards/${boardId.value}/collabs/${CollabDetail.value.oid}`, {
+    let result = await PatchData(`boards/${boardId.value}/collabs/invitations/${CollabDetail.value.oid}`, {
         accessRight: CollabDetail.value.accessRight,
     })
     // console.log(visibilityBoard.value)
@@ -218,6 +218,8 @@ function closeNotificationModal() {
     fetchData()
     
 }
+
+// XD update
 function openConfirmAccessRightModal(collab) {
     const foundBoard = Store.boards.find((board) => board.boardId === boardId.value)
     // console.log(collab);
@@ -248,6 +250,7 @@ function openConfirmDeleteCollabModal(collab) {
     }
 }
 
+// XD remove
 async function removeCollabUser() {
     console.log('remove collab')
     // let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`)
@@ -256,7 +259,7 @@ async function removeCollabUser() {
     console.log(CollabRemove.value);
     
     if (checkAuthToken()) {
-        let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`)
+        let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/invitations/${CollabRemove.value.oid}`)
         if (checkUserInAuthToken(userLogin, CollabRemove.value.oid)) { 
             
             if (collabBoard.status === 401) {
