@@ -1,7 +1,11 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useStore } from "@/stores/store.js";
+import {
+  checkUserInAuthToken,
+  checkAuthToken,
+  checkrequestNewToken,
+} from "@/libs/authToken.js";
 import {
   clearCookies,
   PatchData,
@@ -9,194 +13,31 @@ import {
   getAllBoardByPublic,
   removeData,
 } from "@/libs/fetchs.js";
-
-import {
-  checkUserInAuthToken,
-  checkAuthToken,
-  checkrequestNewToken,
-} from "@/libs/authToken.js";
-
 import Cookies from "js-cookie";
-import BoardVisibilityConfirmation from "@/components/boards/boardVisibilityConfirmation.vue";
-import modalNotification from "@/components/modals/modalNotification.vue";
-import boardCollabLeave from "@/components/boards/modalConfirmedLeaveCollab.vue";
-import modalAcceptInvite from "../invite/modalAcceptInvite.vue";
 
-const Store = useStore();
+const props = defineProps({
+  boardsPersonal:{
+    type: Array},
+  boardsCollab :{
+    type: Array},
+  boardsPublic : {
+    type: Array
+  }    
+}
+)
+
 const router = useRouter();
 const route = useRoute();
-// checkLoginUser
-const loadpage = ref(route.params);
-// let TokenLogin = ref(false)
-
-const username = ref(Cookies.get("name"));
 const isBoardPage = computed(() => route.path.startsWith("/board"));
-const isStatusPage = computed(() => route.path.endsWith("/status"));
+const username = ref(Cookies.get("name"));
+
 const isCollabDropdownOpen = ref(false);
 const isPersonalDropdownOpen = ref(false);
 const isPublicDropdownOpen = ref(false);
-const openConfirmedChangeVisibility = ref(false);
-let visibilityBoard = ref({});
-let userLogin = Cookies.get("oid");
-let CollabLeave = ref({});
-const openConfirmedLeaveCollab = ref(false);
-let AllListBoardTaskBar = ref([]);
 
-function getImageUrl(index) {
-  //return `/nw3/images/bg-theme-${(index %5) +1}.jpg`
-  // return `/images/bg-theme-${(index % 5) + 1}.jpg`
-  return `/images/${(index % 5) + 1}.png`;
-}
-
-let statusInvite = ref([]);
-let PersonalBoard = ref([]);
-let OtherBoard = ref([]);
-let acceptBoard = [];
-let pendingBoard = [];
-
-async function fetchData() {
-  let endpoint = "boards";
-  let finalResult = [];
-  let resultCollab = [];
-  let resultPrivate = [];
-  let resultPublic = [];
-  let resultPublicRaw = {};
-  //   let allBoard = [];
-  //   let collabInvite = [];
-
-  if (checkAuthToken()) {
-    let resultPrivateRaw = await getAllBoard(endpoint);
-    let resultPublicRaw = await getAllBoardByPublic(endpoint);
-
-    resultCollab = resultPrivateRaw.collaborate;
-    resultPrivate = resultPrivateRaw.boards;
-    resultPublic = resultPublicRaw.boards;
-    let collaborators = [];
-
-    console.log(resultPrivate);
-    console.log(resultCollab);
-    console.log(resultPublicRaw);
-
-    for (let i = 0; i < resultCollab.length; i++) {
-    let resultColab = await getAllBoard(
-      `boards/${resultCollab[i].boardId}/collabs`
-    );
-    // console.log("Collaborators for Board ID", resultCollab[i].boardId, ":", resultColab);
-
-    // Add collaborators for the current board to the array
-    collaborators.push({
-      boardId: resultCollab[i].boardId,
-      boardName: resultColab.boardName,
-      collaborators: resultColab.collaborators,
-      owner: resultColab.owner.name
-    });
-  }
-  // console.log(collaborators)
-
-  for (let i = 0; i < collaborators.length; i++) {
-    const collaboratorList = collaborators[i].collaborators; 
-
-    if (!Array.isArray(collaboratorList)) {
-      console.warn("Collaborators for board", collaborators[i].boardId, "is not an array!");
-      continue; 
-    }
-
-    for (let j = 0; j < collaboratorList.length; j++) {
-      const collaborator = collaboratorList[j];
-      // console.log("Checking Collaborator:", collaborator);
-
-      
-      if (collaborator.name === username.value) {
-        // console.log("User found:", collaborator);
-        statusInvite.value.push({
-          boardId: collaborators[i].boardId,
-          boardName: collaborators[i].boardName, 
-          ...collaborator, 
-          boardOwner: collaborators[i].owner
-        });
-      } else {
-        // console.log("Other user:", collaborator);
-      }
-    }
-  }
-  // console.log("Final Status Invite:", statusInvite.value);
-
-
-    resultPrivate.forEach((privateBoard) => {
-      resultPublic = resultPublic.filter(
-        (publicBoard) => publicBoard.owner.oid !== privateBoard.owner.oid
-      );
-      finalResult = [...resultPrivate, ...resultPublic];
-      // console.log(finalResult);
-    });
-  } else {
-    resultPublicRaw = await getAllBoard(endpoint);
-    finalResult = resultPublicRaw.boards;
-    // console.log(finalResult)
-  }
-
-  Store.boards = finalResult.sort(
-    (a, b) => new Date(a.createdOn) - new Date(b.createdOn)
-  );
-  console.log(Store.boards);
-  Store.collaborate = resultCollab
-
-  if (!resultCollab) {
-    // console.log(Store.boards);
-  } else {
-    Store.collaborate = statusInvite.value.sort(
-      (a, b) => new Date(a.createdOn) - new Date(b.createdOn)
-    );
-
-Store.collaborate.forEach(collab => {
-    if (collab.status === "ACCEPTED") {
-        acceptBoard.push(collab); 
-    } else if (collab.status === "PENDING") {
-        pendingBoard.push(collab);
-    }
-});
-
-    // console.log(Store.collaborate);
-  }
-
-  for (const board of Store.boards) {
-    if (board.visibility === "public") {
-      board.isCheck = true;
-    } else {
-      board.isCheck = false;
-    }
-  }
-  // console.log(Store.boards);
-  Store.boards.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
-  // console.log(Store.boards);
-  //   checkFirstBoard();
-  // console.log(Store.boards);
-  extractGroupBoard();
-}
 
 function openBoards() {
     router.push({ name: "Board" })
-}
-
-function openBoardTaskModal(boardId) {
-  alert(boardId)
-  router.push({ name: "BoardTask", params: { id: boardId } });
-  
-}
-function openStatuses(boardId) {
-  router.push({ name: "Status", params: { id: boardId } });
-}
-function openBoardDetailModal(boardId) {
-  router.push({ name: "BoardDetail", params: { id: boardId } });
-}
-function openCreateBoard(boardId) {
-  // console.log(checkAuthToken())
-
-  if (!checkAuthToken) {
-    errorPermition();
-  } else {
-    router.push({ name: "createBoard", params: { id: boardId } });
-  }
 }
 function toggleCollabDropdown() {
   isCollabDropdownOpen.value = !isCollabDropdownOpen.value;
@@ -209,85 +50,19 @@ function togglePersonalDropdown() {
 function togglePublicDropdown() {
   isPublicDropdownOpen.value = !isPublicDropdownOpen.value;
 }
+function openBoardTaskModal(boardId) {   
+  router.push({ name: "BoardTask", params: { id: boardId } });
+  
+}
 
 async function logOut() {
   clearCookies();
   router.push({ name: "login" });
 }
-
-function errorPermition() {
-  router.push({ name: "notFound" });
-}
-
-
-function closeNotificationModal() {
-  openConfirmedChangeVisibility.value = false;
-  openConfirmedLeaveCollab.value = false;
-  Store.errorPrivate404 = false;
-  Store.errorPrivate404Content = "";
-
-  let board = Store.boards.find(
-    (b) => b.boardId === visibilityBoard.value.boardId
-  );
-  if (board) {
-    if (visibilityBoard.value.visibility === "public") {
-      board.isCheck = true;
-    } else {
-      board.isCheck = false;
-    }
-  } else {
-  }
-
-  //   checkFirstBoard();
-  // fetchData()
-}
-
-// function checkOwner(userInboard) {
-//   return checkUserInAuthToken(userInboard,userLogin)
-
-// }
-
-function checkVariable() {
-  if (Store.errorPrivate404 == true) {
-    return true;
-  }
-  return false;
-}
-function extractGroupBoard() {
-  PersonalBoard.value = Store.boards.filter(
-    (board) => board.owner.oid === userLogin
-  );
-  OtherBoard.value = Store.boards.filter(
-    (board) => board.owner.oid != userLogin
-  );
-  // console.log(PersonalBoard.value);
-  // console.log(OtherBoard.value);
-}
-
-onMounted(() => {
-  checkrequestNewToken(router);
-  fetchData();
-  // checkFirstBoard()
-});
-watch(
-  loadpage,
-  async (newloadpage) => {
-    if (newloadpage) {
-      // checkAuthToken()
-    }
-  },
-  { immediate: true }
-);
 </script>
 
 <template>
 <div>
-  <modalNotification
-    @closemodal="closeNotificationModal()"
-    v-show="checkVariable()"
-    class="z-30"
-  />
-
   <div class="class name : itbkk-modal-task  flex">
     <header
       name="header"
@@ -378,7 +153,7 @@ watch(
               All
             </li>
             <li
-              v-for="(board, index) in PersonalBoard"
+              v-for="(board, index) in boardsPersonal"
               :key="index"
               class="py-2 text-slate-400 hover:text-black cursor-pointer"
               @click="openBoardTaskModal(board.boardId)"
@@ -448,13 +223,12 @@ watch(
               All
             </li>
             <li
-              v-for="(board, index) in Store.collaborate"
+              v-for="(board, index) in boardsCollab"
               :key="index"
-              v-show="board.status === 'ACCEPTED'"
               class="py-2 text-slate-400 hover:text-black cursor-pointer"
               @click="openBoardTaskModal(board.boardId)"
             >
-              {{ board.boardName }}({{ board.boardOwner }})
+              {{ board.board_name }}({{ board.owner.name }})
             </li>
           </ul>
         </div>
@@ -519,7 +293,7 @@ watch(
               All
             </li>
             <li
-              v-for="(board, index) in OtherBoard"
+              v-for="(board, index) in boardsPublic"
               :key="index"
               class="py-2 text-slate-400 hover:text-black cursor-pointer"
               @click="openBoardTaskModal(board.boardId)"

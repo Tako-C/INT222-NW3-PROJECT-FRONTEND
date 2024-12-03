@@ -3,7 +3,8 @@ import { ref, onMounted } from "vue";
 import { getAllBoard } from "@/libs/fetchs.js";
 import { useStore } from "@/stores/store.js";
 import { useRoute, useRouter } from "vue-router";
-import { checkrequestNewToken } from '@/libs/authToken.js';
+import { checkrequestNewToken,getAuthToken,checkUserInAuthToken } from '@/libs/authToken.js';
+import Cookies from "js-cookie"
 
 let boardData = ref({});
 let createTimeInBrowserTimezone = ref(null);
@@ -13,6 +14,9 @@ let fetchHaveData = ref(false);
 const route = useRoute();
 const router = useRouter();
 const Store = useStore();
+const boardId = ref(route.params.id)
+let userLogin = Cookies.get("oid")
+
 
 const options = {
     year: "numeric",
@@ -57,6 +61,8 @@ function checkOwner() {
     let boardFound = false
     
     for (const board of Store.boards) {
+        console.log(board);
+        
         if (board.boardId === boardId.value) {
             userInboard = board.owner.oid
             boardFound = true

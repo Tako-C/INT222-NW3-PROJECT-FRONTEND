@@ -21,6 +21,8 @@ import BoardVisibilityConfirmation from "@/components/boards/boardVisibilityConf
 import modalNotification from "@/components/modals/modalNotification.vue";
 import boardCollabLeave from "@/components/boards/modalConfirmedLeaveCollab.vue";
 import modalAcceptInvite from "../invite/modalAcceptInvite.vue";
+import boardSlidebar from "./boardSlidebar.vue";
+import sidebarV2 from "./sidebarV2.vue";
 
 const Store = useStore();
 const router = useRouter();
@@ -38,6 +40,9 @@ const openConfirmedChangeVisibility = ref(false);
 let visibilityBoard = ref({});
 let userLogin = Cookies.get("oid");
 let CollabLeave = ref({});
+let boardSideBarPersonal = ref([])
+let boardSideBarCollab = ref([])
+let boardSideBarPublic = ref([])
 const openConfirmedLeaveCollab = ref(false);
 let AllListBoardTaskBar = ref([]);
 
@@ -77,56 +82,58 @@ async function fetchData() {
     console.log(resultPublicRaw);
 
     for (let i = 0; i < resultCollab.length; i++) {
-    let resultColab = await getAllBoard(
-      `boards/${resultCollab[i].boardId}/collabs`
-    );
-    console.log("Collaborators for Board ID", resultCollab[i].boardId, ":", resultColab);
+      let resultColab = await getAllBoard(
+        `boards/${resultCollab[i].boardId}/collabs`
+      );
+      // console.log("Collaborators for Board ID", resultCollab[i].boardId, ":", resultColab);
 
-    // Add collaborators for the current board to the array
-    collaborators.push({
-      boardId: resultCollab[i].boardId,
-      boardName: resultColab.boardName,
-      collaborators: resultColab.collaborators,
-      owner: resultColab.owner.name
-    });
-  }
-  console.log(collaborators)
-
-  for (let i = 0; i < collaborators.length; i++) {
-    const collaboratorList = collaborators[i].collaborators; 
-
-    if (!Array.isArray(collaboratorList)) {
-      console.warn("Collaborators for board", collaborators[i].boardId, "is not an array!");
-      continue; 
+      // Add collaborators for the current board to the array
+      collaborators.push({
+        boardId: resultCollab[i].boardId,
+        boardName: resultColab.boardName,
+        collaborators: resultColab.collaborators,
+        owner: resultColab.owner.name,
+      });
     }
+    //   console.log(collaborators)
 
-    for (let j = 0; j < collaboratorList.length; j++) {
-      const collaborator = collaboratorList[j];
-      console.log("Checking Collaborator:", collaborator);
+    for (let i = 0; i < collaborators.length; i++) {
+      const collaboratorList = collaborators[i].collaborators;
 
-      
-      if (collaborator.name === username.value) {
-        console.log("User found:", collaborator);
-        statusInvite.value.push({
-          boardId: collaborators[i].boardId,
-          boardName: collaborators[i].boardName, 
-          ...collaborator, 
-          boardOwner: collaborators[i].owner
-        });
-      } else {
-        console.log("Other user:", collaborator);
+      if (!Array.isArray(collaboratorList)) {
+        console.warn(
+          "Collaborators for board",
+          collaborators[i].boardId,
+          "is not an array!"
+        );
+        continue;
+      }
+
+      for (let j = 0; j < collaboratorList.length; j++) {
+        const collaborator = collaboratorList[j];
+        //   console.log("Checking Collaborator:", collaborator);
+
+        if (collaborator.name === username.value) {
+          // console.log("User found:", collaborator);
+          statusInvite.value.push({
+            boardId: collaborators[i].boardId,
+            boardName: collaborators[i].boardName,
+            ...collaborator,
+            boardOwner: collaborators[i].owner,
+          });
+        } else {
+          // console.log("Other user:", collaborator);
+        }
       }
     }
-  }
-  console.log("Final Status Invite:", statusInvite.value);
-
+    //   console.log("Final Status Invite:", statusInvite.value);
 
     resultPrivate.forEach((privateBoard) => {
       resultPublic = resultPublic.filter(
         (publicBoard) => publicBoard.owner.oid !== privateBoard.owner.oid
       );
       finalResult = [...resultPrivate, ...resultPublic];
-      console.log(finalResult);
+      //   console.log(finalResult);
     });
   } else {
     resultPublicRaw = await getAllBoard(endpoint);
@@ -138,22 +145,22 @@ async function fetchData() {
     (a, b) => new Date(a.createdOn) - new Date(b.createdOn)
   );
   // console.log(Store.boards);
-  // Store.collaborate = resultCollab
+  Store.collaborate = resultCollab
 
   if (!resultCollab) {
     // console.log(Store.boards);
   } else {
-    Store.collaborate = statusInvite.value.sort(
-      (a, b) => new Date(a.createdOn) - new Date(b.createdOn)
-    );
+    // Store.collaborate = statusInvite.value.sort(
+    //   (a, b) => new Date(a.createdOn) - new Date(b.createdOn)
+    // );
 
-Store.collaborate.forEach(collab => {
-    if (collab.status === "ACCEPTED") {
-        acceptBoard.push(collab); 
-    } else if (collab.status === "PENDING") {
+    Store.collaborate.forEach((collab) => {
+      if (collab.status === "ACCEPTED") {
+        acceptBoard.push(collab);
+      } else if (collab.status === "PENDING") {
         pendingBoard.push(collab);
-    }
-});
+      }
+    });
 
     console.log(Store.collaborate);
   }
@@ -165,9 +172,9 @@ Store.collaborate.forEach(collab => {
       board.isCheck = false;
     }
   }
-  console.log(Store.boards);
+  //   console.log(Store.boards);
   Store.boards.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
-  console.log(Store.boards);
+  //   console.log(Store.boards);
   //   checkFirstBoard();
   // console.log(Store.boards);
   extractGroupBoard();
@@ -275,10 +282,11 @@ function openConfirmLeaveCollabModal(boardcollab) {
   const foundBoard = Store.collaborate.find(
     (board) => board.boardId === boardcollab.boardId
   );
-  console.log(foundBoard);
+  //   console.log(foundBoard);
 
   if (checkAuthToken()) {
     CollabLeave = boardcollab;
+    console.log(CollabLeave);
     openConfirmedLeaveCollab.value = true;
   } else {
     // errorPermition()
@@ -286,7 +294,7 @@ function openConfirmLeaveCollabModal(boardcollab) {
 }
 
 function openInvitation(boardcollab) {
-  console.log(boardcollab.boardId);
+  //   console.log(boardcollab.boardId);
   router.push({ name: "collabInvite" });
   //   const foundBoard = Store.collaborate.find(
   //     (board) => board.boardId === boardcollab.boardId
@@ -302,25 +310,43 @@ function openInvitation(boardcollab) {
 }
 
 async function leaveConfirm() {
-  console.log("leaveConfirm");
+  //   console.log("leaveConfirm");
 
   let collabOid;
   let collabBoard = await getAllBoard(`boards/${CollabLeave.boardId}/collabs`);
-  for (let i = 0; i < collabBoard.collaborators.length; i++) {
-    console.log(userLogin);
-    console.log(collabBoard.collaborators[i]);
-    if (userLogin === collabBoard.collaborators[i].oid) {
-      console.log(collabBoard.collaborators[i]);
-      collabOid = collabBoard.collaborators[i].oid;
-    }
+
+  if (collabBoard.status === 401) {
+    router.push({ name: "login" });
+    Store.errorToken = true;
   }
+  if (collabBoard.status === 403) {
+    Store.errorPage403 = true;
+    errorPermition();
+  }
+  if (collabBoard.status === 404) {
+    Store.errortext404 = "The Tasks does not exist";
+    Store.errorPage404 = true;
+    errorPermition();
+  } else {
+    for (let i = 0; i < collabBoard.collaborators.length; i++) {
+      // console.log(userLogin);
+      // console.log(collabBoard.collaborators[i]);
+      if (userLogin === collabBoard.collaborators[i].oid) {
+        console.log(collabBoard.collaborators[i]);
+        collabOid = collabBoard.collaborators[i].oid;
+        acceptBoard = acceptBoard.filter(
+          (info) => info.boardId != collabBoard.collaborators[i].boardsId
+        );
+        // console.log(acceptBoard)
+      }
+    }
 
-  let leaveCollab = await removeData(
-    `boards/${CollabLeave.boardId}/collabs/${collabOid}`
-  );
-
-  // console.log(leaveCollab)
-  fetchData();
+    let leaveCollab = await removeData(
+      `boards/${CollabLeave.boardId}/collabs/${collabOid}`
+    );
+    console.log(leaveCollab);
+  }
+  //   fetchData();
   closeNotificationModal();
 }
 
@@ -364,8 +390,12 @@ function extractGroupBoard() {
   OtherBoard.value = Store.boards.filter(
     (board) => board.owner.oid != userLogin
   );
-  console.log(PersonalBoard.value);
-  console.log(OtherBoard.value);
+  boardSideBarPersonal.value.push(...PersonalBoard.value)
+  boardSideBarPublic.value.push(...OtherBoard.value)
+  boardSideBarCollab.value.push(...acceptBoard)
+  console.log(boardSideBarPublic.value)
+  //   console.log(PersonalBoard.value);
+  //   console.log(OtherBoard.value);
 }
 
 onMounted(() => {
@@ -413,221 +443,13 @@ watch(
     /> -->
 
   <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
-    <header
-      name="header"
-      class="top-0 h-full w-[25%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
-    >
-      <div class="flex">
-        <div
-          class="flex flex-col items-start justify-start first-letter:mx-auto space-x-4 pt-5"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="#FFA500"
-            class="size-6"
-          >
-            <path
-              d="M6 3a3 3 0 0 0-3 3v2.25a3 3 0 0 0 3 3h2.25a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H6ZM15.75 3a3 3 0 0 0-3 3v2.25a3 3 0 0 0 3 3H18a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3h-2.25ZM6 12.75a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h2.25a3 3 0 0 0 3-3v-2.25a3 3 0 0 0-3-3H6ZM17.625 13.5a.75.75 0 0 0-1.5 0v2.625H13.5a.75.75 0 0 0 0 1.5h2.625v2.625a.75.75 0 0 0 1.5 0v-2.625h2.625a.75.75 0 0 0 0-1.5h-2.625V13.5Z"
-            />
-          </svg>
-        </div>
-        <div class="p-5">
-          <h3
-            class="text-xl font-bold font-serif titleShadow text-center text-black"
-          >
-            Kradan Kanban <br />Boards
-          </h3>
-        </div>
-      </div>
-
-      <div class="flex flex-col">
-        <!-- Board Section -->
-        <div
-          class="w-60 p-5 flex items-center justify-between cursor-pointer"
-          :class="['rounded-md', { 'bg-orange-400': isBoardPage }]"
-          @click="toggleTaskDropdown()"
-        >
-          <div class="flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              :stroke="isBoardPage ? 'white' : 'gray'"
-              class="size-6"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M6 6.878V6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 0 0 4.5 9v.878m13.5-3A2.25 2.25 0 0 1 19.5 9v.878m0 0a2.246 2.246 0 0 0-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0 1 21 12v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6c0-.98.626-1.813 1.5-2.122"
-              />
-            </svg>
-            <p
-              class="pl-3"
-              :class="{
-                'text-white': isBoardPage,
-                'text-slate-400': !isBoardPage,
-              }"
-            >
-              Board
-            </p>
-          </div>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            :stroke="isBoardPage ? 'white' : 'gray'"
-            class="size-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              :d="isTaskDropdownOpen ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'"
-            />
-          </svg>
-        </div>
-
-        <!-- Dropdown for boards -->
-        <div
-          v-show="isTaskDropdownOpen"
-          class="w-60 mt-2 pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-20 overflow-y-auto"
-        >
-          <ul>
-            <li
-              class="py-2 text-slate-400 hover:text-black cursor-pointer"
-              @click="openBoards"
-            >
-              All
-            </li>
-            <li
-              v-for="(board, index) in Store.boards"
-              :key="index"
-              class="py-2 text-slate-400 hover:text-black cursor-pointer"
-              @click="openBoardTaskModal(board.boardId)"
-            >
-              {{ board.board_name }}
-            </li>
-          </ul>
-        </div>
-
-        <!-- Statuses Section -->
-        <div
-          class="w-60 p-5 flex items-center justify-between cursor-pointer"
-          :class="['rounded-md', { 'bg-orange-400': isStatusPage }]"
-          @click="toggleStatusDropdown()"
-        >
-          <div class="flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              :stroke="isStatusPage ? 'white' : 'gray'"
-              class="size-6"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008Z"
-              />
-            </svg>
-            <p
-              class="pl-3"
-              :class="{
-                'text-white': isStatusPage,
-                'text-slate-400': !isStatusPage,
-              }"
-            >
-              Statuses
-            </p>
-          </div>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            :stroke="isStatusPage ? 'white' : 'gray'"
-            class="size-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              :d="isStatusDropdownOpen ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'"
-            />
-          </svg>
-        </div>
-
-        <!-- Dropdown for statuses -->
-        <div
-          v-show="isStatusDropdownOpen"
-          class="w-60 mt-2 pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-20 overflow-y-auto"
-        >
-          <ul>
-            <li
-              v-for="(board, index) in Store.boards"
-              :key="index"
-              class="py-2 text-slate-400 hover:text-black cursor-pointer"
-              @click="openStatuses(board.boardId)"
-            >
-              {{ board.board_name }}
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Login button -->
-      <div
-        class="itbkk-sign-out bg-orange-400 p-2 flex my-14 w-3/4 cursor-pointer"
-        :class="{
-          'justify-between sign-out': checkAuthToken(),
-          'justify-center items-center': !checkAuthToken(),
-        }"
-        @click="logOut()"
-      >
-        <div class="flex items-center space-x-2 p-1" v-show="checkAuthToken()">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-6 h-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-            />
-          </svg>
-        </div>
-        <p class="itbkk-fullname text-sm font-medium p-2">
-          {{ checkAuthToken() ? username : "Login" }}
-        </p>
-        <div
-          class="flex items-center justify-center right-0"
-          v-show="checkAuthToken()"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="size-5"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"
-            />
-          </svg>
-        </div>
-      </div>
-    </header>
-
     <!-- Table สำหรับแสดงข้อมูลของ board -->
+    <sidebarV2 
+      class="w-1/4 bg-gray-200 h-full"
+      :boardsPersonal="boardSideBarPersonal"
+      :boardsCollab="boardSideBarCollab"
+      :boardsPublic="boardSideBarPublic"
+      />
     <main class="w-full h-auto overflow-y-auto flex flex-col">
       <button
         class="itbkk-button-create right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
@@ -875,7 +697,7 @@ watch(
                 {{ boardcollab.boardName }}
               </p>
               <p class="itbkk-owner-name pt-2">
-                Owner : {{ boardcollab.boardOwner }}
+                Owner : {{ boardcollab.owner.name }}
               </p>
               <p class="itbkk-access-right pt-2">
                 Access Right : {{ boardcollab.accessRight }}
@@ -913,8 +735,8 @@ watch(
           <div class="flex gap-4 flex-nowwrap">
             <!-- เพิ่ม flex-wrap และ justify-center -->
             <div
-              v-for="(boardcollab, index) in  pendingBoard"
-              :key="index" 
+              v-for="(boardcollab, index) in pendingBoard"
+              :key="index"
               v-show="boardcollab.status === 'PENDING'"
               class="bg-white rounded-lg shadow flex flex-col items-center"
             >
@@ -950,7 +772,7 @@ watch(
                   Access Right : {{ boardcollab.accessRight }}
                 </p>
                 <p class="itbkk-owner-name pt-2">
-                  From : {{ boardcollab.boardOwner }}
+                  From : {{ boardcollab.owner.name }}
                 </p>
               </div>
               <button
@@ -998,7 +820,3 @@ watch(
   opacity: 1;
 }
 </style>
-
-
-
-
