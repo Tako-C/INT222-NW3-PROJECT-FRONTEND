@@ -3,7 +3,8 @@ import { ref, onMounted } from "vue";
 import { getAllBoard } from "@/libs/fetchs.js";
 import { useStore } from "@/stores/store.js";
 import { useRoute, useRouter } from "vue-router";
-import { checkrequestNewToken } from '@/libs/authToken.js';
+import { checkrequestNewToken,getAuthToken,checkUserInAuthToken } from '@/libs/authToken.js';
+import Cookies from "js-cookie"
 
 let boardData = ref({});
 let createTimeInBrowserTimezone = ref(null);
@@ -13,6 +14,9 @@ let fetchHaveData = ref(false);
 const route = useRoute();
 const router = useRouter();
 const Store = useStore();
+const boardId = ref(route.params.id)
+let userLogin = Cookies.get("oid")
+
 
 const options = {
     year: "numeric",
@@ -57,6 +61,8 @@ function checkOwner() {
     let boardFound = false
     
     for (const board of Store.boards) {
+        console.log(board);
+        
         if (board.boardId === boardId.value) {
             userInboard = board.owner.oid
             boardFound = true
@@ -91,10 +97,13 @@ onMounted(() => {
 </script>
 
 <template>
-    <div v-show="fetchHaveData" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-8">
+    <div v-show="fetchHaveData" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+        <div class="bg-white rounded-xl shadow-lg w-80 md:w-full max-w-lg p-8">
+            <div class="md:hidden">
+                <p class="text-red-400 flex justify-end cursor-pointer" @click="closeModal()">x</p>
+            </div>
             <h1 class="text-3xl font-semibold text-center text-gray-800 mb-6">Board Details</h1>
-            <div class="flex space-x-8">
+            <div class="flex space-x-8 text-xs md:text-xl">
                 <div class="flex-1 space-y-4 border p-4 rounded-lg border-gray-300">
                     <div>
                         <h2 class="text-xl font-medium text-gray-700">Board Name</h2>
@@ -117,23 +126,33 @@ onMounted(() => {
                         <p class="text-gray-600">{{ boardData.visibility }}</p>
                     </div>
                 </div>
-                <div class="flex-none w-auto text-sm">
-                    <div class="flex justify-center items-center bg-orange-300 rounded-2xl p-2"><p class=" font-medium text-gray-700">Task Quantity :</p>
-                    <p class="text-gray-600 p-1">{{ taskQuantity(boardData.tasks) }}</p></div>
-                    
-                    <div  class="flex justify-center items-center bg-sky-300 rounded-2xl mt-2 p-2"><p class="font-medium text-gray-700">Statuses Quantity :</p>
-                    <p class="text-gray-600 p-1">{{ taskQuantity(boardData.statuses) }}</p></div>
-                    
-                </div>
+                <div class="flex-none w-auto text-sm space-y-2">
+    <div class="flex justify-between items-center bg-orange-300 rounded-2xl p-2">
+        <p class="font-medium text-gray-700">
+            Task<span class="hidden md:inline"> Quantity</span>:
+        </p>
+        <p class="text-gray-600 font-semibold">{{ taskQuantity(boardData.tasks) }}</p>
+    </div>
+
+    <div class="flex justify-between items-center bg-sky-300 rounded-2xl p-2">
+        <p class="font-medium text-gray-700">
+            Statuses<span class="hidden md:inline"> Quantity</span>:
+        </p>
+        <p class="text-gray-600 font-semibold">{{ taskQuantity(boardData.statuses) }}</p>
+    </div>
+</div>
+
             </div>
-            <div class="mt-6 flex justify-end">
-                <button 
-                    class="btn btn-primary"
-                    @click="closeModal()"
-                >
-                    Close
-                </button>
-            </div>
+            <div class="hidden md:flex justify-end mt-6">
+    <button 
+        class="btn btn-primary" 
+        @click="closeModal()"
+    >
+        Close
+    </button>
+</div>
+
+
         </div>
     </div>
 </template>

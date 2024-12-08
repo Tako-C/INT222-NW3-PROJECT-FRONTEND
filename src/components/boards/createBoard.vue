@@ -106,7 +106,7 @@ checkUserPermition()
         >
         </div>
         <div
-            class=" itbkk-modal-new fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
+            class=" itbkk-modal-new fixed bg-white w-[80%] lg:w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
         >
             <div class=" rounded-2xl ">
                 <h1 class=" break-words w-[79%]">
@@ -119,14 +119,14 @@ checkUserPermition()
 
                     <div class=" font-bold">Name</div>
                     <input maxlength="120" v-model="boardData.board_name" class="itbkk-board-name w-[90%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"></input>
-                    <p class=" flex justify-end pr-20 text-[10px]">{{ boardData.board_name.length}}/120</p>
+                    <p class=" flex justify-end pr-14 md:pr-20 text-[10px]">{{ boardData.board_name.length}}/120</p>
             </div>
 
 
                 <div class="boxButton m-3">
                     <button
                         type="submit"
-                        class="itbkk-button-cancel button buttonClose btn"
+                        class="itbkk-button-cancel button buttonClose "
                         @click="closeModal()"
                     >
                     Cancel
@@ -177,6 +177,12 @@ checkUserPermition()
     transition-duration: 0.4s;
   /* cursor: pointer; */
   border-radius: var(--rounded-btn, 0.5rem);
+}
+@media (max-width: 768px) {
+    .button {
+        padding: 10px 30px;
+        font-size: 13px;
+    }
 }
 
 .buttonClose {

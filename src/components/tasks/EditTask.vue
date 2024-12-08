@@ -381,7 +381,7 @@ onUpdated(() => {
             @click="closeModal()"
         ></div>
         <div
-            class="fixed bg-white w-[55%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
+            class="fixed bg-white w-[85%] lg:w-[55%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
             :class="{
                 'itbkk-modal-task itbkk-item': route.params.taskId,
             }"
@@ -461,7 +461,7 @@ onUpdated(() => {
                     <div class="font-bold">Status</div>
 
                     <select
-                        class="itbkk-status w-[30%] z-40 h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
+                        class="itbkk-status md:w-[30%] z-40 h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
                         v-model="taskData.status"
                     >
                         <option
@@ -481,13 +481,13 @@ onUpdated(() => {
                     </p>
                     <div class="font-bold pt-1">Created On</div>
                     <p
-                        class="itbkk-created-on border-2 w-[80%] h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
+                        class="itbkk-created-on border-2 w-[80%] md:h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
                     >
                         {{ createTimeInBrowserTimezone }}
                     </p>
                     <div class="font-bold pt-1">Updated On</div>
                     <p
-                        class="itbkk-updated-on border-2 w-[80%] h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
+                        class="itbkk-updated-on border-2 w-[80%] md:h-[10%] bg-gray-400 bg-opacity-15 rounded-lg pl-3"
                     >
                         {{ updateTimeInBrowserTimezone }}
                     </p>
@@ -546,7 +546,7 @@ onUpdated(() => {
     text-decoration: none;
     display: inline-block;
     font-size: 16px;
-    margin: 4px 2px;
+    margin: 40px 2px;
     transition-duration: 0.4s;
     /* cursor: pointer; */
     border-radius: var(--rounded-btn, 0.5rem);
@@ -583,6 +583,12 @@ onUpdated(() => {
 
 .box {
     margin-right: auto;
+}
+@media (max-width: 768px) {
+    .button {
+        padding: 10px 30px;
+        font-size: 13px;
+    }
 }
 
 .modal-overlay {

@@ -10,8 +10,9 @@ const router = useRouter()
 const route = useRoute()
 const Store = useStore()
 const boardId = ref(route.params.id)
-// let userLogin = Cookies.get("name")
+const username = ref(Cookies.get("name"))
 let userLogin = Cookies.get("oid")
+
 
 function checkUserPermition() {
     // console.log(checkAuthToken(),checkOwner());
@@ -29,7 +30,8 @@ function checkUserPermition() {
 let accessRightList = ref(['read','write'])
 let collabData = ref({
     email: '',
-    accessRight : 'read'
+    accessRight : 'read',
+    statusInvite : 'PENDING'
 })
 
 function closeModal() {
@@ -73,20 +75,25 @@ async function fetchData() {
         let resBoards = await getAllBoard(endpoint)
         Store.boards = resBoards.boards
         Store.collaborate = resBoards.collaborate
-        // console.log(Store.boards)
+        console.log(resBoards.collaborate)
         
         checkUserPermition()
 }
 function addToStore(newBoard) {
-    // console.log(newBoard);
+    console.log(newBoard);
     Store.collaborate.push({ ...newBoard })
-    // console.log(Store.collaborate);
+    console.log(Store.collaborate);
 }
 
 
+
+
 async function saveBoardData() {
-    
+    checkrequestNewToken(router)
+
             collabData.value.boards = boardId.value
+            collabData.value.inviteeEmail = collabData.value.email
+            // collabData.value.name = username.value
      // console.log(checkUserIsCollab());
      
             if (checkUserIsCollab()) {
@@ -95,12 +102,14 @@ async function saveBoardData() {
                 errorPermition()
             } 
             else {
-                let result = await addData(collabData.value, `boards/${boardId.value}/collabs`)
-                // console.log(result)
+                let result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
+                console.log(collabData.value)
+                console.log(result)
               // console.log(checkOwner(),checkAuthToken());
 
 
     if (checkOwner() && checkAuthToken()) {
+        console.log(result)
         
     switch (result.status) {
         case 401:
@@ -121,8 +130,12 @@ async function saveBoardData() {
             break
         default:
             // console.log(Store.collaborate);
+            console.log(result);
+            console.log(collabData.value);
             
-            addToStore(result)
+            result.user.statusInvite = collabData.value.statusInvite
+            addToStore(result.user)
+            // fetchData()
             // console.log(result)
             closeModal()
             break
@@ -171,8 +184,6 @@ onMounted(() => {
     checkrequestNewToken(router)
     checkAuthToken()
     fetchData()
-
-    
     
 })
 
@@ -195,7 +206,7 @@ onMounted(() => {
         >
         </div>
         <div
-            class=" itbkk-modal-new fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
+            class=" itbkk-modal-new fixed bg-white w-[80%] lg:w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
         >
             <div class=" rounded-2xl ">
                 <h1 class=" break-words w-[79%]">
@@ -306,7 +317,12 @@ onMounted(() => {
 .box {
     margin-right: auto;
 }
-
+@media (max-width: 768px) {
+    .button {
+        padding: 10px 30px;
+        font-size: 13px;
+    }
+}
 .modal-overlay {
     position: absolute;
     top: 0;

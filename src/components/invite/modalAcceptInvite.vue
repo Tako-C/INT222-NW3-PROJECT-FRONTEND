@@ -1,7 +1,7 @@
 <script setup>
 import { defineEmits, ref } from 'vue'
 const props = defineProps({
-  removeCollab:{
+  Invitation:{
     type: Object}
 })
 const emits = defineEmits(['closemodal', 'confirmed'])
@@ -10,23 +10,23 @@ const emits = defineEmits(['closemodal', 'confirmed'])
 <template>
     <div class="fixed bg-black bg-opacity-30 w-screen h-screen">
       <div class="itbkk-modal-alert fixed modal-box">
-        <h3 class="text-lg font-bold">Change access right</h3>
+        <h3 class="text-lg font-bold">Invited Collaboration</h3>
         <p class="border-b mt-2"></p>
         <p class="itbkk-message py-4">
-          Do you want to remove  <strong>"{{ removeCollab.name }}"</strong> from the board ?
+        <strong>{{ Invitation.owner?.name }}</strong> has invited you to collab board with <strong>{{ Invitation.accessRight }}</strong> access in <strong> {{ Invitation.board_name }}</strong>
         </p>
         <div class="boxButton">
           <button
             @click="emits('closemodal')"
             class="itbkk-button-cancel button buttonCancel"
           >
-            Cancel
+            Decline
           </button>
           <button
             @click="emits('confirmed')"
             class="itbkk-button-confirm button buttonConfirm"
           >
-            Confirm
+            Accept
           </button>
         </div>
       </div>
@@ -80,14 +80,5 @@ const emits = defineEmits(['closemodal', 'confirmed'])
       left: 50%;
       transform: translate(-50%, -50%);
     }
-
-    @media (max-width: 480px) {
-  .button {
-    padding: 8px 15px; /* ลดขนาด padding ให้เล็กลงอีก */
-    font-size: 12px;  /* ลดขนาดฟอนต์ให้เหมาะกับมือถือ */
-    margin: 12px 20px;   /* ลดระยะห่างและจัดให้อยู่ชิดแนวตั้ง */
-    width: 50%;     /* ปรับปุ่มให้ยืดเต็มความกว้าง */
-  }
-}  
 </style>
     

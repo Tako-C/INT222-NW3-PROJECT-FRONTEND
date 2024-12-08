@@ -187,7 +187,7 @@ function userCollab() {
         >
         </div>
         <div
-            class=" itbkk-modal-status fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
+            class=" itbkk-modal-status fixed bg-white w-[80%] lg:w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl "
         >
             <div class=" rounded-2xl ">
                 <h1 class=" break-words w-[79%]">
@@ -295,7 +295,12 @@ function userCollab() {
     color: white;
     border: 2px solid grey;
 }
-
+@media (max-width: 768px) {
+    .button {
+        padding: 10px 30px;
+        font-size: 13px;
+    }
+}
 .box {
     margin-right: auto;
 }

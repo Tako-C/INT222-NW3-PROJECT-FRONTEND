@@ -8,6 +8,8 @@ import { checkAuthToken,checkUserInAuthToken,checkrequestNewToken} from '@/libs/
 import modalNotification from "@/components/modals/modalNotification.vue"
 import boardCollabChangeAccessRight from "@/components/collab/modalCollabChangeAccessRight.vue"
 import boardCollabRemove from "@/components/collab/modalConfirmedDeleteCollab.vue"
+import boardSlidebar from "./boardSlidebar.vue"
+import sidebarV2 from "./sidebarV2.vue"
  
 const Store = useStore()
 const router = useRouter()
@@ -28,6 +30,12 @@ let resultAllBoard = {}
 let CollabDetail = ref({})
 let CollabRemove = ref({})
 let accessRightList = ref(['read','write'])
+let boardSideBarPersonal = ref([])
+let boardSideBarCollab = ref([])
+let boardSideBarPublic = ref([])
+let PersonalBoard = ref([]);
+let OtherBoard = ref([]);
+let acceptBoard = [];
 
 function checkPublicCollab(resultAllBoard) {
     // console.log(resultAllBoard)
@@ -68,8 +76,9 @@ async function fetchData() {
         Store.statuses = resStatuses
         // console.log(resultAllBoard)
         // console.log(Store.statuses)
-        // console.log(Store.boards)
-        // console.log(Store.collaborate)
+        console.log(Store.boards)
+        console.log(Store.collaborate)
+        console.log(resultColab)
 
         
         // if (!resultAllBoard.collaborate) {    
@@ -102,7 +111,12 @@ async function fetchData() {
             
             break
         }
-
+        resBoards.collaborate.forEach((collab) => {
+      if (collab.status === "ACCEPTED") {
+        acceptBoard.push(collab);
+      }
+    });
+        extractGroupBoard()
 }
 
 async function changeAccessRicht() {
@@ -124,7 +138,7 @@ async function patchAccessRicht() {
     
     checkrequestNewToken(router)
 
-    let result = await PatchData(`boards/${boardId.value}/collabs/${CollabDetail.value.oid}`, {
+    let result = await PatchData(`boards/${boardId.value}/collabs/invitations/${CollabDetail.value.oid}`, {
         accessRight: CollabDetail.value.accessRight,
     })
     // console.log(visibilityBoard.value)
@@ -193,7 +207,7 @@ function openBoards() {
     router.push({ name: "Board" })
 }
 function goBack(){
-    router.go(-1);
+    router.push({name: 'BoardTask'});
 }
 async function logOut(){
     router.push({ name:'login'})
@@ -218,6 +232,8 @@ function closeNotificationModal() {
     fetchData()
     
 }
+
+// XD update
 function openConfirmAccessRightModal(collab) {
     const foundBoard = Store.boards.find((board) => board.boardId === boardId.value)
     // console.log(collab);
@@ -248,6 +264,7 @@ function openConfirmDeleteCollabModal(collab) {
     }
 }
 
+// XD remove
 async function removeCollabUser() {
     console.log('remove collab')
     // let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`)
@@ -256,7 +273,7 @@ async function removeCollabUser() {
     console.log(CollabRemove.value);
     
     if (checkAuthToken()) {
-        let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`)
+        let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/invitations/${CollabRemove.value.oid}`)
         if (checkUserInAuthToken(userLogin, CollabRemove.value.oid)) { 
             
             if (collabBoard.status === 401) {
@@ -292,6 +309,22 @@ function handleDeleteCollab() {
     } else{}
 }
 
+function extractGroupBoard() {
+    console.log(Store.boards)
+  PersonalBoard.value = Store.boards.filter(
+    (board) => board.owner.oid === userLogin
+  );
+  OtherBoard.value = Store.boards.filter(
+    (board) => board.owner.oid != userLogin
+  );
+  boardSideBarPersonal.value.push(...PersonalBoard.value)
+  boardSideBarPublic.value.push(...OtherBoard.value)
+  boardSideBarCollab.value.push(...acceptBoard)
+  console.log(boardSideBarPublic.value)
+  //   console.log(PersonalBoard.value);
+  //   console.log(OtherBoard.value);
+}
+
 watch(
     boardId,
     async (newBoardId) => {
@@ -305,7 +338,7 @@ watch(
     { immediate: true }
 )
 onMounted(() => {
-    fetchData()
+    // fetchData()
     
 })
 </script>
@@ -330,219 +363,14 @@ onMounted(() => {
         @confirmed="removeCollabUser()"
         class="z-40"
     />
-        <header
-            name="header"
-            class="top-0 z-10 h-full w-[20%] border-orange-400 bg-white shadow-lg flex flex-col items-center justify-between px-6 text-white rounded-r-3xl"
-        >
-            <div class="flex">
+    <sidebarV2 
+      :boardsPersonal="boardSideBarPersonal"
+      :boardsCollab="boardSideBarCollab"
+      :boardsPublic="boardSideBarPublic"
+      />
+                <!-- back button -->
                 <div
-                    class="flex flex-col items-start justify-start first-letter:mx-auto space-x-4 pt-5"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="#FFA500"
-                        class="size-6"
-                    >
-                        <path
-                            d="M6 3a3 3 0 0 0-3 3v2.25a3 3 0 0 0 3 3h2.25a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H6ZM15.75 3a3 3 0 0 0-3 3v2.25a3 3 0 0 0 3 3H18a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3h-2.25ZM6 12.75a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h2.25a3 3 0 0 0 3-3v-2.25a3 3 0 0 0-3-3H6ZM17.625 13.5a.75.75 0 0 0-1.5 0v2.625H13.5a.75.75 0 0 0 0 1.5h2.625v2.625a.75.75 0 0 0 1.5 0v-2.625h2.625a.75.75 0 0 0 0-1.5h-2.625V13.5Z"
-                        />
-                    </svg>
-                </div>
-                <div class="p-5">
-                    <h3
-                        class="text-xl font-bold font-serif titleShadow text-center text-black"
-                    >
-                        Kradan Kanban <br />Boards
-                    </h3>
-                </div>
-            </div>
- 
-            <div class="flex flex-col">
-                <!-- Board Section -->
-                <div
-                    class="w-60 p-5 flex items-center justify-between cursor-pointer"
-                    :class="['rounded-md', { 'bg-orange-400': isBoardPage }]"
-                    @click="toggleTaskDropdown()"
-                >
-                    <div class="flex items-center">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            :stroke="isBoardPage ? 'white' : 'gray'"
-                            class="size-6"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M6 6.878V6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 0 0 4.5 9v.878m13.5-3A2.25 2.25 0 0 1 19.5 9v.878m0 0a2.246 2.246 0 0 0-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0 1 21 12v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6c0-.98.626-1.813 1.5-2.122"
-                            />
-                        </svg>
-                        <p
-                            class="pl-3"
-                            :class="{
-                                'text-white': isBoardPage,
-                                'text-slate-400': !isBoardPage,
-                            }"
-                        >
-                            Board
-                        </p>
-                    </div>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        :stroke="isBoardPage ? 'white' : 'gray'"
-                        class="size-6"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            :d="
-                                isTaskDropdownOpen
-                                    ? 'M6 15l6-6 6 6'
-                                    : 'M6 9l6 6 6-6'
-                            "
-                        />
-                    </svg>
-                </div>
- 
-                <!-- Dropdown for boards -->
-                <div
-                    v-show="isTaskDropdownOpen"
-                    class="w-60 mt-2 pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-20 overflow-y-auto"
-                >
-                    <ul>
-                        <li
-                            class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                            @click="openBoards"
-                        >
-                            All
-                        </li>
-                        <li
-                            v-for="(board, index) in Store.boards"
-                            :key="index"
-                            class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                            @click="openBoardTasks(board.boardId)"
-                        >
-                            {{ board.board_name }}
-                        </li>
-                    </ul>
-                </div>
- 
-                <!-- Statuses Section -->
-                <div
-                    class=" w-60 p-5 flex items-center justify-between cursor-pointer"
-                    :class="['rounded-md', { 'bg-orange-400': isStatusPage }]"
-                    @click="toggleStatusDropdown()"
-                >
-                    <div class="flex items-center">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            :stroke="isStatusPage ? 'white' : 'gray'"
-                            class="size-6"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008Z"
-                            />
-                        </svg>
-                        <p
-                            class="pl-3"
-                            :class="{
-                                'text-white': isStatusPage,
-                                'text-slate-400': !isStatusPage,
-                            }"
-                        >
-                            Statuses
-                        </p>
-                    </div>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        :stroke="isStatusPage ? 'white' : 'gray'"
-                        class="size-6"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            :d="
-                                isStatusDropdownOpen
-                                    ? 'M6 15l6-6 6 6'
-                                    : 'M6 9l6 6 6-6'
-                            "
-                        />
-                    </svg>
-                </div>
- 
-                <!-- Dropdown for statuses -->
-                <div
-                    v-show="isStatusDropdownOpen"
-                    class="w-60 mt-2 pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-20 overflow-y-auto"
-                >
-                    <ul>
-                        <li
-                            v-for="(board, index) in Store.boards"
-                            :key="index"
-                            class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                            @click="openStatuses(board.boardId)"
-                        >
-                            {{ board.board_name }}
-                        </li>
-                    </ul>
-                </div>
-            </div>
- 
-            <div class="bg-orange-400 p-2 flex my-14 justify-between w-3/4 cursor-pointer">
-                <div class="flex items-center space-x-2 p-1">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="w-6 h-6"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                        />
-                    </svg>
-                </div>
-                <p class="itbkk-fullname text-sm font-medium p-1">
-                    {{ checkAuthToken() ? username : "Login" }}
-                </p>
-                <div class="itbkk-sign-out flex items-center justify-center right-0" @click="logOut()">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="size-5"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"
-                        />
-                    </svg>
-                </div>
-            </div>
- 
-            <!-- back button -->
-            <div
-                class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-20 rounded-xl cursor-pointer"
+                class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-10 w-10 md:h-14 md:w-20 rounded-xl cursor-pointer"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -558,17 +386,16 @@ onMounted(() => {
                         d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
                     />
                 </svg>
- 
-                <p class="pl-2" @click="goBack()">Back</p>
+
+                <p class="pl-2 hidden md:block" @click="goBack()">Back</p>
             </div>
-        </header>
  
         <!-- Table สำหรับแสดงข้อมูลของ board -->
         <main class="h-full w-full overflow-y-scroll">
             <!--TOPIC-->
-            <div class="flex justify-between text-white">
+            <div class="flex justify-between text-white text-xs sm:text-sm md:text-sm lg:text-lg">
                 <div
-                    class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
+                    class="text-xs sm:text-lg md:text-2xl font-bold text-black flex w-auto ml-2 lg:ml-16 mt-10"
                 >
                 <h1 class="itbkk-board-name">{{ boardName }}</h1>
                     <div class="flex items-center justify-center">
@@ -590,7 +417,7 @@ onMounted(() => {
                     <p>Collaborator</p>
                 </div>
                 <button
-                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
+                    class="itbkk-button-add right-0 mt-5 flex text-orange-400 md:text-white md:bg-orange-400 items-center justify-center h-14 md:w-40 rounded-xl tooltip tooltip-left"
                     :data-tip="checkAuthToken() && checkOwner() ? 'Add user in Collaborate.' : 'You do not have permission to use this feature.'"          
                     @click="openCreateCollabUser"
                     :disabled="!checkAuthToken() || !checkOwner()"
@@ -609,7 +436,7 @@ onMounted(() => {
                             d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                         />
                     </svg>
-                    <p class="pl-2">Add User</p>
+                    <p class="pl-2 hidden md:block">Add User</p>
                 </button>
             </div>
  
@@ -617,15 +444,16 @@ onMounted(() => {
                         
             </div>
             <!--Table-->
-            <div class=" flex flex-col mt-5 ml-16 w-5/6">
+            <div class=" flex flex-col mt-5 ml-2 lg:ml-16 w-full lg:w-5/6">
                 <!-- Table Header -->
                 <div class="bg-gray-100 p-4 rounded-t-lg shadow-md">
-                    <div class="grid grid-cols-6 gap-5">
+                    <div class="grid grid-cols-7 gap-5 text-xs md:text-sm lg:text-xl">
                         <h3 class="font-bold flex justify-center">No</h3>
                         <h3 class="font-bold flex justify-center">Name</h3>
                         <h3 class="font-bold flex justify-center col-span-2">Email</h3>
-                        <h3 class="font-bold flex justify-center">Access Rigths</h3>
+                        <h3 class="font-bold flex justify-center">Access Rights</h3>
                         <h3 class="font-bold flex justify-center">Action</h3>
+                        <h3 class="font-bold flex justify-center">Status</h3>
                     </div>
                 </div>
                 <!-- Table Body -->
@@ -633,7 +461,7 @@ onMounted(() => {
                 :key="index"
                 class="flex flex-col"
                 >
-                    <div class="grid grid-cols-6 gap-5 mt-5">
+                    <div class="grid grid-cols-7 gap-5 mt-5">
                         <p class="itbkk-item flex justify-center">{{ index+1 }}</p>
                         <p class="itbkk-name flex justify-center">{{ collab.name }}</p>
                         <p class="itbkk-email flex justify-center col-span-2">{{ collab.email }}</p>
@@ -654,7 +482,7 @@ onMounted(() => {
                         >
                             Remove
                         </button>
-
+                        <h3 class="font-bold flex justify-center">{{ collab.status }}</h3>
                     </div>
                 </div>
             </div>

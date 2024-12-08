@@ -11,6 +11,7 @@ import editStatus from '@/components/statuses/editStatus.vue'
 import NotFound from '@/components/errorPage.vue'
 import Collab from '@/components/boards/boardCollab.vue'
 import createCollabUser from '@/components/collab/createCollabUser.vue'
+import collabInvite from '@/components/invite/collabInvite.vue'
 
 
 import login from '@/components/login.vue'
@@ -95,6 +96,17 @@ const router = createRouter({
         },
       ]
     },
+    // {
+    //   path: '/board/:id/collab/invitation',
+    //   name: 'collabInvite',
+    //   component: collabInvite
+    // },
+
+    {
+      path: '/collab/invitation',
+      name: 'collabInvite',
+      component: collabInvite
+    },    
     {
         path: "/",
         redirect: "/board",
