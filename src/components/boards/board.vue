@@ -23,6 +23,7 @@ import boardCollabLeave from "@/components/boards/modalConfirmedLeaveCollab.vue"
 import modalAcceptInvite from "../invite/modalAcceptInvite.vue";
 import boardSlidebar from "./boardSlidebar.vue";
 import sidebarV2 from "./sidebarV2.vue";
+import { EyeIcon } from "@heroicons/vue/24/solid";
 
 const Store = useStore();
 const router = useRouter();
@@ -412,6 +413,8 @@ watch(
   },
   { immediate: true }
 );
+
+let sidebarModal = ref(false)
 </script>
 
 <template>
@@ -444,8 +447,19 @@ watch(
 
   <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
     <!-- Table สำหรับแสดงข้อมูลของ board -->
+     <!-- <div class="">
+      <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="#FFA500"
+            class="size-16 m-2 lg:size-6"
+          >
+            <path
+              d="M6 3a3 3 0 0 0-3 3v2.25a3 3 0 0 0 3 3h2.25a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H6ZM15.75 3a3 3 0 0 0-3 3v2.25a3 3 0 0 0 3 3H18a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3h-2.25ZM6 12.75a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h2.25a3 3 0 0 0 3-3v-2.25a3 3 0 0 0-3-3H6ZM17.625 13.5a.75.75 0 0 0-1.5 0v2.625H13.5a.75.75 0 0 0 0 1.5h2.625v2.625a.75.75 0 0 0 1.5 0v-2.625h2.625a.75.75 0 0 0 0-1.5h-2.625V13.5Z"
+            />
+          </svg>
+     </div> -->
     <sidebarV2 
-      class="w-1/4 bg-gray-200 h-full"
       :boardsPersonal="boardSideBarPersonal"
       :boardsCollab="boardSideBarCollab"
       :boardsPublic="boardSideBarPublic"
@@ -481,15 +495,15 @@ watch(
 
       <div name="PersonalBoard" v-show="checkAuthToken()">
         <div class="flex justify-between text-white">
-          <h1 class="text-3xl font-bold text-black ml-10 mt-10">
+          <h1 class="text-3xl font-bold text-black ml-2 mt-10 mb-6">
             {{
               checkAuthToken() ? `${username} Personal Board` : "Public Board"
             }}
           </h1>
         </div>
-        <div class="flex-grow p-8 overflow-y-auto">
+        <div class="flex-grow p-2 overflow-y-auto ">
           <div class="overflow-x-auto flex-grow p-4 border mb-8">
-            <div class="flex gap-4 flex-nowwrap">
+            <div class="flex gap-4 flex-nowwrap sm:flex-row ">
               <!-- เพิ่ม flex-wrap และ justify-center -->
 
               <!-- OterBoars -->
@@ -567,11 +581,11 @@ watch(
 
       <div name="OtherBoard">
         <div class="flex justify-between text-white">
-          <h1 class="text-3xl font-bold text-black ml-10 mt-10">
+          <h1 class="text-3xl font-bold text-black ml-2 mt-10 mb-6">
             Public Board
           </h1>
         </div>
-        <div class="flex-grow p-8 overflow-y-auto">
+        <div class="flex-grow p-2 overflow-y-auto">
           <div class="overflow-x-auto flex-grow p-4 border mb-8">
             <div class="flex gap-4 flex-nowwrap">
               <!-- เพิ่ม flex-wrap และ justify-center -->
@@ -694,7 +708,7 @@ watch(
               </div>
               <!-- <p class="itbkk-collab-item pt-2">No : {{ index + 1 }}</p> -->
               <p class="itbkk-board-name text-lg font-bold">
-                {{ boardcollab.boardName }}
+                {{ boardcollab.board_name }}
               </p>
               <p class="itbkk-owner-name pt-2">
                 Owner : {{ boardcollab.owner.name }}
@@ -766,7 +780,7 @@ watch(
                   </svg>
                 </div>
                 <p class="itbkk-board-name text-lg font-bold">
-                  Board : {{ boardcollab.boardName }}
+                  Board : {{ boardcollab.board_name }}
                 </p>
                 <p class="itbkk-access-right pt-2">
                   Access Right : {{ boardcollab.accessRight }}

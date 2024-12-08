@@ -80,5 +80,14 @@ const emits = defineEmits(['closemodal', 'confirmed'])
       left: 50%;
       transform: translate(-50%, -50%);
     }
+
+    @media (max-width: 480px) {
+  .button {
+    padding: 8px 15px; /* ลดขนาด padding ให้เล็กลงอีก */
+    font-size: 12px;  /* ลดขนาดฟอนต์ให้เหมาะกับมือถือ */
+    margin: 12px 20px;   /* ลดระยะห่างและจัดให้อยู่ชิดแนวตั้ง */
+    width: 50%;     /* ปรับปุ่มให้ยืดเต็มความกว้าง */
+  }
+}  
 </style>
     

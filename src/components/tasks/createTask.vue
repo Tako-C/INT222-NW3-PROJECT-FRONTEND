@@ -179,7 +179,7 @@ function errorPermition() {
             @click="closeModal()"
         ></div>
         <div
-            class="fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
+            class="fixed bg-white w-[80%] lg:w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
         >
             <div class="rounded-2xl">
                 <h1 class="break-words w-[79%]">
@@ -199,7 +199,7 @@ function errorPermition() {
                     class="itbkk-title w-[80%] h-8 resize-none italic bg-slate-400 bg-opacity-15 rounded-lg border-2 pl-2"
                     maxlength="100"
                 />
-                <p class="flex justify-end pr-28 text-[10px]">
+                <p class="flex justify-end pr-10 md:pr-20 lg:pr-28  text-[10px]">
                     {{
                         taskData.title === null ? "0" : taskData.title.length
                     }}/100
@@ -210,7 +210,7 @@ function errorPermition() {
                     v-model="taskData.description"
                     class="itbkk-description w-[80%] h-[80%] resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-2 overflow-hidden hover:overflow-y-scroll border-2"
                 ></textarea>
-                <p class="flex justify-end pr-28 text-[10px]">
+                <p class="flex justify-end pr-10 md:pr-20 lg:pr-28 text-[10px]">
                     {{
                         taskData.description === null
                             ? "0"
@@ -224,7 +224,7 @@ function errorPermition() {
                     v-model="taskData.assignees"
                     class="itbkk-assignees w-[80%] h-[30%] resize-none bg-gray-400 bg-opacity-15 rounded-lg pl-3 border-2"
                 ></textarea>
-                <p class="flex justify-end pr-28 text-[10px]">
+                <p class="flex justify-end pr-10 md:pr-20 lg:pr-28  text-[10px]">
                     {{
                         taskData.description === null
                             ? "0"
@@ -235,7 +235,7 @@ function errorPermition() {
                 <div class="font-bold">Status</div>
                 <select
                     v-model="taskData.status"
-                    class="itbkk-status w-[30%] h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
+                    class="itbkk-status md:w-[30%] h-8 bg-gray-400 bg-opacity-15 rounded-lg pl-2 pr-2 border-2"
                 >
                     <option
                         class=""
@@ -325,7 +325,12 @@ function errorPermition() {
 .box {
     margin-right: auto;
 }
-
+@media (max-width: 768px) {
+    .button {
+        padding: 10px 30px;
+        font-size: 13px;
+    }
+}
 .modal-overlay {
     position: absolute;
     top: 0;

@@ -306,7 +306,7 @@ onUpdated(() => {
             @click="openStatuses()"
         ></div>
         <div
-            class="fixed bg-white w-[35%] h-auto indicator flex flex-col rounded-2xl shadow-2xl"
+            class="fixed bg-white w-[85%] lg:w-[55%]  h-auto indicator flex flex-col rounded-2xl shadow-2xl"
         >
             <div class="rounded-2xl">
                 <h1 class="break-words w-[79%]">
@@ -441,7 +441,12 @@ onUpdated(() => {
 .box {
     margin-right: auto;
 }
-
+@media (max-width: 768px) {
+    .button {
+        padding: 10px 30px;
+        font-size: 13px;
+    }
+}
 .modal-overlay {
     position: absolute;
     top: 0;

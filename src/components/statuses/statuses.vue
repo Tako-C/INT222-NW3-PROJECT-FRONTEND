@@ -278,7 +278,7 @@ function openBoards() {
 }
 
 function goBack(){
-    router.go(-1);
+    router.push({name: "BoardTask"});
 }
 
 function openCreateStatus() {
@@ -412,17 +412,40 @@ function checkVariable() {
 
     <div class="class name : itbkk-modal-task w-screen bg-white h-screen flex">
         <sidebarV2 
-      class="w-1/4 bg-gray-200 h-full"
       :boardsPersonal="boardSideBarPersonal"
       :boardsCollab="boardSideBarCollab"
       :boardsPublic="boardSideBarPublic"
       />
+                      <!-- back button -->
+                      <div
+                class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-10 w-10 md:h-14 md:w-20 rounded-xl cursor-pointer"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-6"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+                    />
+                </svg>
+
+                <p class="pl-2 hidden md:block" @click="goBack()">Back</p>
+            </div>
 
         <!-- Table สำหรับแสดงข้อมูลของ board -->
+        
         <main class="h-full w-full overflow-y-scroll">
-            <div class="flex justify-between text-white">
+            <!-- Topic -->
+             <!-- respon -->
+            <div class="flex justify-between text-white text-xs sm:text-sm md:text-sm lg:text-lg">
                 <div
-                    class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
+                    class="text-xs sm:text-lg md:text-2xl font-bold text-black flex w-auto ml-2 lg:ml-16 mt-10"
                 >
                     <h1>{{ checkAuthToken() ? username : "Login" }}</h1>
                     <div class="flex items-center justify-center">
@@ -462,7 +485,7 @@ function checkVariable() {
                     <p>Statuses Lists</p>
                 </div>
                 <button
-                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
+                    class="itbkk-button-add right-0 mt-5 flex text-orange-400 md:text-white md:bg-orange-400 items-center justify-center h-14 md:w-40 rounded-xl tooltip tooltip-left"
                     :data-tip="
                         checkAuthToken()
                             ? 'Create your status.'
@@ -486,7 +509,7 @@ function checkVariable() {
                         />
                     </svg>
                     <p
-                        class="pl-2"
+                        class="pl-2 hidden md:block"
                         :class="{
                             'cursor-not-allowed': !checkAuthToken() ,
                             'cursor-pointer': checkAuthToken(),
@@ -497,10 +520,10 @@ function checkVariable() {
                 </button>
             </div>
 
-            <div class="flex flex-col mt-10 ml-16 w-5/6">
+            <div class="flex flex-col mt-10 ml-2 lg:ml-16 w-full lg:w-5/6">
                 <!-- Table Header -->
                 <div class="bg-gray-100 p-4 rounded-t-lg shadow-md">
-                    <div class="grid grid-cols-4 gap-4">
+                    <div class="grid grid-cols-4 gap-4 text-xs md:text-sm lg:text-xl">
                         <h3 class="font-bold">ID</h3>
                         <h3 class="font-bold">Name</h3>
                         <h3 class="font-bold">Description</h3>
@@ -511,7 +534,7 @@ function checkVariable() {
                 <div
                     v-for="(status, index) in Store.statuses"
                     :key="index"
-                    class="itbkk-item bg-white rounded-b-lg shadow-md mb-2"
+                    class="itbkk-item bg-white rounded-b-lg shadow-md mb-2 text-xs sm:text-sm md:text-sm lg:text-lg"
                 >
                     <div class="grid grid-cols-4 gap-4 p-4">
                         <p

@@ -73,8 +73,8 @@ watch([usernameCount, passwordCount], ([username, password]) => {
     <div class="bg-black w-full h-full absolute opacity-60">
       <img src="/images/bg-login.jpg" alt="bg-board" class="w-full h-full object-cover rounded-2xl ">
     </div>
-    <div class="fixed bg-white w-96 h-auto rounded-lg shadow-2xl p-8">
-      <h1 class="text-5xl text-center font-bold text-gray-800 mb-4">LOGIN</h1>
+    <div class="fixed bg-white w-80 lg:w-96 h-auto rounded-lg shadow-2xl p-8">
+      <h1 class="text-4xl lg:text-5xl text-center font-bold text-gray-800 mb-4">LOGIN</h1>
       <p class="text-center text-gray-600 mb-8">
         Please enter your username and password
       </p>

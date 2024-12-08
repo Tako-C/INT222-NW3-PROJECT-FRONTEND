@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { ArrowRightCircleIcon,ArrowLeftCircleIcon } from '@heroicons/vue/24/solid'
 import {
   checkUserInAuthToken,
   checkAuthToken,
@@ -55,6 +56,10 @@ function openBoardTaskModal(boardId) {
   
 }
 
+const isExtend = ref(true)
+function handleExtend(value) {
+  isExtend.value = value
+}
 async function logOut() {
   clearCookies();
   router.push({ name: "login" });
@@ -63,15 +68,22 @@ async function logOut() {
 
 <template>
 <div>
-  <div class="class name : itbkk-modal-task  flex">
-    <header
+  <div class="class name : itbkk-modal-task  flex" @mouseenter="() => handleExtend(true)" @mouseleave="() => handleExtend(false)" >
+    <div v-if="!isExtend" class="bg-[#FFFBDA] h-screen flex items-center rounded-r-2xl mr-2">
+      <ArrowRightCircleIcon class="size-10 text-[#FFBB70] m-2" />
+    </div>
+    <div
+      v-if="isExtend"
       name="header"
-      class="top-0 h-screen w-[100%] border-orange-400 bg-white shadow-lg flex flex-col items-center  px-6 text-white"
+      class="top-0 h-screen w-[100%] border-orange-400 bg-white shadow-lg flex items-center justify-start  pl-6 text-white"
     >
+    <div class="flex flex-col items-center ">
       <div class="flex">
+        
         <div
           class="flex flex-col items-start justify-start first-letter:mx-auto space-x-4 pt-5"
         >
+        
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -91,12 +103,12 @@ async function logOut() {
           </h3>
         </div>
       </div>
-
+  
       <div class="flex flex-col mt-10">
         <!-- PersonalBoard Section -->
         <div
           class="w-60 p-5 flex items-center justify-between cursor-pointer"
-          :class="['rounded-md', { 'bg-orange-400': isBoardPage }]"
+          :class="['rounded-md', { 'bg-[#f7f285]': isBoardPage }]"
           @click="togglePersonalDropdown()"
         >
           <div class="flex items-center">
@@ -352,7 +364,11 @@ async function logOut() {
           </svg>
         </div>
       </div>
-    </header>
+    </div>
+    <div class="bg-[#FFFBDA] w-10 h-screen flex items-center rounded-r-2xl ml-4" @click="handleExtend(false)">
+      <ArrowLeftCircleIcon class="size-10 text-[#FFBB70] m-2" />
+    </div>
+  </div>
         <!-- Main Content Section -->
       <div class="main-content">
       <router-view />

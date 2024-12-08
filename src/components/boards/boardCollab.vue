@@ -207,7 +207,7 @@ function openBoards() {
     router.push({ name: "Board" })
 }
 function goBack(){
-    router.go(-1);
+    router.push({name: 'BoardTask'});
 }
 async function logOut(){
     router.push({ name:'login'})
@@ -364,14 +364,13 @@ onMounted(() => {
         class="z-40"
     />
     <sidebarV2 
-      class="w-1/4 bg-gray-200 h-full"
       :boardsPersonal="boardSideBarPersonal"
       :boardsCollab="boardSideBarCollab"
       :boardsPublic="boardSideBarPublic"
       />
                 <!-- back button -->
                 <div
-                class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-20 rounded-xl cursor-pointer"
+                class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-10 w-10 md:h-14 md:w-20 rounded-xl cursor-pointer"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -388,15 +387,15 @@ onMounted(() => {
                     />
                 </svg>
 
-                <p class="pl-2" @click="goBack()">Back</p>
+                <p class="pl-2 hidden md:block" @click="goBack()">Back</p>
             </div>
  
         <!-- Table สำหรับแสดงข้อมูลของ board -->
         <main class="h-full w-full overflow-y-scroll">
             <!--TOPIC-->
-            <div class="flex justify-between text-white">
+            <div class="flex justify-between text-white text-xs sm:text-sm md:text-sm lg:text-lg">
                 <div
-                    class="text-2xl font-bold text-black flex w-auto ml-16 mt-10"
+                    class="text-xs sm:text-lg md:text-2xl font-bold text-black flex w-auto ml-2 lg:ml-16 mt-10"
                 >
                 <h1 class="itbkk-board-name">{{ boardName }}</h1>
                     <div class="flex items-center justify-center">
@@ -418,7 +417,7 @@ onMounted(() => {
                     <p>Collaborator</p>
                 </div>
                 <button
-                    class="itbkk-button-add right-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-40 rounded-xl tooltip tooltip-left"
+                    class="itbkk-button-add right-0 mt-5 flex text-orange-400 md:text-white md:bg-orange-400 items-center justify-center h-14 md:w-40 rounded-xl tooltip tooltip-left"
                     :data-tip="checkAuthToken() && checkOwner() ? 'Add user in Collaborate.' : 'You do not have permission to use this feature.'"          
                     @click="openCreateCollabUser"
                     :disabled="!checkAuthToken() || !checkOwner()"
@@ -437,7 +436,7 @@ onMounted(() => {
                             d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                         />
                     </svg>
-                    <p class="pl-2">Add User</p>
+                    <p class="pl-2 hidden md:block">Add User</p>
                 </button>
             </div>
  
@@ -445,10 +444,10 @@ onMounted(() => {
                         
             </div>
             <!--Table-->
-            <div class=" flex flex-col mt-5 ml-16 w-5/6">
+            <div class=" flex flex-col mt-5 ml-2 lg:ml-16 w-full lg:w-5/6">
                 <!-- Table Header -->
                 <div class="bg-gray-100 p-4 rounded-t-lg shadow-md">
-                    <div class="grid grid-cols-7 gap-5">
+                    <div class="grid grid-cols-7 gap-5 text-xs md:text-sm lg:text-xl">
                         <h3 class="font-bold flex justify-center">No</h3>
                         <h3 class="font-bold flex justify-center">Name</h3>
                         <h3 class="font-bold flex justify-center col-span-2">Email</h3>

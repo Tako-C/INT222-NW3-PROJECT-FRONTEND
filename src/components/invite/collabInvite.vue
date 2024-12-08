@@ -216,7 +216,7 @@ function openBoards() {
   router.push({ name: "Board" });
 }
 function goBack() {
-  router.go(-1);
+  router.push({name: 'Board'});
 }
 async function logOut() {
   router.push({ name: "login" });
@@ -398,7 +398,27 @@ onMounted(() => {
       :boardsCollab="boardSideBarCollab"
       :boardsPublic="boardSideBarPublic"
       />
+                <!-- back button -->
+                <div
+                class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-10 w-10 md:h-14 md:w-20 rounded-xl cursor-pointer"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-6"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+                    />
+                </svg>
 
+                <p class="pl-2 hidden md:block" @click="goBack()">Back</p>
+            </div>
     <!-- Table สำหรับแสดงข้อมูลของ board -->
     <main class="h-full w-full overflow-y-scroll">
       <!--TOPIC-->
