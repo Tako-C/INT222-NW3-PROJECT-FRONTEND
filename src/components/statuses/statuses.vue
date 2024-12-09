@@ -18,7 +18,6 @@ import {
     checkUserInAuthToken,
     checkrequestNewToken,
 } from "@/libs/authToken.js"
-import boardSlidebar from "../boards/boardSlidebar.vue"
 import sidebarV2 from "../boards/sidebarV2.vue"
 
 const Store = useStore()
@@ -37,19 +36,12 @@ const transferModal = ref(false)
 const errorDeleteStatus = ref(false)
 const successDeleteStatus = ref(false)
 let userLogin = Cookies.get("oid")
-const currentStatus = ref({})
 let boardSideBarPersonal = ref([])
 let boardSideBarCollab = ref([])
 let boardSideBarPublic = ref([])
 let PersonalBoard = ref([]);
 let OtherBoard = ref([]);
 let acceptBoard = [];
-
-const isBoardPage = computed(() => route.path.endsWith(`/board`))
-const isStatusPage = computed(() =>
-    route.path.includes(`/board/${boardId.value}/status`)
-)
-
 
 // watch(
 //     boardId,
@@ -273,9 +265,6 @@ async function removeStatusTransfer(data) {
 }
 
 // ================= Open/Close Page Function ===========================================================================
-function openBoards() {
-    router.push({ name: "Board" })
-}
 
 function goBack(){
     router.push({name: "BoardTask"});
@@ -283,12 +272,6 @@ function goBack(){
 
 function openCreateStatus() {
     router.push({ name: "createStatus" })
-}
-
-function openBoardDetailModal(id) {
-    router.push({ name: "BoardTask", params: { id } })
-    // Update the boardId ref to trigger data fetch
-    boardId.value = id
 }
 
 function openStatuses(id) {
@@ -334,21 +317,9 @@ function errorPermition() {
     router.push({ name: "notFound" })
 }
 
-async function logOut() {
-    clearCookies()
-    router.push({ name: "login" })
-}
-
 // =======================================================================================================================
 
 // ====================== Orther Fucntion ================================================================================
-function toggleStatusDropdown() {
-    isStatusDropdownOpen.value = !isStatusDropdownOpen.value
-}
-
-function toggleTaskDropdown() {
-    isTaskDropdownOpen.value = !isTaskDropdownOpen.value
-}
 
 function getBoardName() {
     const board = Store.boards.boards.find((board) => board.boardId === boardId.value) || Store.boards.collaborate.find((board) => board.boardId === boardId.value)

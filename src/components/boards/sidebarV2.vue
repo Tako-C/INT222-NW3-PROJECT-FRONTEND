@@ -1,19 +1,9 @@
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref,computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ArrowRightCircleIcon,ArrowLeftCircleIcon, ClipboardDocumentIcon, EyeIcon, ChevronDownIcon, UserIcon, UserGroupIcon, SquaresPlusIcon, ArrowLeftStartOnRectangleIcon } from '@heroicons/vue/24/solid'
-import {
-  checkUserInAuthToken,
-  checkAuthToken,
-  checkrequestNewToken,
-} from "@/libs/authToken.js";
-import {
-  clearCookies,
-  PatchData,
-  getAllBoard,
-  getAllBoardByPublic,
-  removeData,
-} from "@/libs/fetchs.js";
+import {checkAuthToken,} from "@/libs/authToken.js";
+import {clearCookies,} from "@/libs/fetchs.js";
 import Cookies from "js-cookie";
 
 const props = defineProps({
@@ -30,6 +20,7 @@ const props = defineProps({
 const router = useRouter();
 const route = useRoute();
 const isBoardPage = computed(() => route.path.startsWith("/board"));
+const isCollabPage = computed(() => route.path.startsWith("/collab"));
 const username = ref(Cookies.get("name"));
 
 const isCollabDropdownOpen = ref(false);
@@ -74,10 +65,9 @@ async function logOut() {
     </div>
     <div
       v-if="isExtend"
-      name="header"
       class="top-0 h-screen w-[100%] border-orange-400 bg-white shadow-lg flex items-center justify-start  pl-6 text-white"
     >
-    <div class="flex flex-col items-center ">
+    <div class="flex flex-col items-center justify-between">
       <div class="flex">
         
         <div
@@ -97,18 +87,13 @@ async function logOut() {
       <div class="flex flex-col mt-10">
         <!-- PersonalBoard Section -->
         <div
-          class="w-60 p-5 flex items-center justify-between cursor-pointer"
-          :class="['rounded-md', { 'bg-orange-400': isBoardPage }]"
+          class="w-60 p-5 flex items-center justify-between cursor-pointer rounded-md bg-orange-400"
           @click="togglePersonalDropdown()"
         >
           <div class="flex items-center">
             <ClipboardDocumentIcon class="size-7"/>
             <p
-              class="pl-3"
-              :class="{
-                'text-white': isBoardPage,
-                'text-slate-400': !isBoardPage,
-              }"
+              class="pl-3 text-white"
             >
               Personal Board
             </p>
@@ -141,18 +126,13 @@ async function logOut() {
 
         <!-- CollabBoard Section -->
         <div
-          class="w-60 p-5 flex items-center justify-between cursor-pointer mt-2"
-          :class="['rounded-md', { 'bg-orange-400': isBoardPage }]"
+          class="w-60 p-5 flex items-center justify-between cursor-pointer mt-2 rounded-md bg-orange-400"
           @click="toggleCollabDropdown()"
         >
           <div class="flex items-center">
             <UserGroupIcon class="size-7"/>
             <p
-              class="pl-3"
-              :class="{
-                'text-white': isBoardPage,
-                'text-slate-400': !isBoardPage,
-              }"
+              class="pl-3 text-white"
             >
               Collaborator Board
             </p>
@@ -185,18 +165,13 @@ async function logOut() {
 
         <!-- PublicBoard Section -->
         <div
-          class="w-60 p-5 flex items-center justify-between cursor-pointer mt-2"
-          :class="['rounded-md', { 'bg-orange-400': isBoardPage }]"
+          class="w-60 p-5 flex items-center justify-between cursor-pointer mt-2 rounded-md bg-orange-400"
           @click="togglePublicDropdown()"
         >
           <div class="flex items-center">
             <EyeIcon class="size-7"/>
             <p
-              class="pl-3"
-              :class="{
-                'text-white': isBoardPage,
-                'text-slate-400': !isBoardPage,
-              }"
+              class="pl-3 text-white"
             >
               Public Board
             </p>

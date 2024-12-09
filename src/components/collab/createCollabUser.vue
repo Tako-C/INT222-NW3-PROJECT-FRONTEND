@@ -44,7 +44,7 @@ function checkUserIsCollab() {
     // console.log(foundBoard);
     for (let i = 0; i < Store.collaborate.length; i++) {
         if (Store.collaborate[i].oid === userLogin && Store.collaborate[i].boardsId === boardId.value) {
-            // console.log(Store.collaborate[i].oid);
+            console.log(Store.collaborate[i].oid);
         // console.log(Store.collaborate[i].boardsId);
             return true 
         }
@@ -80,83 +80,96 @@ async function fetchData() {
         checkUserPermition()
 }
 function addToStore(newBoard) {
-    console.log(newBoard);
+    // console.log(newBoard);
     Store.collaborate.push({ ...newBoard })
-    console.log(Store.collaborate);
+    // console.log(Store.collaborate);
 }
 
 
 
+
+// async function saveBoardData() {
+//     checkrequestNewToken(router)
+
+//             collabData.value.boards = boardId.value
+//             collabData.value.inviteeEmail = collabData.value.email
+//             // collabData.value.name = username.value
+//      // console.log(checkUserIsCollab());
+     
+//             if (checkUserIsCollab()) {
+//                 // console.log(checkUserIsCollab());
+//                 Store.errorPage403 = true
+//                 errorPermition()
+//             } 
+//             else {
+//                 let result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
+//                 // console.log(collabData.value)
+//                 // console.log(result)
+//               // console.log(checkOwner(),checkAuthToken());
+
+
+//     if (checkOwner() && checkAuthToken()) {
+//         // console.log(result)
+        
+//     switch (result.status) {
+//         case 401:
+//             router.push({ name: "login" })
+//             Store.errorToken = true
+//             break
+//         case 400:
+//             // console.log("400 error")
+//             errorPermition()
+//             break
+//         case 404:
+//             Store.errorPage404 = true
+//             // console.log("404 error")
+//             break
+//         case 409:
+//             Store.errorPage409 = true
+//             // console.log("409 error")
+//             break
+//         default:
+//             // console.log(Store.collaborate);
+//             // console.log(result);
+//             // console.log(collabData.value);
+            
+//             // result.user.statusInvite = collabData.value.statusInvite
+//             addToStore(result.user)
+//             // fetchData()
+//             // console.log(result)
+//             closeModal()
+//             break
+//     }
+// } else {
+//     switch (result.status) {
+//         case 403:
+//             Store.errorPage403 = true
+//             errorPermition()
+//             break
+//         case 401:
+//             Store.errorPage401 = true
+//             errorPermition()
+//             break
+//         case 409:
+//             errorPermition()
+//             break
+//     }
+// }
+
+//             }    
+// }
+ 
 
 async function saveBoardData() {
-    checkrequestNewToken(router)
-
+        // checkrequestNewToken(router)
             collabData.value.boards = boardId.value
             collabData.value.inviteeEmail = collabData.value.email
-            // collabData.value.name = username.value
-     // console.log(checkUserIsCollab());
-     
-            if (checkUserIsCollab()) {
-                // console.log(checkUserIsCollab());
-                Store.errorPage403 = true
-                errorPermition()
-            } 
-            else {
-                let result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
-                console.log(collabData.value)
-                console.log(result)
-              // console.log(checkOwner(),checkAuthToken());
 
-
-    if (checkOwner() && checkAuthToken()) {
-        console.log(result)
-        
-    switch (result.status) {
-        case 401:
-            router.push({ name: "login" })
-            Store.errorToken = true
-            break
-        case 400:
-            // console.log("400 error")
-            errorPermition()
-            break
-        case 404:
-            Store.errorPage404 = true
-            // console.log("404 error")
-            break
-        case 409:
-            Store.errorPage409 = true
-            // console.log("409 error")
-            break
-        default:
-            // console.log(Store.collaborate);
-            console.log(result);
-            console.log(collabData.value);
-            
-            result.user.statusInvite = collabData.value.statusInvite
+            console.log(collabData.value)
+            let result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
+            console.log(result)
             addToStore(result.user)
-            // fetchData()
-            // console.log(result)
-            closeModal()
-            break
-    }
-} else {
-    switch (result.status) {
-        case 403:
-            Store.errorPage403 = true
-            errorPermition()
-            break
-        case 401:
-            Store.errorPage401 = true
-            errorPermition()
-            break
-        case 409:
-            errorPermition()
-            break
-    }
-}
-
-            }    
+            closeModal() 
 }
 function errorPermition() {
     router.push({ name: "notFound" })
@@ -181,9 +194,9 @@ function closeNotificationModal() {
 }
 
 onMounted(() => {
-    checkrequestNewToken(router)
-    checkAuthToken()
-    fetchData()
+    // checkrequestNewToken(router)
+    // checkAuthToken()
+    // fetchData()
     
 })
 

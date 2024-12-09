@@ -131,16 +131,6 @@ checkUserPermition()
                     >
                     Cancel
                     </button>
-                    <!-- <button 
-                        type="submit"
-                        class="itbkk-button-ok button buttonOK btn"
-                        @click="saveBoardData()"
-                        :disabled="!TokenLogin || boardData.board_name.length === 0"
-                        :class="{ 'cursor-not-allowed': !TokenLogin }">
-                        
-                        
-                    Add
-                    </button> -->
                     <button 
                         type="submit"
                         class="itbkk-button-ok button buttonOK "

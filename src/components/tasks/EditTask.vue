@@ -15,7 +15,6 @@ const router = useRouter()
 const Store = useStore()
 const isEdited = ref(false)
 const DefualtStatus = 3
-const boardId = ref(route.params.id)
 let statusObject = ref()
 let userLogin = Cookies.get("oid")
 const currentBoardId = ref({})

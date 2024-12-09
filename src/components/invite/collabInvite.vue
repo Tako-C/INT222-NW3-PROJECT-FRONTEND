@@ -16,19 +16,13 @@ import {
   checkrequestNewToken,
 } from "@/libs/authToken.js";
 import modalNotification from "@/components/modals/modalNotification.vue";
-import boardCollabChangeAccessRight from "@/components/collab/modalCollabChangeAccessRight.vue";
 import boardCollabRemove from "@/components/collab/modalConfirmedDeleteCollab.vue";
 import modalAcceptInvite from "./modalAcceptInvite.vue";
-import boardSlidebar from "../boards/boardSlidebar.vue";
 import sidebarV2 from "../boards/sidebarV2.vue";
 
 const Store = useStore();
 const router = useRouter();
 const route = useRoute();
-const isBoardPage = computed(() => route.path.startsWith("/board"));
-const isStatusPage = computed(() =>
-  route.path.startsWith(`/board/${boardId.value}/status`)
-);
 const username = ref(Cookies.get("name"));
 const isTaskDropdownOpen = ref(false);
 const isStatusDropdownOpen = ref(false);
@@ -49,27 +43,10 @@ let PersonalBoard = ref([]);
 let OtherBoard = ref([]);
 let acceptBoard = [];
 let pendingBoard = [];
-// function checkOwner() {
-//   const boardsArray = Array.isArray(Store.boards) ? Store.boards : [];
-//   const collaborateArray = Array.isArray(Store.collaborate)
-//     ? Store.collaborate
-//     : [];
 
-//   const foundBoard =
-//     boardsArray.find((board) => board.boardId === boardId.value) ||
-//     collaborateArray.find((board) => board.boardId === boardId.value);
-//   //   console.log(Store.boards)
 
-//   if (foundBoard) {
-//     const userInboard = foundBoard.owner.oid;
-//     return checkUserInAuthToken(userInboard, userLogin);
-//   }
-//   return false;
-// }
 
-let invite = ref();
 async function fetchData() {
-  let endpoint = "boards";
   let resBoards = await getAllBoard("boards")
 
   Store.boards = resBoards.boards
@@ -196,34 +173,8 @@ function getBoardName() {
 function errorPermition() {
   router.push({ name: "notFound" });
 }
-
-function toggleTaskDropdown() {
-  isTaskDropdownOpen.value = !isTaskDropdownOpen.value;
-}
-
-function toggleStatusDropdown() {
-  isStatusDropdownOpen.value = !isStatusDropdownOpen.value;
-  // checkFirstStatuses()
-}
-
-function openBoardTasks(id) {
-  router.push({ name: "BoardTask", params: { id } });
-  // Update the boardId ref to trigger data fetch
-  boardId.value = id;
-}
-
-function openBoards() {
-  router.push({ name: "Board" });
-}
 function goBack() {
   router.push({name: 'Board'});
-}
-async function logOut() {
-  router.push({ name: "login" });
-}
-function openCreateCollabUser() {
-  fetchData();
-  router.push({ name: "createCollab", params: { id: boardId.value } });
 }
 
 function checkVariable() {
@@ -269,20 +220,6 @@ async function removeCollabUser() {
 
       closeNotificationModal();
     }
-  }
-}
-
-function handleAccessRightChange() {
-  if (!checkOwner() || !checkAuthToken()) {
-    return true;
-  } else {
-  }
-}
-
-function handleDeleteCollab() {
-  if (!checkOwner() || !checkAuthToken()) {
-    return true;
-  } else {
   }
 }
 
@@ -352,7 +289,7 @@ async function declineInvite() {
   }
 
   // closeNotificationModal()
-  // router.push({ name: "Board"});
+  router.push({ name: "Board"});
 }
 
 watch(
@@ -393,7 +330,6 @@ onMounted(() => {
       class="z-40"
     />
     <sidebarV2 
-      class="w-1/4 bg-gray-200 h-full"
       :boardsPersonal="boardSideBarPersonal"
       :boardsCollab="boardSideBarCollab"
       :boardsPublic="boardSideBarPublic"

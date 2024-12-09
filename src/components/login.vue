@@ -4,9 +4,6 @@ import { useRouter } from "vue-router";
 import { useStore } from "@/stores/store";
 import modalNotification from "@/components/modals/modalNotification.vue";
 import { login } from "@/libs/fetchs";
-import { jwtDecode } from "jwt-decode";
-import Cookies from "js-cookie";
-
 
 const router = useRouter();
 const Store = useStore();

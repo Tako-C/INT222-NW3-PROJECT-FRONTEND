@@ -17,13 +17,11 @@ import {
   checkAuthToken,
   checkrequestNewToken,
 } from "@/libs/authToken.js";
-import boardSlidebar from "./boardSlidebar.vue";
 import sidebarV2 from "./sidebarV2.vue";
 
 const Store = useStore();
 const router = useRouter();
 const route = useRoute();
-const loadpage = ref(route.params);
 const boardId = ref(route.params.id);
 const isStatusDropdownOpen = ref(false);
 const isTaskDropdownOpen = ref(false);
@@ -47,34 +45,10 @@ const filterList = ref([]);
 const showStatusList = ref(false);
 let userLogin = Cookies.get("oid");
 
-const isBoardPage = computed(() => route.path.startsWith("/board"));
-const isStatusPage = computed(() =>
-  route.path.startsWith(`/board/${boardId.value}/status`)
-);
-
 let boardnow = ref({});
 let visibilityBoard = ref({});
 let openConfirmedvisibility = ref(false);
 import BoardVisibilityConfirmation from "./boardVisibilityConfirmation.vue";
-
-// function checkFirstStatuses() {
-//     console.log(Store.statuses.length)
-//     let firstStatuses = Store.statuses[0]
-//     console.log(firstStatuses);
-
-//     openStatuses(boardId.value)
-
-// }
-
-// ต้องทำเพราะ cypress  ====================================================================================================
-
-// function loopBoardVisibility() {
-//     for (const board of Store.boards) {
-//         if (board.boardId == boardId.value) {
-//             boardnow.value = board
-//         }
-//     }
-// }
 
 async function fetchData() {
   let endpoint = `${boardId.value}/tasks`;
@@ -90,10 +64,6 @@ async function fetchData() {
   let resBoards = await getAllBoard("boards");
   let resTasks = await getDataByBoard(endpoint);
   let resStatuses = await getDataByBoard(`${boardId.value}/statuses`);
-
-  console.log(resTasks);
-  // console.log(resStatuses);
-  // console.log(resBoards);
 
   if (resTasks.status === 401) {
     router.push({ name: "login" });
@@ -112,16 +82,7 @@ async function fetchData() {
     Store.statuses = resStatuses;
     Store.boards = resBoards;
     Store.collaborate = resBoards.collaborate;
-    // console.log(Store.tasks);
-    // console.log(Store.boards);
-    // console.log(Store.collaborate);
   }
-
-  // Store.collaborate.forEach((collab) => {
-  //   if (collab.status === "ACCEPTED") {
-  //     acceptBoard.push(collab);
-  //   }
-  // });
   loopBoardVisibility();
   extractGroupBoard();
 }
@@ -189,17 +150,6 @@ function loopBoardVisibility() {
   // console.log(Store.boards);
 }
 
-function openConfirmVisibilitymodal() {
-  if (checkAuthToken) {
-    visibilityBoard.value = boardnow.value;
-    // console.log(boardnow.value.visibility)
-
-    openConfirmedvisibility.value = true;
-  } else {
-    errorPermition();
-  }
-}
-
 async function updateVisibility() {
   checkrequestNewToken(router);
 
@@ -259,22 +209,12 @@ async function changeVisibility() {
   openConfirmed.value = false;
 }
 
-function openBoards() {
-  router.push({ name: "Board" });
-}
-
 function goBack() {
-  router.push({name: "Board"});
+  router.push({ name: "Board" });
 }
 
 function openCreateTask() {
   router.push({ name: "createTask" });
-}
-
-function openBoardDetailModal(id) {
-  router.push({ name: "BoardTask", params: { id } });
-  // Update the boardId ref to trigger data fetch
-  boardId.value = id;
 }
 
 function openStatuses(boardId) {
@@ -283,15 +223,6 @@ function openStatuses(boardId) {
 
 function openCollaborator(boardId) {
   router.push({ name: "collab", params: { id: boardId } });
-}
-
-function toggleStatusDropdown() {
-  isStatusDropdownOpen.value = !isStatusDropdownOpen.value;
-  // checkFirstStatuses()
-}
-
-function toggleTaskDropdown() {
-  isTaskDropdownOpen.value = !isTaskDropdownOpen.value;
 }
 
 function getBoardName() {
@@ -412,9 +343,6 @@ function openConfirmModal(id, title) {
   taskID.value = id;
 }
 
-async function logOut() {
-  router.push({ name: "login" });
-}
 function errorPermition() {
   router.push({ name: "notFound" });
 }
@@ -506,15 +434,6 @@ watch(
   { immediate: true }
 );
 
-// watchEffect( async()=> {
-//     console.log(route.params.id)
-//     boardId.value = route.params.id
-//     await fetchData()
-//             getBoardName()
-//             loopBoardVisibility()
-// }
-// )
-
 onMounted(() => {
   checkrequestNewToken(router);
   fetchData();
@@ -522,54 +441,54 @@ onMounted(() => {
 </script>
 
 <template>
-  <modalNotification
-    :errorDelete="errorDelete"
-    :successDelete="successDelete"
-    @closemodal="closeNotificationModal()"
-    v-show="checkVariable()"
-    class="z-30"
-  />
-  <modalconfirmed
-    v-show="openConfirmed"
-    :taskTitle="taskTitle"
-    @closemodal="closeNotificationModal()"
-    @confirmed="removeTask()"
-    class="z-40"
-  />
-  <BoardVisibilityConfirmation
-    :changevisibility="visibilityBoard"
-    v-show="openConfirmedvisibility"
-    @closemodal="closeNotificationModal()"
-    @confirmed="updateVisibility()"
-    class="z-40"
-  />
   <div class="w-screen bg-white h-screen flex">
+    <modalNotification
+      :errorDelete="errorDelete"
+      :successDelete="successDelete"
+      @closemodal="closeNotificationModal()"
+      v-show="checkVariable()"
+      class="z-30"
+    />
+    <modalconfirmed
+      v-show="openConfirmed"
+      :taskTitle="taskTitle"
+      @closemodal="closeNotificationModal()"
+      @confirmed="removeTask()"
+      class="z-40"
+    />
+    <BoardVisibilityConfirmation
+      :changevisibility="visibilityBoard"
+      v-show="openConfirmedvisibility"
+      @closemodal="closeNotificationModal()"
+      @confirmed="updateVisibility()"
+      class="z-40"
+    />
     <sidebarV2
       :boardsPersonal="boardSideBarPersonal"
       :boardsCollab="boardSideBarCollab"
       :boardsPublic="boardSideBarPublic"
     />
-                    <!-- back button -->
-                    <div
-                class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-10 w-10 md:h-14 md:w-20 rounded-xl cursor-pointer"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-6"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
-                    />
-                </svg>
+    <!-- back button -->
+    <div
+      class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-10 w-10 md:h-14 md:w-20 rounded-xl cursor-pointer"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="size-6"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+        />
+      </svg>
 
-                <p class="pl-2 hidden md:block" @click="goBack()">Back</p>
-            </div>
+      <p class="pl-2 hidden md:block" @click="goBack()">Back</p>
+    </div>
 
     <!-- Table สำหรับแสดงข้อมูลของ board -->
     <main class="h-full w-full overflow-y-scroll">
@@ -645,9 +564,7 @@ onMounted(() => {
         </button>
       </div>
       <!-- respon -->
-      <div
-        class="flex flex-col items-center sm:flex-col lg:flex-row "
-      >
+      <div class="flex flex-col items-center sm:flex-col lg:flex-row">
         <!--Search Box-->
         <div class="flex items-center">
           <div>
@@ -686,7 +603,7 @@ onMounted(() => {
           <p class="p-4 mt-5 text-sm lg:text-lg">Filter Status By :</p>
           <div
             v-show="filterList.length === 0"
-            class="italic text-gray-400 mt-5 text-sm lg:text-lg" 
+            class="italic text-gray-400 mt-5 text-sm lg:text-lg"
           >
             No filter yet . . .
           </div>
@@ -828,7 +745,7 @@ onMounted(() => {
       </div>
 
       <!--Table-->
-      <div class="flex flex-col mt-5 ml-2 lg:ml-16 w-full lg:w-4/5 ">
+      <div class="flex flex-col mt-5 ml-2 lg:ml-16 w-full lg:w-4/5">
         <!-- Table Header -->
         <div class="bg-gray-100 p-4 rounded-t-lg shadow-md">
           <!-- respon -->
