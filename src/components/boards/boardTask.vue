@@ -47,6 +47,7 @@ let boardSideBarPublic = ref([]);
 let PersonalBoard = ref([]);
 let OtherBoard = ref([]);
 let acceptBoard = [];
+let boardIsmycollab = ref(false)
 
 const sortStatus = ref(0);
 const newFilterString = ref("");
@@ -74,6 +75,25 @@ async function fetchData() {
   let resTasks = await getDataByBoard(endpoint);
   let resStatuses = await getDataByBoard(`${boardId.value}/statuses`);
 
+  for (let i = 0; i < resBoards.boards.length; i++) {
+    if (resBoards.boards[i].owner.oid === userLogin) {
+      PersonalBoard.value.push(resBoards.boards[i]);
+    }
+
+    if (
+      resBoards.boards[i].owner.oid !== userLogin &&
+      resBoards.boards[i].visibility === "public"
+    ) {
+      OtherBoard.value.push(resBoards.boards[i]);
+    }
+  }
+
+  for (let i = 0; i < resBoards.collaborate.length; i++) {
+    if (resBoards.collaborate[i].visibility === "public") {
+        resBoards.collaborate[i].visibility
+      OtherBoard.value.push(resBoards.collaborate[i]);
+    }
+  }
   if (resTasks.status === 401) {
     router.push({ name: "login" });
     Store.errorToken = true;
@@ -94,6 +114,7 @@ async function fetchData() {
   }
   loopBoardVisibility();
   extractGroupBoard();
+  getMyCollab()
 }
 
 function toggleSort() {
@@ -243,6 +264,31 @@ function getBoardName() {
   }
 }
 
+async function getMyCollab() {
+  let AllCollabInCurrentBoard = []
+  AllCollabInCurrentBoard =  await getDataByBoard(`${boardId.value}/collabs`);
+  console.log(AllCollabInCurrentBoard);
+  
+  let myCollabData = AllCollabInCurrentBoard.collaborators.find((collab)=> collab.oid === userLogin)
+  console.log(myCollabData);
+
+  if (myCollabData.status == "ACCEPTED") {
+      if (myCollabData.accessRight == "write") {
+          boardIsmycollab.value = true
+      } else {
+           boardIsmycollab.value = false
+      }
+
+  } else{
+     boardIsmycollab.value = false
+  }
+  
+  
+  
+}
+
+
+
 function openTaskDetail(taskId) {
   router.push({
     name: "editTask",
@@ -358,40 +404,34 @@ function checkOwner() {
 }
 
 function userCollab() {
-  const userCollab =
-    Store.boards.boards.find((uCollab) => uCollab.boardId === boardId.value) ||
-    Store.boards.collaborate.find(
-      (uCollab) => uCollab.boardId === boardId.value
-    );
+  // const userCollab =
+  //   Store.boards.boards.find((uCollab) => uCollab.boardId === boardId.value) ||
+  //   Store.boards.collaborate.find(
+  //     (uCollab) => uCollab.boardId === boardId.value
+  //   );
 
-  if (checkOwner()) {
-    return true;
-  } else {
-    if (userCollab) {
-      if (userCollab.accessRight == "read") {
-        return false;
-      }
-      if (userCollab.accessRight == "write") {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
+  // if (checkOwner()) {
+  //   return true;
+  // } else {
+  //   if (userCollab) {
+  //     if (userCollab.accessRight == "read") {
+  //       return false;
+  //     }
+  //     if (userCollab.accessRight == "write") {
+  //       return true;
+  //     } else {
+  //       return false;
+  //     }
+  //   } else {
+  //     return false;
+  //   }
+  // }
 }
 
 function extractGroupBoard() {
   boardSideBarPersonal.value = [];
   boardSideBarPublic.value = [];
   boardSideBarCollab.value = [];
-  PersonalBoard.value = Store.boards.boards.filter(
-    (board) => board.owner.oid === userLogin
-  );
-  OtherBoard.value = Store.boards.boards.filter(
-    (board) => board.owner.oid != userLogin
-  );
 
   let CollabBoard = Store.collaborate.filter(
     (collab) => collab.status == "ACCEPTED"
@@ -482,14 +522,21 @@ onMounted(() => {
           <p>Tasks Lists</p>
         </div>
         <button
-          class="itbkk-button-add mt-5 flex text-orange-400 md:text-white md:bg-orange-400 items-center justify-center h-14 md:w-40 rounded-xl tooltip tooltip-left"
-          @click="userCollab() || checkOwner() ? openCreateTask() : ''"
+          class="itbkk-button-add mt-5 flex md:text-white items-center justify-center h-14 md:w-40 rounded-xl tooltip tooltip-left"
+          :class="{
+              'bg-orange-500': boardIsmycollab || checkOwner(),
+              'bg-gray-400': !boardIsmycollab && !checkOwner() ,
+              'cursor-not-allowed': !checkOwner() && !boardIsmycollab,
+              'cursor-pointer': checkOwner() || boardIsmycollab,
+            }"
+          @click="checkOwner() || boardIsmycollab ? openCreateTask() : ''"
           :data-tip="
-            checkAuthToken()
+            boardIsmycollab || checkOwner()
               ? 'Create your task.'
               : 'You do not have permission to use this feature.'
           "
-          :disabled="!checkAuthToken()"
+          :disabled="!checkAuthToken() && !boardIsmycollab"
+          
         >
           <PlusIcon class="size-7" />
           <p class="pl-2 hidden md:block">Create Task</p>
@@ -672,9 +719,15 @@ onMounted(() => {
                 "
               >
                 <TrashIcon
-                  class="size-7 text-red-500"
+                  class="size-7"
+                  :class="{
+                    ' text-red-500': boardIsmycollab || checkOwner(),
+                    'text-gray-400': !boardIsmycollab && !checkOwner() ,
+                    'cursor-not-allowed': !checkOwner() && !boardIsmycollab,
+                    'cursor-pointer': checkOwner() || boardIsmycollab,
+                  }"
                   @click="
-                    checkAuthToken() && userCollab()
+                    checkOwner() || boardIsmycollab
                       ? openConfirmModal(task.id, task.title)
                       : ''
                   "

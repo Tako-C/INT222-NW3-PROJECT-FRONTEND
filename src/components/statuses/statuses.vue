@@ -48,27 +48,29 @@ let boardSideBarPublic = ref([]);
 let PersonalBoard = ref([]);
 let OtherBoard = ref([]);
 let acceptBoard = [];
+let boardIsmycollab = ref(false)
 
-// watch(
-//     boardId,
-//     async (newBoardId) => {
-//         if (newBoardId) {
-//             await fetchData()
-//         }
-//     },
-//     { immediate: true }
-// )
+watch(
+    boardId,
+    async (newBoardId) => {
+        if (newBoardId) {
+            await fetchData()
+        }
+    },
+    { immediate: true }
+)
+
 
 onMounted(() => {
-  fetchData();
+  // fetchData()
   checkrequestNewToken(router);
 });
 
 function checkOwner() {
+  
   const foundBoard =
     Store.boards.boards.find((board) => board.boardId === boardId.value) ||
     Store.boards.collaborate.find((board) => board.boardId === boardId.value);
-  console.log(Store.boards);
 
   if (foundBoard) {
     const userInboard = foundBoard.owner.oid;
@@ -82,33 +84,54 @@ function checkOwner() {
   }
 }
 function userCollab() {
-  const userCollab =
-    Store.boards.boards.find((uCollab) => uCollab.boardId === boardId.value) ||
-    Store.boards.collaborate.find(
-      (uCollab) => uCollab.boardId === boardId.value
-    );
+  // const userCollab =
+  //   Store.boards.boards.find((uCollab) => uCollab.boardId === boardId.value) ||
+  //   Store.boards.collaborate.find(
+  //     (uCollab) => uCollab.boardId === boardId.value
+  //   );
 
-  if (checkOwner()) {
-    return true;
-  } else {
-    if (userCollab) {
-      if (userCollab.accessRight == "read") {
-        console.log("read");
-        return false;
-      }
-      if (userCollab.accessRight == "write") {
-        console.log("write");
-        return true;
-      } else {
-        console.log("Erroe permition");
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
+  // if (checkOwner()) {
+  //   return true;
+  // } else {
+  //   if (userCollab) {
+  //     if (userCollab.accessRight == "read") {
+  //       console.log("read");
+  //       return false;
+  //     }
+  //     if (userCollab.accessRight == "write") {
+  //       console.log("write");
+  //       return true;
+  //     } else {
+  //       console.log("Erroe permition");
+  //       return false;
+  //     }
+  //   } else {
+  //     return false;
+  //   }
+  // }
 }
+async function getMyCollab() {
+  let AllCollabInCurrentBoard = []
+  AllCollabInCurrentBoard =  await getDataByBoard(`${boardId.value}/collabs`);
+  console.log(AllCollabInCurrentBoard);
+  
+  let myCollabData = AllCollabInCurrentBoard.collaborators.find((collab)=> collab.oid === userLogin)
+  console.log(myCollabData);
 
+  if (myCollabData.status == "ACCEPTED") {
+      if (myCollabData.accessRight == "write") {
+          boardIsmycollab.value = true
+      } else {
+           boardIsmycollab.value = false
+      }
+
+  } else{
+     boardIsmycollab.value = false
+  }
+  
+  
+  
+}
 async function fetchData() {
   const endpoint = `${boardId.value}/statuses`;
   let resStatus = await getDataByBoard(endpoint);
@@ -122,8 +145,30 @@ async function fetchData() {
   // Store.collaborate = resBoards.collaborate
   // console.log(Store.collaborate)
   console.log(Store.collaborate);
+  PersonalBoard.value = []
+  OtherBoard.value = []
 
-  getBoardName();
+  for (let i = 0; i < resBoards.boards.length; i++) {
+    if (resBoards.boards[i].owner.oid === userLogin) {
+      PersonalBoard.value.push(resBoards.boards[i]);
+    }
+
+    if (
+      resBoards.boards[i].owner.oid !== userLogin &&
+      resBoards.boards[i].visibility === "public"
+    ) {
+      OtherBoard.value.push(resBoards.boards[i]);
+    }
+  }
+
+  for (let i = 0; i < resBoards.collaborate.length; i++) {
+    if (resBoards.collaborate[i].visibility === "public") {
+        resBoards.collaborate[i].visibility
+      OtherBoard.value.push(resBoards.collaborate[i]);
+    }
+  }
+  getBoardName()
+  getMyCollab()
   switch (resStatus.status) {
     case 401:
       router.push({ name: "login" });
@@ -158,12 +203,8 @@ async function fetchData() {
 
 function extractGroupBoard() {
   console.log(Store.boards);
-  PersonalBoard.value = Store.boards.boards.filter(
-    (board) => board.owner.oid === userLogin
-  );
-  OtherBoard.value = Store.boards.boards.filter(
-    (board) => board.owner.oid != userLogin
-  );
+
+  
   boardSideBarPersonal.value.push(...PersonalBoard.value);
   boardSideBarPublic.value.push(...OtherBoard.value);
   boardSideBarCollab.value.push(...acceptBoard);
@@ -428,21 +469,23 @@ function checkVariable() {
           <p>Statuses Lists</p>
         </div>
         <button
-          class="itbkk-button-add right-0 mt-5 flex text-orange-400 md:text-white md:bg-orange-400 items-center justify-center h-14 md:w-44 rounded-xl tooltip tooltip-left"
+          class="itbkk-button-add mt-5 flex md:text-white items-center justify-center h-14 md:w-40 rounded-xl tooltip tooltip-left"
           :data-tip="
-            checkAuthToken()
+            boardIsmycollab || checkOwner()
               ? 'Create your status.'
               : 'You do not have permission to use this feature.'
           "
-          @click="userCollab() || checkOwner() ? openCreateStatus() : ''"
-        >
-          <PlusIcon class="size-7 ml-2" />
-          <p
-            class="pl-2 hidden md:block"
+          @click=" boardIsmycollab || checkOwner() ? openCreateStatus() : ''"
             :class="{
-              'cursor-not-allowed': !checkAuthToken(),
-              'cursor-pointer': checkAuthToken(),
-            }"
+              'bg-orange-500': boardIsmycollab || checkOwner(),
+              'bg-gray-400': !boardIsmycollab && !checkOwner() ,
+              'cursor-not-allowed': !checkOwner() && !boardIsmycollab,
+              'cursor-pointer': checkOwner() || boardIsmycollab,
+            }"          
+        >
+          <PlusIcon class="size-7" />
+          <p
+            class="pl-2 hidden md:block"         
           >
             Create Status
           </p>
@@ -505,15 +548,17 @@ function checkVariable() {
                 "
               >
                 <TrashIcon
-                  class="size-7 text-red-500"
+                  class="size-7"
                   :class="{
-                    'cursor-not-allowed': !checkAuthToken(),
-                    'cursor-pointer': checkAuthToken(),
+                    ' text-red-500': boardIsmycollab || checkOwner(),
+                    'text-gray-400': !boardIsmycollab && !checkOwner() ,
+                    'cursor-not-allowed': !checkOwner() && !boardIsmycollab,
+                    'cursor-pointer': checkOwner() || boardIsmycollab,
                   }"
                   :disabled="!checkAuthToken()"
                   @click="
-                    checkAuthToken() && userCollab()
-                      ? openConfirmModal(status.statusId, status.name)
+                    checkOwner() || boardIsmycollab
+                      ? openConfirmModal(task.id, task.title)
                       : ''
                   "
                 />

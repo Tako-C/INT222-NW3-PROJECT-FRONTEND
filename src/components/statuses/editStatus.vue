@@ -63,7 +63,7 @@ async function fetchData() {
   if (checkAuthToken()) {
     if (checkUserInAuthToken(userLogin, currentBoardId.value.owner.oid)) {
       if (userCollab()) {
-        console.log("Usercollab accessRight is write");
+        // console.log("Usercollab accessRight is write");
 
         if (currentStatus.name == "No Status" || currentStatus.name == "Done") {
           window.alert("You can not edit this Status.");
@@ -84,6 +84,50 @@ async function fetchData() {
       handlePermissionError(currentStatus);
     }
   }
+}
+
+function userCollab() {
+  const userCollab =
+    Store.boards.boards.find(
+      (uCollab) => uCollab.boardId === currentBoardId.value.boardId
+    ) ||
+    Store.boards.collaborate.find(
+      (uCollab) => uCollab.boardId === currentBoardId.value.boardId
+    );
+  // console.log(userCollab);
+
+  if (checkOwner()) {
+    return true;
+  } else {
+    if (userCollab) {
+      if (userCollab.accessRight == "read") {
+        // console.log("read");
+        return false;
+      }
+      if (userCollab.accessRight == "write") {
+        // console.log("write");
+        return true;
+      } else {
+        // console.log("Erroe permission");
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+}
+
+function checkOwner() {
+  let userInboard = "";
+  const foundBoard =
+    Store.boards.boards.find((board) => board.boardId === boardId.value) ||
+    Store.boards.collaborate.find((board) => board.boardId === boardId.value);
+
+  if (foundBoard.boardId === boardId.value) {
+    userInboard = foundBoard.owner.oid;
+  } else {
+  }
+  return checkUserInAuthToken(userInboard, userLogin);
 }
 
 function handlePermissionError(currentStatus) {

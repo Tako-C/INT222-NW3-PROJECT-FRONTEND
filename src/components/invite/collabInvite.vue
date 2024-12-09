@@ -55,7 +55,27 @@ async function fetchData() {
 
   Store.boards = resBoards.boards;
   Store.collaborate = resBoards.collaborate;
+console.log(resBoards.collaborate[0])
 
+for (let i = 0; i < resBoards.boards.length; i++) {
+    if (resBoards.boards[i].owner.oid === userLogin) {
+      console.log('yoooo')
+      PersonalBoard.value.push(resBoards.boards[i]);
+    }
+
+    if (
+      resBoards.boards[i].owner.oid !== userLogin &&
+      resBoards.boards[i].visibility === "public"
+    ) {
+      OtherBoard.value.push(resBoards.boards[i]);
+    }
+  }
+
+  for (let i = 0; i < Store.collaborate.length; i++) {
+    if (resBoards.collaborate[i].visibility === "public") {
+      OtherBoard.value.push(resBoards.collaborate[i]);
+    }
+  }
   Store.collaborate.forEach((collab) => {
     if (collab.status === "ACCEPTED") {
       acceptBoard.push(collab);
@@ -68,12 +88,6 @@ async function fetchData() {
 }
 
 function extractGroupBoard() {
-  PersonalBoard.value = Store.boards.filter(
-    (board) => board.owner.oid === userLogin
-  );
-  OtherBoard.value = Store.boards.filter(
-    (board) => board.owner.oid != userLogin
-  );
   boardSideBarPersonal.value.push(...PersonalBoard.value);
   boardSideBarPublic.value.push(...OtherBoard.value);
   boardSideBarCollab.value.push(...acceptBoard);
