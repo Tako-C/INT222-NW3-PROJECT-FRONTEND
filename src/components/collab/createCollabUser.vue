@@ -15,17 +15,14 @@ let userLogin = Cookies.get("oid")
 
 
 function checkUserPermition() {
-    // console.log(checkAuthToken(),checkOwner());
     if (!checkAuthToken() || !checkOwner()) {
         Store.errorPage403 = true
-        errorPermition()
+        errorPermission()
         router.push({ name: "notFound" })
     } else {
 
     }
 }
-
-
 
 let accessRightList = ref(['read','write'])
 let collabData = ref({
@@ -40,12 +37,8 @@ function closeModal() {
 }
 
 function checkUserIsCollab() { 
-    // const foundBoard = Store.collaborate.find((board) => board.boardsId === boardId.value && board.oid === userLogin)
-    // console.log(foundBoard);
     for (let i = 0; i < Store.collaborate.length; i++) {
         if (Store.collaborate[i].oid === userLogin && Store.collaborate[i].boardsId === boardId.value) {
-            console.log(Store.collaborate[i].oid);
-        // console.log(Store.collaborate[i].boardsId);
             return true 
         }
     }
@@ -54,16 +47,11 @@ function checkUserIsCollab() {
 function checkOwner() {
     let userInboard = ""
     const foundBoard = Store.boards.find((board) => board.boardId === boardId.value) || Store.collaborate.find((board) => board.boardId)
-    // console.log(foundBoard)
     
     if (foundBoard.boardId === boardId.value) {
         userInboard = foundBoard.owner.oid
         
-    } else {
-        
     }
-    // console.log(userInboard)
-    // console.log(checkUserInAuthToken(userInboard, userLogin));
     
     
     return checkUserInAuthToken(userInboard, userLogin)
@@ -75,103 +63,69 @@ async function fetchData() {
         let resBoards = await getAllBoard(endpoint)
         Store.boards = resBoards.boards
         Store.collaborate = resBoards.collaborate
-        console.log(resBoards.collaborate)
         
         checkUserPermition()
 }
 function addToStore(newBoard) {
-    // console.log(newBoard);
     Store.collaborate.push({ ...newBoard })
-    // console.log(Store.collaborate);
 }
-
-
-
-
-// async function saveBoardData() {
-//     checkrequestNewToken(router)
-
-//             collabData.value.boards = boardId.value
-//             collabData.value.inviteeEmail = collabData.value.email
-//             // collabData.value.name = username.value
-//      // console.log(checkUserIsCollab());
-     
-//             if (checkUserIsCollab()) {
-//                 // console.log(checkUserIsCollab());
-//                 Store.errorPage403 = true
-//                 errorPermition()
-//             } 
-//             else {
-//                 let result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
-//                 // console.log(collabData.value)
-//                 // console.log(result)
-//               // console.log(checkOwner(),checkAuthToken());
-
-
-//     if (checkOwner() && checkAuthToken()) {
-//         // console.log(result)
-        
-//     switch (result.status) {
-//         case 401:
-//             router.push({ name: "login" })
-//             Store.errorToken = true
-//             break
-//         case 400:
-//             // console.log("400 error")
-//             errorPermition()
-//             break
-//         case 404:
-//             Store.errorPage404 = true
-//             // console.log("404 error")
-//             break
-//         case 409:
-//             Store.errorPage409 = true
-//             // console.log("409 error")
-//             break
-//         default:
-//             // console.log(Store.collaborate);
-//             // console.log(result);
-//             // console.log(collabData.value);
-            
-//             // result.user.statusInvite = collabData.value.statusInvite
-//             addToStore(result.user)
-//             // fetchData()
-//             // console.log(result)
-//             closeModal()
-//             break
-//     }
-// } else {
-//     switch (result.status) {
-//         case 403:
-//             Store.errorPage403 = true
-//             errorPermition()
-//             break
-//         case 401:
-//             Store.errorPage401 = true
-//             errorPermition()
-//             break
-//         case 409:
-//             errorPermition()
-//             break
-//     }
-// }
-
-//             }    
-// }
- 
 
 async function saveBoardData() {
-        // checkrequestNewToken(router)
+    checkrequestNewToken(router)
             collabData.value.boards = boardId.value
             collabData.value.inviteeEmail = collabData.value.email
+     
+            if (checkUserIsCollab()) {
+                Store.errorPage403 = true
+                errorPermission()
+            } 
+            else {
+                let result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
 
-            console.log(collabData.value)
-            let result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
-            console.log(result)
+    if (checkOwner() && checkAuthToken()) {
+        
+    switch (result.status) {
+        case 401:
+            router.push({ name: "login" })
+            Store.errorToken = true
+            break
+        case 400:
+            // console.log("400 error")
+            errorPermission()
+            break
+        case 404:
+            Store.errorPage404 = true
+            // console.log("404 error")
+            break
+        case 409:
+            Store.errorPage409 = true
+            // console.log("409 error")
+            break
+        default:
             addToStore(result.user)
-            closeModal() 
+            closeModal()
+            break
+    }
+} else {
+    switch (result.status) {
+        case 403:
+            Store.errorPage403 = true
+            errorPermission()
+            break
+        case 401:
+            Store.errorPage401 = true
+            errorPermission()
+            break
+        case 409:
+            errorPermission()
+            break
+    }
 }
-function errorPermition() {
+
+    }    
+}
+
+function errorPermission() {
     router.push({ name: "notFound" })
 }
 function clearData() {
@@ -250,16 +204,6 @@ onMounted(() => {
                     >
                     Cancel
                     </button>
-                    <!-- <button 
-                        type="submit"
-                        class="itbkk-button-ok button buttonOK btn"
-                        @click="saveBoardData()"
-                        :disabled="!TokenLogin || boardData.board_name.length === 0"
-                        :class="{ 'cursor-not-allowed': !TokenLogin }">
-                        
-                        
-                    Add
-                    </button> -->
                     <button 
                         type="submit"
                         class="itbkk-button-ok button buttonOK "
@@ -294,7 +238,6 @@ onMounted(() => {
     font-size: 16px;
     margin: 4px 2px;
     transition-duration: 0.4s;
-  /* cursor: pointer; */
   border-radius: var(--rounded-btn, 0.5rem);
 }
 

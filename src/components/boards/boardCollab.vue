@@ -18,6 +18,11 @@ import modalNotification from "@/components/modals/modalNotification.vue";
 import boardCollabChangeAccessRight from "@/components/collab/modalCollabChangeAccessRight.vue";
 import boardCollabRemove from "@/components/collab/modalConfirmedDeleteCollab.vue";
 import sidebarV2 from "./sidebarV2.vue";
+import {
+  ArrowUturnLeftIcon,
+  ChevronDoubleRightIcon,
+  PlusIcon,
+} from "@heroicons/vue/24/solid";
 
 const Store = useStore();
 const router = useRouter();
@@ -47,8 +52,6 @@ function checkOwner() {
   const foundBoard =
     boardsArray.find((board) => board.boardId === boardId.value) ||
     collaborateArray.find((board) => board.boardId === boardId.value);
-  //   console.log(Store.boards)
-
   if (foundBoard) {
     const userInboard = foundBoard.owner.oid;
     return checkUserInAuthToken(userInboard, userLogin);
@@ -77,12 +80,11 @@ async function fetchData() {
       OtherBoard.value.push(resultAllBoard.boards[i]);
     }
   }
-  for(let i = 0; i < resultAllBoard.collaborate.length; i++){
+  for (let i = 0; i < resultAllBoard.collaborate.length; i++) {
     if (resultAllBoard.collaborate[i].visibility === "public") {
       OtherBoard.value.push(resultAllBoard.collaborate[i]);
     }
   }
-  console.log(OtherBoard.value);
 
   resultAllBoard.collaborate.forEach((collab) => {
     if (collab.status === "ACCEPTED") {
@@ -90,29 +92,7 @@ async function fetchData() {
     }
   });
 
-  switch (resultColab.status) {
-    case 401:
-      router.push({ name: "login" });
-      Store.errorToken = true;
-      break;
-    case 400:
-      // console.log("400 error")
-      errorPermission();
-      break;
-    case 404:
-      Store.errortext404 = "The Colabulate does not exist";
-      Store.errorPage404 = true;
-      console.log("404 error");
-      errorPermission();
-      break;
-    case 403:
-      Store.errorPage403 = true;
-      // console.log("403 error")
-      errorPermission();
-      break;
-    default:
-      break;
-  }
+  errorDetection(resultColab.status);
   extractGroupBoard();
 }
 
@@ -140,28 +120,19 @@ async function patchAccessRight() {
       accessRight: CollabDetail.value.accessRight,
     }
   );
-  // console.log(visibilityBoard.value)
 
   if (
     checkAuthToken() &&
     checkUserInAuthToken(CollabDetail.value.oid, userLogin)
   ) {
-    if (result.status === 401) {
-      router.push({ name: "login" });
-      Store.errorToken = true;
-    }
-    if (result.status === 404) {
-      errorPermission();
-      Store.errorPage404 = true;
-    } else {
+    errorDetection(result.status);
+    if (result.status === 200) {
       changeAccessRight();
     }
   } else {
-    if (result.status === 403) {
-      Store.errorPage403 = true;
-      errorPermission();
-    }
+    errorDetection(result.status);
   }
+
   closeNotificationModal();
 }
 
@@ -170,14 +141,11 @@ function getBoardName() {
     resultAllBoard.boards.find((b) => b.boardId === boardId.value) ||
     resultAllBoard.collaborate.find((b) => b.boardId === boardId.value);
   if (board) {
-    // console.log(board)
     boardName.value = board.board_name;
   } else {
     console.log("ไม่พบบอร์ด");
     boardName.value = "";
   }
-  // console.log(board)
-  // console.log(resultAllBoard)
 }
 
 function errorPermission() {
@@ -207,14 +175,10 @@ function openConfirmAccessRightModal(collab) {
   const foundBoard = Store.boards.find(
     (board) => board.boardId === boardId.value
   );
-  // console.log(collab);
-  // console.log(foundBoard);
-  // console.log(userLogin);
   if (
     checkAuthToken() &&
     checkUserInAuthToken(foundBoard.owner.oid, userLogin)
   ) {
-    // console.log(visibilityBoard.value.isCheck);
     CollabDetail.value = collab;
     openConfirmedAccessRight.value = true;
     // openConfirmed.value = true
@@ -227,14 +191,10 @@ function openConfirmDeleteCollabModal(collab) {
   const foundBoard = Store.boards.find(
     (board) => board.boardId === boardId.value
   );
-  console.log(collab);
-  // console.log(foundBoard);
-  // console.log(userLogin);
   if (
     checkAuthToken() &&
     checkUserInAuthToken(foundBoard.owner.oid, userLogin)
   ) {
-    // console.log(visibilityBoard.value.isCheck);
     CollabRemove.value = collab;
     openConfirmedRemove.value = true;
     // openConfirmed.value = true
@@ -243,35 +203,22 @@ function openConfirmDeleteCollabModal(collab) {
   }
 }
 async function removeCollabUser() {
-  console.log("remove collab");
-  // let collabBoard = await removeData(`boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`)
-
-  // closeNotificationModal()
-  console.log(CollabRemove.value);
-
   if (checkAuthToken()) {
-    let collabBoard = await removeData(
-      `boards/${CollabRemove.value.boardsId}/collabs/invitations/${CollabRemove.value.oid}`
-    );
-    if (checkUserInAuthToken(userLogin, CollabRemove.value.oid)) {
-      if (collabBoard.status === 401) {
-        router.push({ name: "login" });
-        Store.errorToken = true;
-      }
-      if (collabBoard.status === 404) {
-        errorPermission();
-        Store.errorPage404 = true;
-      }
-      closeNotificationModal();
-    } else {
-      if (collabBoard.status === 403) {
-        Store.errorPage403 = true;
-        errorPermission();
-      }
+    let collabBoard;
 
-      closeNotificationModal();
+    if (CollabRemove.value.status === "PENDING") {
+      collabBoard = await removeData(
+        `boards/${CollabRemove.value.boardsId}/collabs/invitations/${CollabRemove.value.oid}`
+      );
+    } else if (CollabRemove.value.status === "ACCEPTED") {
+      collabBoard = await removeData(
+        `boards/${CollabRemove.value.boardsId}/collabs/${CollabRemove.value.oid}`
+      );
     }
+    errorDetection(collabBoard.status);
   }
+
+  closeNotificationModal();
 }
 
 function handleAccessRightChange() {
@@ -300,13 +247,38 @@ function extractGroupBoard() {
   boardSideBarCollab.value.push(...acceptBoard);
 }
 
+function errorDetection(status) {
+  switch (status) {
+    case 401:
+      router.push({ name: "login" });
+      Store.errorToken = true;
+      break;
+    case 400:
+      // console.log("400 error")
+      errorPermission();
+      break;
+    case 404:
+      Store.errortext404 = "The Colabulate does not exist";
+      Store.errorPage404 = true;
+      // console.log("404 error");
+      errorPermission();
+      break;
+    case 403:
+      Store.errorPage403 = true;
+      // console.log("403 error")
+      errorPermission();
+      break;
+    default:
+      break;
+  }
+}
+
 watch(
   boardId,
   async (newBoardId) => {
     if (newBoardId) {
       await fetchData();
       getBoardName();
-      // console.log(boardName.value);
     }
   },
   { immediate: true }
@@ -344,23 +316,10 @@ onMounted(() => {
     <!-- back button -->
     <div
       class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-14 w-20 rounded-xl cursor-pointer"
+      @click="goBack()"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="size-6"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
-        />
-      </svg>
-
-      <p class="pl-2" @click="goBack()">Back</p>
+      <ArrowUturnLeftIcon class="size-7 text-white" />
+      <p class="pl-2 text-white">Back</p>
     </div>
 
     <!-- Table สำหรับแสดงข้อมูลของ board -->
@@ -374,20 +333,7 @@ onMounted(() => {
         >
           <h1 class="itbkk-board-name">{{ boardName }}</h1>
           <div class="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-8"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
-              />
-            </svg>
+            <ChevronDoubleRightIcon class="size-7" />
           </div>
           <p>Collaborator</p>
         </div>
@@ -401,20 +347,7 @@ onMounted(() => {
           @click="openCreateCollabUser"
           :disabled="!checkAuthToken() || !checkOwner()"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="size-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
+          <PlusIcon class="size-7" />
           <p class="pl-2 hidden md:block">Add User</p>
         </button>
       </div>

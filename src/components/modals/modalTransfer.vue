@@ -1,27 +1,27 @@
 <script setup>
-import { defineEmits, watchEffect } from 'vue'
-import { ref, defineProps } from 'vue'
-import { useStore } from '@/stores/store.js'
-const emits = defineEmits(['closemodal', 'confirmed'])
-const Store = useStore()
+import { defineEmits, watchEffect } from "vue";
+import { ref, defineProps } from "vue";
+import { useStore } from "@/stores/store.js";
+const emits = defineEmits(["closemodal", "confirmed"]);
+const Store = useStore();
 const props = defineProps({
   statusName: { type: String },
-})
+});
 
-const statusData = ref([])
-const transferStatus = ref("No Status")
+const statusData = ref([]);
+const transferStatus = ref("No Status");
 
 watchEffect(() => {
-  statusData.value = [...Store.statuses]
+  statusData.value = [...Store.statuses];
   if (
     props.statusName &&
     statusData.value.some((status) => status.name === props.statusName)
   ) {
     statusData.value = statusData.value.filter(
       (status) => status.name !== props.statusName
-    )
+    );
   }
-})
+});
 </script>
 
 <template>
@@ -120,10 +120,10 @@ watchEffect(() => {
 
 @media (max-width: 480px) {
   .button {
-    padding: 8px 15px; 
-    font-size: 12px;  
-    margin: 12px 20px;  
-    width: 50%;   
+    padding: 8px 15px;
+    font-size: 12px;
+    margin: 12px 20px;
+    width: 50%;
   }
 }
 </style>

@@ -1,38 +1,40 @@
 <script setup>
-import { defineEmits, ref } from 'vue'
+import { defineEmits, ref } from "vue";
 const props = defineProps({
-  changevisibility:{
-    type: Object}
-})
-const emits = defineEmits(['closemodal', 'confirmed'])
+  changevisibility: {
+    type: Object,
+  },
+});
+const emits = defineEmits(["closemodal", "confirmed"]);
 </script>
- 
+
 <template>
-<div class="fixed bg-black bg-opacity-30 w-screen h-screen">
-  <div class="itbkk-modal-alert fixed modal-box">
-    <h3 class="text-lg font-bold">Change visibility</h3>
-    <p class="border-b mt-2"></p>
-    <p class="itbkk-message py-4">
-      Do you want to change board visibility to {{ changevisibility.visibility == 'public' ? 'private' : 'public' }}?
-    </p>
-    <div class="boxButton">
-      <button
-        @click="emits('closemodal')"
-        class="itbkk-button-cancel button buttonCancel"
-      >
-        Cancel
-      </button>
-      <button
-        @click="emits('confirmed')"
-        class="itbkk-button-confirm button buttonConfirm"
-      >
-        Confirm
-      </button>
+  <div class="fixed bg-black bg-opacity-30 w-screen h-screen">
+    <div class="itbkk-modal-alert fixed modal-box">
+      <h3 class="text-lg font-bold">Change visibility</h3>
+      <p class="border-b mt-2"></p>
+      <p class="itbkk-message py-4">
+        Do you want to change board visibility to
+        {{ changevisibility.visibility == "public" ? "private" : "public" }}?
+      </p>
+      <div class="boxButton">
+        <button
+          @click="emits('closemodal')"
+          class="itbkk-button-cancel button buttonCancel"
+        >
+          Cancel
+        </button>
+        <button
+          @click="emits('confirmed')"
+          class="itbkk-button-confirm button buttonConfirm"
+        >
+          Confirm
+        </button>
+      </div>
     </div>
   </div>
-</div>
 </template>
- 
+
 <style scoped>
 .boxButton {
   display: flex;
@@ -54,13 +56,12 @@ const emits = defineEmits(['closemodal', 'confirmed'])
   cursor: pointer;
 }
 
-
 @media (max-width: 480px) {
   .button {
-    padding: 8px 15px; 
-    font-size: 12px;  
-    margin: 12px 20px;  
-    width: 50%;   
+    padding: 8px 15px;
+    font-size: 12px;
+    margin: 12px 20px;
+    width: 50%;
   }
 }
 .buttonCancel {

@@ -1,15 +1,15 @@
 <script setup>
-import { defineEmits } from 'vue'
-import { defineProps } from 'vue'
+import { defineEmits } from "vue";
+import { defineProps } from "vue";
 
-const emits = defineEmits(['closemodal', 'confirmed'])
+const emits = defineEmits(["closemodal", "confirmed"]);
 const props = defineProps({
   statusName: { type: String },
-})
+});
 </script>
 
 <template>
-  <div class=" fixed modal-box">
+  <div class="fixed modal-box">
     <h3 class="text-lg font-bold">Delete a status</h3>
     <p class="border-b mt-2"></p>
     <p class="itbkk-message py-4">
@@ -24,7 +24,7 @@ const props = defineProps({
       </button>
       <button
         @click="emits('confirmed')"
-        class="itbkk-button-confirm  button buttonConfirm"
+        class="itbkk-button-confirm button buttonConfirm"
       >
         Confirm
       </button>
@@ -81,10 +81,10 @@ const props = defineProps({
 }
 @media (max-width: 480px) {
   .button {
-    padding: 8px 15px; 
-    font-size: 12px;  
-    margin: 12px 20px;  
-    width: 50%;   
+    padding: 8px 15px;
+    font-size: 12px;
+    margin: 12px 20px;
+    width: 50%;
   }
 }
 </style>

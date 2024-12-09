@@ -2,11 +2,7 @@
 import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "@/stores/store.js";
-import {
-  PatchData,
-  getAllBoard,
-  removeData,
-} from "@/libs/fetchs.js";
+import { PatchData, getAllBoard, removeData } from "@/libs/fetchs.js";
 
 import {
   checkUserInAuthToken,
@@ -19,7 +15,11 @@ import BoardVisibilityConfirmation from "@/components/boards/boardVisibilityConf
 import modalNotification from "@/components/modals/modalNotification.vue";
 import boardCollabLeave from "@/components/boards/modalConfirmedLeaveCollab.vue";
 import sidebarV2 from "./sidebarV2.vue";
-import { UserGroupIcon, PlusCircleIcon, BellAlertIcon } from "@heroicons/vue/24/solid";
+import {
+  UserGroupIcon,
+  PlusCircleIcon,
+  BellAlertIcon,
+} from "@heroicons/vue/24/solid";
 
 const Store = useStore();
 const router = useRouter();
@@ -49,19 +49,16 @@ let pendingBoard = [];
 
 function assignVisibility(visibility) {
   if (visibility === "public") {
-    return true
+    return true;
   } else {
-    return false
+    return false;
   }
 }
 async function fetchData() {
   let dataRaw = await getAllBoard("boards");
-  console.log(dataRaw);
 
-  
   for (let i = 0; i < dataRaw.boards.length; i++) {
-    console.log(dataRaw.boards[i].owner.oid);
-    dataRaw.boards[i].isCheck = assignVisibility(dataRaw.boards[i].visibility)
+    dataRaw.boards[i].isCheck = assignVisibility(dataRaw.boards[i].visibility);
     if (dataRaw.boards[i].owner.oid === userLogin) {
       PersonalBoard.value.push(dataRaw.boards[i]);
     }
@@ -74,28 +71,26 @@ async function fetchData() {
     }
   }
 
-  for(let i = 0; i < dataRaw.collaborate.length; i++){
+  for (let i = 0; i < dataRaw.collaborate.length; i++) {
     if (dataRaw.collaborate[i].visibility === "public") {
-      dataRaw.collaborate[i].isCheck = assignVisibility(dataRaw.collaborate[i].visibility)
+      dataRaw.collaborate[i].isCheck = assignVisibility(
+        dataRaw.collaborate[i].visibility
+      );
       OtherBoard.value.push(dataRaw.collaborate[i]);
     }
   }
 
-  Store.collaborate = dataRaw.collaborate
+  Store.collaborate = dataRaw.collaborate;
 
   Store.collaborate.forEach((collab) => {
-      if (collab.status === "ACCEPTED") {
-        acceptBoard.push(collab);
-      } else if (collab.status === "PENDING") {
-        pendingBoard.push(collab);
-      }
-    });
-    
-  console.log(PersonalBoard.value);
-  console.log(OtherBoard.value);
-  console.log(Store.collaborate);
+    if (collab.status === "ACCEPTED") {
+      acceptBoard.push(collab);
+    } else if (collab.status === "PENDING") {
+      pendingBoard.push(collab);
+    }
+  });
 
-  extractGroupBoard()
+  extractGroupBoard();
 }
 
 function openBoardTaskModal(boardId) {
@@ -105,16 +100,14 @@ function openBoardDetailModal(boardId) {
   router.push({ name: "BoardDetail", params: { id: boardId } });
 }
 function openCreateBoard(boardId) {
-  // console.log(checkAuthToken())
-
   if (!checkAuthToken) {
-    errorPermition();
+    errorPermission();
   } else {
     router.push({ name: "createBoard", params: { id: boardId } });
   }
 }
 
-function errorPermition() {
+function errorPermission() {
   router.push({ name: "notFound" });
 }
 
@@ -130,7 +123,6 @@ async function updateVisibility() {
   let result = await PatchData(`boards/${visibilityBoard.value.boardId}`, {
     visibility: visibilityBoard.value.visibility,
   });
-  // console.log(visibilityBoard.value)
 
   if (
     checkAuthToken() &&
@@ -145,7 +137,7 @@ async function updateVisibility() {
   } else {
     if (result.status === 403) {
       Store.errorPage403 = true;
-      errorPermition();
+      errorPermission();
     }
   }
 }
@@ -173,40 +165,32 @@ async function changeVisibility() {
 function openConfirmModal(board) {
   if (checkAuthToken() && checkUserInAuthToken(board.owner.oid, userLogin)) {
     visibilityBoard.value = board;
-    // console.log(visibilityBoard.value.isCheck);
     openConfirmedChangeVisibility.value = true;
     // openConfirmed.value = true
   } else {
     Store.errorPage403 = true;
-    errorPermition();
+    errorPermission();
   }
 }
 
 function openConfirmLeaveCollabModal(boardcollab) {
-  console.log(boardcollab);
   const foundBoard = Store.collaborate.find(
     (board) => board.boardId === boardcollab.boardId
   );
-  //   console.log(foundBoard);
 
   if (checkAuthToken()) {
     CollabLeave = boardcollab;
-    console.log(CollabLeave);
     openConfirmedLeaveCollab.value = true;
   } else {
-    // errorPermition()
+    // errorPermission()
   }
 }
 
 function openInvitation() {
-  //   console.log(boardcollab.boardId);
   router.push({ name: "collabInvite" });
-
 }
 
 async function leaveConfirm() {
-  //   console.log("leaveConfirm");
-
   let collabOid;
   let collabBoard = await getAllBoard(`boards/${CollabLeave.boardId}/collabs`);
 
@@ -216,30 +200,26 @@ async function leaveConfirm() {
   }
   if (collabBoard.status === 403) {
     Store.errorPage403 = true;
-    errorPermition();
+    errorPermission();
   }
   if (collabBoard.status === 404) {
     Store.errortext404 = "The Tasks does not exist";
     Store.errorPage404 = true;
-    errorPermition();
+    errorPermission();
   } else {
     for (let i = 0; i < collabBoard.collaborators.length; i++) {
-      // console.log(userLogin);
-      // console.log(collabBoard.collaborators[i]);
       if (userLogin === collabBoard.collaborators[i].oid) {
         console.log(collabBoard.collaborators[i]);
         collabOid = collabBoard.collaborators[i].oid;
         acceptBoard = acceptBoard.filter(
           (info) => info.boardId != collabBoard.collaborators[i].boardsId
         );
-        // console.log(acceptBoard)
       }
     }
 
     let leaveCollab = await removeData(
       `boards/${CollabLeave.boardId}/collabs/${collabOid}`
     );
-    console.log(leaveCollab);
   }
   //   fetchData();
   closeNotificationModal();
@@ -264,7 +244,6 @@ function closeNotificationModal() {
   }
 }
 
-
 function checkVariable() {
   if (Store.errorPrivate404 == true) {
     return true;
@@ -272,8 +251,12 @@ function checkVariable() {
   return false;
 }
 function extractGroupBoard() {
-  PersonalBoard.value.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
-  OtherBoard.value.sort((a, b) => new Date(a.createdOn) - new Date(b.createdOn));
+  PersonalBoard.value.sort(
+    (a, b) => new Date(a.createdOn) - new Date(b.createdOn)
+  );
+  OtherBoard.value.sort(
+    (a, b) => new Date(a.createdOn) - new Date(b.createdOn)
+  );
   boardSideBarPersonal.value.push(...PersonalBoard.value);
   boardSideBarPublic.value.push(...OtherBoard.value);
   boardSideBarCollab.value.push(...acceptBoard);
@@ -293,7 +276,6 @@ watch(
   },
   { immediate: true }
 );
-
 </script>
 
 <template>
@@ -334,18 +316,18 @@ watch(
           </h1>
         </div>
         <button
-        class="itbkk-button-create right-0 ml-3 flex bg-orange-400 items-center justify-center h-10 w-40 rounded-xl tooltip tooltip-left"
-        :data-tip="
-          checkAuthToken()
-            ? 'Create your board.'
-            : 'You do not have permission to use this feature.'
-        "
-        :disabled="!checkAuthToken()"
-        @click="openCreateBoard()"
-      >
-        <PlusCircleIcon class="size-7 text-white"/>
-        <p class="pl-2">Create Board</p>
-      </button>
+          class="itbkk-button-create right-0 ml-3 flex bg-orange-400 items-center justify-center h-10 w-40 rounded-xl tooltip tooltip-left"
+          :data-tip="
+            checkAuthToken()
+              ? 'Create your board.'
+              : 'You do not have permission to use this feature.'
+          "
+          :disabled="!checkAuthToken()"
+          @click="openCreateBoard()"
+        >
+          <PlusCircleIcon class="size-7 text-white" />
+          <p class="pl-2">Create Board</p>
+        </button>
         <div class="flex-grow p-2 overflow-y-auto">
           <div class="overflow-x-auto flex-grow p-4 border mb-8">
             <div class="flex gap-4 flex-nowwrap sm:flex-row">
@@ -519,13 +501,12 @@ watch(
             :key="index"
             class="bg-white rounded-lg shadow flex flex-col items-center"
           >
-            <!-- {{ console.log(boardcollab) }} -->
             <div
               class="p-6 min-w-[250px] max-w-[250px] flex flex-col items-center"
               @click="openBoardTaskModal(boardcollab.boardId)"
             >
               <div class="mb-4">
-              <UserGroupIcon class="size-20 text-blue-300"/>
+                <UserGroupIcon class="size-20 text-blue-300" />
               </div>
               <p class="itbkk-board-name text-lg font-bold">
                 {{ boardcollab.board_name }}
@@ -579,7 +560,7 @@ watch(
                 @click="openInvitation()"
               >
                 <div class="mb-4">
-                <BellAlertIcon class="size-20 text-yellow-400"/>
+                  <BellAlertIcon class="size-20 text-yellow-400" />
                 </div>
                 <p class="itbkk-board-name text-lg font-bold">
                   Board : {{ boardcollab.board_name }}

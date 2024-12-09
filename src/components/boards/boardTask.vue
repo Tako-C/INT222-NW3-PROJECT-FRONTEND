@@ -18,13 +18,22 @@ import {
   checkrequestNewToken,
 } from "@/libs/authToken.js";
 import sidebarV2 from "./sidebarV2.vue";
+import {
+  ArrowUturnLeftIcon,
+  ChevronDoubleRightIcon,
+  PlusIcon,
+  MagnifyingGlassCircleIcon,
+  TrashIcon,
+  XCircleIcon,
+  Bars3Icon,
+  BarsArrowUpIcon,
+  BarsArrowDownIcon,
+} from "@heroicons/vue/24/solid";
 
 const Store = useStore();
 const router = useRouter();
 const route = useRoute();
 const boardId = ref(route.params.id);
-const isStatusDropdownOpen = ref(false);
-const isTaskDropdownOpen = ref(false);
 const boardName = ref("");
 const errorDelete = ref(false);
 const successDelete = ref(false);
@@ -71,12 +80,12 @@ async function fetchData() {
   }
   if (resTasks.status === 403) {
     Store.errorPage403 = true;
-    errorPermition();
+    errorPermission();
   }
   if (resTasks.status === 404) {
     Store.errortext404 = "The Tasks does not exist";
     Store.errorPage404 = true;
-    errorPermition();
+    errorPermission();
   } else {
     Store.tasks = resTasks;
     Store.statuses = resStatuses;
@@ -144,10 +153,7 @@ function loopBoardVisibility() {
       foundBoard.isCheck = false;
     }
     boardnow.value = foundBoard;
-    // console.log(boardnow.value)
   }
-
-  // console.log(Store.boards);
 }
 
 async function updateVisibility() {
@@ -175,11 +181,11 @@ async function updateVisibility() {
   } else {
     if (result.status === 403) {
       Store.errorPage403 = true;
-      errorPermition();
+      errorPermission();
     }
     if (result.status === 401) {
       Store.errorPage401 = true;
-      errorPermition();
+      errorPermission();
     }
   }
   closeNotificationModal();
@@ -231,10 +237,8 @@ function getBoardName() {
     Store.boards.collaborate.find((b) => b.boardId === boardId.value);
 
   if (board) {
-    // console.log(board)
     boardName.value = board.board_name;
   } else {
-    // console.log('ไม่พบบอร์ด')
     boardName.value = "";
   }
 }
@@ -263,16 +267,15 @@ async function removeTask() {
     } else {
       Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value);
       successDelete.value = true;
-      // console.log(successDelete.value)
     }
   } else {
     if (removedTask.status === 403) {
       Store.errorPage403 = true;
-      errorPermition();
+      errorPermission();
     }
     if (removedTask.status === 401) {
       Store.errorPage401 = true;
-      errorPermition();
+      errorPermission();
     }
   }
   fetchData();
@@ -297,9 +300,6 @@ function closeNotificationModal() {
   Store.errorPrivate404 = false;
   Store.errorPrivate404Content = "";
 
-  console.log(Store.boards);
-  console.log(visibilityBoard.value);
-
   let board =
     Store.boards.boards.find(
       (b) => b.boardId === visibilityBoard.value.boardId
@@ -308,7 +308,6 @@ function closeNotificationModal() {
       (b) => b.boardId === visibilityBoard.value.boardId
     );
 
-  console.log(board);
   if (board) {
     if (board.visibility === "public") {
       boardnow.isCheck = true;
@@ -335,15 +334,12 @@ function checkVariable() {
 }
 
 function openConfirmModal(id, title) {
-  // console.log("open delete");
-  // console.log(checkOwner());
-
   openConfirmed.value = true;
   taskTitle.value = title;
   taskID.value = id;
 }
 
-function errorPermition() {
+function errorPermission() {
   router.push({ name: "notFound" });
 }
 
@@ -355,11 +351,9 @@ function checkOwner() {
     const userInboard = foundBoard.owner.oid;
     return checkUserInAuthToken(userInboard, userLogin);
   } else {
-    // console.log(Store.boards);
     Store.errorPage404 = true;
     Store.errortext404 = "The Status does not exist";
     router.push({ name: "notFound" });
-    // }
   }
 }
 
@@ -375,14 +369,11 @@ function userCollab() {
   } else {
     if (userCollab) {
       if (userCollab.accessRight == "read") {
-        console.log("read");
         return false;
       }
       if (userCollab.accessRight == "write") {
-        console.log("write");
         return true;
       } else {
-        console.log("Erroe permition");
         return false;
       }
     } else {
@@ -395,7 +386,6 @@ function extractGroupBoard() {
   boardSideBarPersonal.value = [];
   boardSideBarPublic.value = [];
   boardSideBarCollab.value = [];
-  console.log(Store.boards.boards);
   PersonalBoard.value = Store.boards.boards.filter(
     (board) => board.owner.oid === userLogin
   );
@@ -406,22 +396,16 @@ function extractGroupBoard() {
   let CollabBoard = Store.collaborate.filter(
     (collab) => collab.status == "ACCEPTED"
   );
-  console.log(CollabBoard);
 
   boardSideBarPersonal.value.push(...PersonalBoard.value);
   boardSideBarPublic.value.push(...OtherBoard.value);
   boardSideBarCollab.value.push(...CollabBoard);
-  console.log(boardSideBarPublic.value);
-  console.log(PersonalBoard.value);
-  //   console.log(OtherBoard.value);
 }
-console.log("boom");
 
 watch(
   () => route.params,
   async (newBoardId) => {
     boardId.value = route.params.id;
-    console.log(newBoardId);
 
     if (newBoardId) {
       await fetchData();
@@ -471,23 +455,10 @@ onMounted(() => {
     <!-- back button -->
     <div
       class="fixed right-0 bottom-0 mt-3 flex bg-orange-400 items-center justify-center h-10 w-10 md:h-14 md:w-20 rounded-xl cursor-pointer"
+      @click="goBack()"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="size-6"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
-        />
-      </svg>
-
-      <p class="pl-2 hidden md:block" @click="goBack()">Back</p>
+      <ArrowUturnLeftIcon class="size-7 text-white" />
+      <p class="pl-2 hidden md:block text-white">Back</p>
     </div>
 
     <!-- Table สำหรับแสดงข้อมูลของ board -->
@@ -502,37 +473,11 @@ onMounted(() => {
         >
           <h1>{{ checkAuthToken() ? `${username}` : "Public Board" }}</h1>
           <div class="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-8"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
-              />
-            </svg>
+            <ChevronDoubleRightIcon class="size-7" />
           </div>
           <h1>{{ boardName }}</h1>
           <div class="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-8"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
-              />
-            </svg>
+            <ChevronDoubleRightIcon class="size-7" />
           </div>
           <p>Tasks Lists</p>
         </div>
@@ -546,20 +491,7 @@ onMounted(() => {
           "
           :disabled="!checkAuthToken()"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="size-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
+          <PlusIcon class="size-7" />
           <p class="pl-2 hidden md:block">Create Task</p>
         </button>
       </div>
@@ -579,10 +511,8 @@ onMounted(() => {
                 @keyup.enter="addFilter"
                 class="itbkk-status-filter w-auto text-sm lg:text-lg"
               />
-              <img
-                src="https://www.svgrepo.com/show/46113/magnifying-glass.svg"
-                alt=""
-                class="ml-2 cursor-pointer w-4 h-4"
+              <MagnifyingGlassCircleIcon
+                class="size-8 cursor-pointer -mr-2 text-orange-400"
                 @click="addFilter"
               />
             </div>
@@ -614,10 +544,8 @@ onMounted(() => {
             class="flex justify-center items-center rounded-3xl bg-slate-100 w-auto mt-5 ml-2 p-2"
           >
             <p class="itbkk-filter-item">{{ filter }}</p>
-            <img
-              src="https://www.svgrepo.com/show/21045/delete-button.svg"
-              alt="Delete"
-              class="itbkk-filter-item-clear ml-2 cursor-pointer w-3 h-3"
+            <TrashIcon
+              class="size-5 itbkk-filter-item-clear ml-2 cursor-pointer"
               @click="removeFilter(index)"
             />
           </div>
@@ -626,46 +554,10 @@ onMounted(() => {
             @click="removeAllFilter()"
             class="itbkk-filter-item-clear"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-6 cursor-pointer text-red-500 mt-5 ml-2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-              />
-            </svg>
+            <XCircleIcon class="size-6 cursor-pointer text-red-500 mt-5 ml-2" />
           </div>
         </div>
         <div class="flex">
-          <!-- Visibility -->
-          <!-- <div class="itbkk-board-visibility flex mt-8 ">
-                            <input
-                                type="checkbox"
-                                class=" toggle tooltip tooltip-right "
-                                :class="{
-                                    'cursor-not-allowed ':
-                                        !checkAuthToken()
-                                }"
-                                :data-tip="
-                                    checkAuthToken()
-                                        ? 'change Visibility Board'
-                                        : 'You do not have permission to use this feature.'
-                                "
-                                :disabled="!checkAuthToken()"
-                                v-model="boardnow.isCheck"
-                                @change="openConfirmVisibilitymodal()"
-                                
-                            />
-                            <p class="pl-3">{{ boardnow.visibility }}</p>
-                        </div> -->
-
-          <!--Sort-->
           <!-- respon -->
           <div
             class="itbkk-status-sort cursor-pointer pt-1 flex items-center md:ml-[12%] lg:ml-[20%] mr-[12%] mt-3 text-xs md:text-sm lg:text-lg"
@@ -674,58 +566,19 @@ onMounted(() => {
             <template v-if="sortStatus === 0">
               <div class="flex">
                 <span class="w-20">Sort DEF</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"
-                  />
-                </svg>
+                <Bars3Icon class="size-6" />
               </div>
             </template>
             <template v-else-if="sortStatus === 1">
               <div class="flex">
                 <span class="w-20">Sort ACS</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12"
-                  />
-                </svg>
+                <BarsArrowUpIcon class="size-7" />
               </div>
             </template>
             <template v-else>
               <div class="flex">
                 <span class="w-20">Sort DCS</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25"
-                  />
-                </svg>
+                <BarsArrowDownIcon class="size-7" />
               </div>
             </template>
             <button
@@ -818,25 +671,14 @@ onMounted(() => {
                     : 'You do not have permission to use this feature.'
                 "
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
+                <TrashIcon
+                  class="size-7 text-red-500"
                   @click="
                     checkAuthToken() && userCollab()
                       ? openConfirmModal(task.id, task.title)
                       : ''
                   "
-                  class="size-6 text-red-500"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                  />
-                </svg>
+                />
               </div>
             </div>
           </div>

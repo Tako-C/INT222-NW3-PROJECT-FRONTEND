@@ -1,11 +1,11 @@
 <script setup>
-import { defineEmits } from 'vue'
-import { defineProps } from 'vue'
+import { defineEmits } from "vue";
+import { defineProps } from "vue";
 
-const emits = defineEmits(['closemodal', 'confirmed'])
+const emits = defineEmits(["closemodal", "confirmed"]);
 const props = defineProps({
   taskTitle: { type: String },
-})
+});
 </script>
 
 <template>
@@ -82,10 +82,10 @@ const props = defineProps({
 
 @media (max-width: 480px) {
   .button {
-    padding: 8px 15px; 
-    font-size: 12px;  
-    margin: 12px 20px;  
-    width: 50%;   
+    padding: 8px 15px;
+    font-size: 12px;
+    margin: 12px 20px;
+    width: 50%;
   }
 }
 </style>

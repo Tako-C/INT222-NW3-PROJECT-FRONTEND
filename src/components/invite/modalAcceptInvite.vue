@@ -1,84 +1,82 @@
 <script setup>
 import { defineEmits, ref } from 'vue'
 const props = defineProps({
-  Invitation:{
-    type: Object}
+  Invitation: {
+    type: Object
+  }
 })
 const emits = defineEmits(['closemodal', 'confirmed'])
 </script>
- 
+
 <template>
-    <div class="fixed bg-black bg-opacity-30 w-screen h-screen">
-      <div class="itbkk-modal-alert fixed modal-box">
-        <h3 class="text-lg font-bold">Invited Collaboration</h3>
-        <p class="border-b mt-2"></p>
-        <p class="itbkk-message py-4">
-        <strong>{{ Invitation.owner?.name }}</strong> has invited you to collab board with <strong>{{ Invitation.accessRight }}</strong> access in <strong> {{ Invitation.board_name }}</strong>
-        </p>
-        <div class="boxButton">
-          <button
-            @click="emits('closemodal')"
-            class="itbkk-button-cancel button buttonCancel"
-          >
-            Decline
-          </button>
-          <button
-            @click="emits('confirmed')"
-            class="itbkk-button-confirm button buttonConfirm"
-          >
-            Accept
-          </button>
-        </div>
+  <div class="fixed bg-black bg-opacity-30 w-screen h-screen">
+    <div class="itbkk-modal-alert fixed modal-box">
+      <h3 class="text-lg font-bold">Invited Collaboration</h3>
+      <p class="border-b mt-2"></p>
+      <p class="itbkk-message py-4">
+        <strong>{{ Invitation.owner?.name }}</strong> has invited you to collab board with <strong>{{
+          Invitation.accessRight }}</strong> access in <strong> {{ Invitation.board_name }}</strong>
+      </p>
+      <div class="boxButton">
+        <button @click="emits('closemodal')" class="itbkk-button-cancel button buttonCancel">
+          Decline
+        </button>
+        <button @click="emits('confirmed')" class="itbkk-button-confirm button buttonConfirm">
+          Accept
+        </button>
       </div>
     </div>
-    </template>
-     
+  </div>
+</template>
+
 <style scoped>
-    .boxButton {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: auto;
-    }
-    .button {
-      margin-top: auto;
-      background-color: #04aa6d;
-      border: none;
-      color: white;
-      padding: 10px 30px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 15px;
-      margin: 15px 4px;
-      transition-duration: 0.4s;
-      cursor: pointer;
-    }
-    .buttonCancel {
-      background-color: white;
-      color: black;
-      border: 2px solid red;
-    
-      &:hover {
-        background-color: red;
-        color: white;
-      }
-    }
-    
-    .buttonConfirm {
-      background-color: white;
-      color: black;
-      border: 2px solid #04aa6d;
-    
-      &:hover {
-        background-color: #04aa6d;
-        color: white;
-      }
-    }
-    .modal-box {
-      position: fixed;
-      top: 15%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
+.boxButton {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+.button {
+  margin-top: auto;
+  background-color: #04aa6d;
+  border: none;
+  color: white;
+  padding: 10px 30px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 15px;
+  margin: 15px 4px;
+  transition-duration: 0.4s;
+  cursor: pointer;
+}
+
+.buttonCancel {
+  background-color: white;
+  color: black;
+  border: 2px solid red;
+
+  &:hover {
+    background-color: red;
+    color: white;
+  }
+}
+
+.buttonConfirm {
+  background-color: white;
+  color: black;
+  border: 2px solid #04aa6d;
+
+  &:hover {
+    background-color: #04aa6d;
+    color: white;
+  }
+}
+
+.modal-box {
+  position: fixed;
+  top: 15%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 </style>
-    
