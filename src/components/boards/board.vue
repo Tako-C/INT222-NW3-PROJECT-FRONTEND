@@ -316,7 +316,7 @@ watch(
           </h1>
         </div>
         <button
-          class="itbkk-button-create right-0 ml-3 flex bg-orange-400 items-center justify-center h-10 w-40 rounded-xl tooltip tooltip-left"
+          class="itbkk-button-create right-0 ml-3 flex bg-orange-300 items-center justify-center h-10 w-40 rounded-xl tooltip tooltip-left border-orange-500"
           :data-tip="
             checkAuthToken()
               ? 'Create your board.'
@@ -325,7 +325,7 @@ watch(
           :disabled="!checkAuthToken()"
           @click="openCreateBoard()"
         >
-          <PlusCircleIcon class="size-7 text-white" />
+          <PlusCircleIcon class="size-7" />
           <p class="pl-2">Create Board</p>
         </button>
         <div class="flex-grow p-2 overflow-y-auto">
@@ -333,7 +333,7 @@ watch(
             <div class="flex gap-4 flex-nowwrap sm:flex-row">
               <!-- เพิ่ม flex-wrap และ justify-center -->
 
-              <!-- OterBoars -->
+              <!-- Personal Board -->
               <div
                 v-for="(board, index) in PersonalBoard"
                 :key="index"
@@ -493,7 +493,7 @@ watch(
       </h1>
       <div
         v-show="checkAuthToken() && Store.collaborate.length > 0"
-        class="flex-grow p-4 border"
+        class="flex-grow p-4 border ml-2"
       >
         <div class="flex gap-4 flex-nowwrap">
           <div
@@ -539,14 +539,14 @@ watch(
       </tbody>
 
       <!-- Invite row -->
-      <div v-show="Store.collaborate.length > 0 && checkAuthToken()">
+      <div v-show="pendingBoard.length > 0 ">
         <h1
           v-show="checkAuthToken()"
           class="itbkk-collab-board text-3xl font-bold text-black ml-2 mt-10 mb-6"
         >
           Invite Collab Boards
         </h1>
-        <div class="overflow-x-auto flex-grow p-4 border">
+        <div class="overflow-x-auto flex-grow p-4 border ml-2">
           <div class="flex gap-4 flex-nowwrap">
             <!-- เพิ่ม flex-wrap และ justify-center -->
             <div

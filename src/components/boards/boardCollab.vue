@@ -285,6 +285,7 @@ watch(
 );
 onMounted(() => {
   // fetchData()
+  checkrequestNewToken(router)
 });
 </script>
 <template>
@@ -338,7 +339,12 @@ onMounted(() => {
           <p>Collaborator</p>
         </div>
         <button
-          class="itbkk-button-add right-0 mt-5 flex text-orange-400 md:text-white md:bg-orange-400 items-center justify-center h-14 md:w-40 rounded-xl tooltip tooltip-left"
+          class="itbkk-button-add right-0 mt-5 flex text-orange-400 md:text-white items-center justify-center h-14 md:w-40 rounded-xl tooltip tooltip-left"
+          :class="{
+              'bg-orange-500 cursor-pointer': checkOwner(),
+              'bg-gray-400 cursor-not-allowed': !checkOwner() ,
+            }"
+          
           :data-tip="
             checkAuthToken() && checkOwner()
               ? 'Add user in Collaborate.'
@@ -406,6 +412,10 @@ onMounted(() => {
                   ? 'remove user'
                   : 'You do not have permission to use this feature.'
               "
+              :class="{
+              'cursor-not-allowed': !checkOwner(),
+              'cursor-pointer': checkOwner(),
+            }"
               :disabled="handleDeleteCollab()"
               @click="
                 checkOwner() && checkAuthToken()
@@ -424,9 +434,6 @@ onMounted(() => {
         v-show="Store.collaborate.length == 0"
         class="w-full flex justify-center mt-16"
       >
-        {{
-          Store.collaborate
-        }}
         <tr>
           <td class="text-center" colspan="6">Don't Have collaborate ?</td>
         </tr>

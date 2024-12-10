@@ -10,7 +10,7 @@ import {
   UserIcon,
   UserGroupIcon,
   SquaresPlusIcon,
-  ArrowLeftStartOnRectangleIcon,
+  ArrowLeftOnRectangleIcon,
 } from "@heroicons/vue/24/solid";
 import { checkAuthToken } from "@/libs/authToken.js";
 import { clearCookies } from "@/libs/fetchs.js";
@@ -28,6 +28,7 @@ const props = defineProps({
   },
 });
 
+const isLoggedIn = computed(() => checkAuthToken());
 const router = useRouter();
 const route = useRoute();
 const isBoardPage = computed(() => route.path.startsWith("/board"));
@@ -64,185 +65,183 @@ async function logOut() {
   clearCookies();
   router.push({ name: "login" });
 }
+function handleAuthAction() {
+  if (!isLoggedIn.value) {
+    router.push({ name: "login" });
+  }
+}
 </script>
 
 <template>
-  <div>
+  <div class="h-screen flex">
     <div
-      class="class name : itbkk-modal-task flex"
+      class="relative flex flex-col transition-all duration-300 ease-in-out bg-white shadow-lg"
+      :class="isExtend ? 'w-64' : 'w-16'"
       @mouseenter="() => handleExtend(true)"
       @mouseleave="() => handleExtend(false)"
     >
-      <div
-        v-if="!isExtend"
-        class="bg-[#FFFBDA] h-screen flex items-center rounded-r-2xl mr-2"
-      >
-        <ArrowRightCircleIcon class="size-10 text-[#FFBB70] m-2" />
-      </div>
-      <div
-        v-if="isExtend"
-        class="top-0 h-screen w-[100%] border-orange-400 bg-white shadow-lg flex items-center justify-start pl-6 text-white"
-      >
-        <div class="flex flex-col items-center justify-between">
-          <div class="flex">
-            <div
-              class="flex flex-col items-start justify-start first-letter:mx-auto space-x-4 pt-5"
-            >
-              <SquaresPlusIcon class="size-7 text-orange-400" />
-            </div>
-            <div class="p-5">
-              <h3
-                class="text-xl font-bold font-serif titleShadow text-center text-black"
-              >
-                Kradan Kanban <br />Boards
-              </h3>
-            </div>
-          </div>
-
-          <div class="flex flex-col mt-10">
-            <!-- PersonalBoard Section -->
-            <div
-              class="w-60 p-5 flex items-center justify-between cursor-pointer rounded-md bg-orange-400"
-              @click="togglePersonalDropdown()"
-            >
-              <div class="flex items-center">
-                <ClipboardDocumentIcon class="size-7" />
-                <p class="pl-3 text-white">Personal Board</p>
-              </div>
-              <ChevronDownIcon class="size-5" />
-            </div>
-
-            <!-- Dropdown for PersonalBoard -->
-            <div
-              v-show="isPersonalDropdownOpen"
-              class="w-60 mt-2 pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 overflow-y-auto"
-            >
-              <ul>
-                <li
-                  class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                  @click="openBoards"
-                >
-                  All
-                </li>
-                <li
-                  v-for="(board, index) in boardsPersonal"
-                  :key="index"
-                  class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                  @click="openBoardTaskModal(board.boardId)"
-                >
-                  {{ board.board_name }}
-                </li>
-              </ul>
-            </div>
-
-            <!-- CollabBoard Section -->
-            <div
-              class="w-60 p-5 flex items-center justify-between cursor-pointer mt-2 rounded-md bg-orange-400"
-              @click="toggleCollabDropdown()"
-            >
-              <div class="flex items-center">
-                <UserGroupIcon class="size-7" />
-                <p class="pl-3 text-white">Collaborator Board</p>
-              </div>
-              <ChevronDownIcon class="size-5" />
-            </div>
-
-            <!-- Dropdown for CollabBoards -->
-            <div
-              v-show="isCollabDropdownOpen"
-              class="w-60 mt-2 pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 overflow-y-auto"
-            >
-              <ul>
-                <li
-                  class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                  @click="openBoards"
-                >
-                  All
-                </li>
-                <li
-                  v-for="(board, index) in boardsCollab"
-                  :key="index"
-                  class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                  @click="openBoardTaskModal(board.boardId)"
-                >
-                  {{ board.board_name }}({{ board.owner.name }})
-                </li>
-              </ul>
-            </div>
-
-            <!-- PublicBoard Section -->
-            <div
-              class="w-60 p-5 flex items-center justify-between cursor-pointer mt-2 rounded-md bg-orange-400"
-              @click="togglePublicDropdown()"
-            >
-              <div class="flex items-center">
-                <EyeIcon class="size-7" />
-                <p class="pl-3 text-white">Public Board</p>
-              </div>
-              <ChevronDownIcon class="size-5" />
-            </div>
-
-            <!-- Dropdown for PublicBoards -->
-            <div
-              v-show="isPublicDropdownOpen"
-              class="w-60 mt-2 pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 overflow-y-auto"
-            >
-              <ul>
-                <li
-                  class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                  @click="openBoards"
-                >
-                  All
-                </li>
-                <li
-                  v-for="(board, index) in boardsPublic"
-                  :key="index"
-                  class="py-2 text-slate-400 hover:text-black cursor-pointer"
-                  @click="openBoardTaskModal(board.boardId)"
-                >
-                  {{ board.board_name }}({{ board.owner.name }})
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Login button -->
-          <div
-            class="itbkk-sign-out bg-orange-400 p-2 flex my-14 w-3/4 cursor-pointer"
-            :class="{
-              'justify-between sign-out': checkAuthToken(),
-              'justify-center items-center': !checkAuthToken(),
-            }"
-            @click="logOut()"
-          >
-            <div
-              class="flex items-center space-x-2 p-1"
-              v-show="checkAuthToken()"
-            >
-              <UserIcon class="size-5" />
-            </div>
-            <p class="itbkk-fullname text-sm font-medium p-2">
-              {{ checkAuthToken() ? username : "Login" }}
-            </p>
-            <div
-              class="flex items-center justify-center right-0"
-              v-show="checkAuthToken()"
-            >
-              <ArrowLeftStartOnRectangleIcon class="size-5" />
-            </div>
-          </div>
-        </div>
-        <div
-          class="bg-[#FFFBDA] w-10 h-screen flex items-center rounded-r-2xl ml-4"
-          @click="handleExtend(false)"
+      <!-- Logo and Title -->
+      <div class="flex items-center p-4 bg-orange-100">
+        <SquaresPlusIcon class="h-8 w-8 text-orange-500 flex-shrink-0" />
+        <h3
+          class="ml-2 text-xl font-bold text-orange-800 transition-opacity duration-300"
+          :class="{ 'opacity-0': !isExtend }"
         >
-          <ArrowLeftCircleIcon class="size-10 text-[#FFBB70] m-2" />
+          Kradan Kanban
+        </h3>
+      </div>
+
+      <!-- Board Sections -->
+      <div class="flex-grow overflow-y-auto">
+        <div class="flex flex-col space-y-2 p-4">
+          <!-- PersonalBoard Section -->
+          <div
+            class="w-full p-3 flex items-center justify-between cursor-pointer rounded-md bg-orange-400"
+            @click="togglePersonalDropdown()"
+          >
+            <div class="flex items-center">
+              <ClipboardDocumentIcon class="h-5 w-5 text-white" />
+              <p class="pl-3 text-white" :class="{ 'opacity-0': !isExtend }">Personal Board</p>
+            </div>
+            <ChevronDownIcon class="h-5 w-5 text-white" :class="{ 'opacity-0': !isExtend }" />
+          </div>
+
+          <!-- Dropdown for PersonalBoard -->
+          <div
+            v-show="isPersonalDropdownOpen && isExtend"
+            class="w-full pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 overflow-y-auto"
+          >
+            <ul>
+              <li
+                class="py-2 text-slate-400 hover:text-black cursor-pointer"
+                @click="openBoards"
+              >
+                All
+              </li>
+              <li
+                v-for="(board, index) in boardsPersonal"
+                :key="index"
+                class="py-2 text-slate-400 hover:text-black cursor-pointer"
+                @click="openBoardTaskModal(board.boardId)"
+              >
+                {{ board.board_name }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- CollabBoard Section -->
+          <div
+            class="w-full p-3 flex items-center justify-between cursor-pointer rounded-md bg-orange-400"
+            @click="toggleCollabDropdown()"
+          >
+            <div class="flex items-center">
+              <UserGroupIcon class="h-5 w-5 text-white" />
+              <p class="pl-3 text-white" :class="{ 'opacity-0': !isExtend }">Collaborator Board</p>
+            </div>
+            <ChevronDownIcon class="h-5 w-5 text-white" :class="{ 'opacity-0': !isExtend }" />
+          </div>
+
+          <!-- Dropdown for CollabBoards -->
+          <div
+            v-show="isCollabDropdownOpen && isExtend"
+            class="w-full pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 overflow-y-auto"
+          >
+            <ul>
+              <li
+                class="py-2 text-slate-400 hover:text-black cursor-pointer"
+                @click="openBoards"
+              >
+                All
+              </li>
+              <li
+                v-for="(board, index) in boardsCollab"
+                :key="index"
+                class="py-2 text-slate-400 hover:text-black cursor-pointer"
+                @click="openBoardTaskModal(board.boardId)"
+              >
+                {{ board.board_name }}({{ board.owner.name }})
+              </li>
+            </ul>
+          </div>
+
+          <!-- PublicBoard Section -->
+          <div
+            class="w-full p-3 flex items-center justify-between cursor-pointer rounded-md bg-orange-400"
+            @click="togglePublicDropdown()"
+          >
+            <div class="flex items-center">
+              <EyeIcon class="h-5 w-5 text-white" />
+              <p class="pl-3 text-white" :class="{ 'opacity-0': !isExtend }">Public Board</p>
+            </div>
+            <ChevronDownIcon class="h-5 w-5 text-white" :class="{ 'opacity-0': !isExtend }" />
+          </div>
+
+          <!-- Dropdown for PublicBoards -->
+          <div
+            v-show="isPublicDropdownOpen && isExtend"
+            class="w-full pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 overflow-y-auto"
+          >
+            <ul>
+              <li
+                class="py-2 text-slate-400 hover:text-black cursor-pointer"
+                @click="openBoards"
+              >
+                All
+              </li>
+              <li
+                v-for="(board, index) in boardsPublic"
+                :key="index"
+                class="py-2 text-slate-400 hover:text-black cursor-pointer"
+                @click="openBoardTaskModal(board.boardId)"
+              >
+                {{ board.board_name }}({{ board.owner.name }})
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
-      <!-- Main Content Section -->
-      <div class="main-content">
-        <router-view />
+
+      <!-- Login/Logout Button -->
+      <div class="p-4 mt-auto">
+        <button
+          @click="isLoggedIn ? logOut() : handleAuthAction()"
+          class="btn w-full text-white transition-all ease-in-out relative overflow-hidden group"
+          :class="[
+            isExtend ? 'btn-info hover:bg-primary-focus' : 'btn-info hover:bg-primary/20',
+            { 'justify-start': isExtend, 'justify-center': !isExtend }
+          ]"
+        >
+          <div
+            class="flex items-center justify-center w-full h-full absolute top-0 left-0 transition-all duration-300 ease-in-out"
+            :class="isLoggedIn && isExtend ? 'group-hover:-top-full' : ''"
+          >
+            <UserIcon class="h-5 w-5" :class="{ 'mr-2': isExtend }" />
+            <span v-if="isExtend" class="font-medium">
+              {{ isLoggedIn ? username : "Login" }}
+            </span>
+          </div>
+          <div
+            v-if="isLoggedIn && isExtend"
+            class="flex items-center justify-center w-full h-full absolute top-full left-0 transition-all duration-300 ease-in-out group-hover:top-0"
+          >
+            <ArrowLeftOnRectangleIcon class="h-5 w-5 mr-2" />
+            <span class="font-medium">Logout</span>
+          </div>
+        </button>
       </div>
+
+      <!-- Extend/Collapse Toggle -->
+      <button 
+        @click="handleExtend(!isExtend)"
+        class="absolute top-1/2 -right-3 transform -translate-y-1/2 bg-orange-200 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-transform duration-200 hover:scale-110"
+      >
+        <component :is="isExtend ? ArrowLeftCircleIcon : ArrowRightCircleIcon" class="h-10 w-10 text-orange-600" />
+      </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-auto">
+      <router-view />
     </div>
   </div>
 </template>
