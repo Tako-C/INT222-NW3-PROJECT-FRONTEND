@@ -2,6 +2,11 @@
 import { useStore } from "../../stores/store.js";
 import { defineProps, ref, onMounted, watchEffect } from "vue";
 import { defineEmits } from "vue";
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  XMarkIcon
+} from "@heroicons/vue/24/solid";
 
 const emits = defineEmits(["closemodal"]);
 const props = defineProps({
@@ -136,7 +141,7 @@ function checkEvent() {
 onMounted(checkEvent);
 </script>
 
-<template>
+<!-- <template>
   <div
     class="fixed modal-box z-50"
     :class="{
@@ -186,7 +191,52 @@ onMounted(checkEvent);
       </button>
     </div>
   </div>
+</template> -->
+
+<template>
+  <div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+    <div 
+      class="modal-box max-w-md w-full mx-4 p-6 rounded-lg shadow-xl transition-all duration-300 ease-in-out transform"
+      :class="{
+        'bg-green-50 border-green-500': message.header === 'Success!',
+        'bg-red-50 border-red-500': message.header === 'Error!',
+        'scale-100 opacity-100': true,
+        'scale-95 opacity-0': false
+      }"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center">
+          <CheckCircleIcon v-if="message.header === 'Success!'" class="w-8 h-8 text-green-500 mr-2" />
+          <ExclamationTriangleIcon v-else class="w-8 h-8 text-red-500 mr-2" />
+          <h3 class="text-xl font-bold" :class="{
+            'text-green-700': message.header === 'Success!',
+            'text-red-700': message.header === 'Error!',
+            'text-red-700': message.header === '409 Error!'
+          }">
+            {{ message.header }}
+          </h3>
+        </div>
+        <button @click="emits('closemodal')" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+          <XMarkIcon class="w-6 h-6" />
+        </button>
+      </div>
+
+      <div class="border-t border-gray-200 my-4"></div>
+      
+      <p class="text-gray-600 mb-6">{{ message.detail }}</p>
+      
+      <div class="flex justify-end">
+        <button 
+          @click="emits('closemodal')" 
+          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
+
 
 <style scoped>
 .boxButton {

@@ -103,7 +103,7 @@ async function fetchData() {
     errorPermission();
   }
   if (resTasks.status === 404) {
-    Store.errortext404 = "The Tasks does not exist";
+    Store.errortext404 = "The Board does not exist";
     Store.errorPage404 = true;
     errorPermission();
   } else {
@@ -112,8 +112,8 @@ async function fetchData() {
     Store.boards = resBoards;
     Store.collaborate = resBoards.collaborate;
   }
-  loopBoardVisibility();
-  extractGroupBoard();
+  loopBoardVisibility()
+  extractGroupBoard()
   getMyCollab()
 }
 
@@ -271,8 +271,8 @@ async function getMyCollab() {
   
   let myCollabData = AllCollabInCurrentBoard.collaborators.find((collab)=> collab.oid === userLogin)
   console.log(myCollabData);
-
-  if (myCollabData.status == "ACCEPTED") {
+  if(!checkOwner) {
+    if (myCollabData.status == "ACCEPTED") {
       if (myCollabData.accessRight == "write") {
           boardIsmycollab.value = true
       } else {
@@ -281,9 +281,9 @@ async function getMyCollab() {
 
   } else{
      boardIsmycollab.value = false
+  }  
+  } else {  
   }
-  
-  
   
 }
 
@@ -389,44 +389,21 @@ function errorPermission() {
   router.push({ name: "notFound" });
 }
 
+
 function checkOwner() {
   const foundBoard =
-    Store.boards.boards.find((board) => board.boardId === boardId.value) ||
-    Store.boards.collaborate.find((board) => board.boardId === boardId.value);
+  Store.boards.boards.find((board) => board.boardId === boardId.value) ||
+  Store.boards.collaborate.find((board) => board.boardId === boardId.value);
   if (foundBoard) {
     const userInboard = foundBoard.owner.oid;
     return checkUserInAuthToken(userInboard, userLogin);
-  } else {
+  } else { 
     Store.errorPage404 = true;
-    Store.errortext404 = "The Status does not exist";
-    router.push({ name: "notFound" });
+    Store.errortext404 = "The Board does not exist";
+    router.push({ name: "notFound" })
   }
 }
 
-function userCollab() {
-  // const userCollab =
-  //   Store.boards.boards.find((uCollab) => uCollab.boardId === boardId.value) ||
-  //   Store.boards.collaborate.find(
-  //     (uCollab) => uCollab.boardId === boardId.value
-  //   );
-
-  // if (checkOwner()) {
-  //   return true;
-  // } else {
-  //   if (userCollab) {
-  //     if (userCollab.accessRight == "read") {
-  //       return false;
-  //     }
-  //     if (userCollab.accessRight == "write") {
-  //       return true;
-  //     } else {
-  //       return false;
-  //     }
-  //   } else {
-  //     return false;
-  //   }
-  // }
-}
 
 function extractGroupBoard() {
   boardSideBarPersonal.value = [];
@@ -448,9 +425,9 @@ watch(
     boardId.value = route.params.id;
 
     if (newBoardId) {
-      await fetchData();
-      getBoardName();
-      loopBoardVisibility();
+      await fetchData()
+      getBoardName()
+      loopBoardVisibility()
 
       // checkTokenLogin()
     }
@@ -459,8 +436,7 @@ watch(
 );
 
 onMounted(() => {
-  checkrequestNewToken(router);
-  fetchData();
+  checkrequestNewToken(router)
 });
 </script>
 
@@ -545,7 +521,7 @@ onMounted(() => {
       <!-- respon -->
       <div class="flex flex-col items-center sm:flex-col lg:flex-row">
         <!--Search Box-->
-        <div class="flex items-center">
+        <div class="flex items-center w-[60%]">
           <div>
             <div
               class="flex items-center justify-between input input-bordered w-auto h-10 ml-2 lg:ml-16 mt-5"
@@ -607,7 +583,7 @@ onMounted(() => {
         <div class="flex">
           <!-- respon -->
           <div
-            class="itbkk-status-sort cursor-pointer pt-1 flex items-center md:ml-[12%] lg:ml-[20%] mr-[12%] mt-3 text-xs md:text-sm lg:text-lg"
+            class="itbkk-status-sort cursor-pointer pt-1 flex items-center  md:ml-[12%] lg:ml-[20%] mr-[12%] mt-3 text-xs md:text-sm lg:text-lg"
             @click="toggleSort"
           >
             <template v-if="sortStatus === 0">

@@ -74,13 +74,22 @@ async function saveBoardData() {
     checkrequestNewToken(router)
             collabData.value.boards = boardId.value
             collabData.value.inviteeEmail = collabData.value.email
-     
+
+            let emailCheck = [...collabData.value.email];
+            let emailContain = emailCheck.find((char) => char === '@');
+
+            let result
             if (checkUserIsCollab()) {
                 Store.errorPage403 = true
                 errorPermission()
             } 
             else {
-                let result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
+                if (!emailContain) {
+                    errorPermission()
+                } else {
+                    result = await addData(collabData.value, `boards/${boardId.value}/collabs/invitations`)
+                }
+                
 
     if (checkOwner() && checkAuthToken()) {
         
