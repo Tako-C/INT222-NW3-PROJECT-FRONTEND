@@ -411,6 +411,16 @@ watch(
         </div>
         <div class="flex-grow p-2 overflow-y-auto">
           <div class="overflow-x-auto flex-grow p-4 border mb-8">
+            <tbody
+              v-show="OtherBoard.length === 0"
+              class="bg-white rounded-lg p-6 w-full flex flex-col items-center"
+            >
+              <tr>
+                <td class="text-center" colspan="6">
+                  Don't Have Public Board ?
+                </td>
+              </tr>
+            </tbody>
             <div class="flex gap-4 flex-nowwrap">
               <!-- เพิ่ม flex-wrap และ justify-center -->
 
@@ -526,20 +536,20 @@ watch(
             </button>
           </div>
         </div>
+        <tbody
+          v-show="acceptBoard.length === 0 && checkAuthToken()"
+          class="bg-white rounded-lg p-6 w-full flex flex-col items-center"
+        >
+          <tr>
+            <td class="text-center" colspan="6">
+              Don't Have collaborate Board ?
+            </td>
+          </tr>
+        </tbody>
       </div>
-      <tbody
-        v-show="Store.collaborate.length === 0 && checkAuthToken()"
-        class="bg-white rounded-lg shadow p-6 w-full flex flex-col items-center"
-      >
-        <tr>
-          <td class="text-center" colspan="6">
-            Don't Have collaborate Board ?
-          </td>
-        </tr>
-      </tbody>
 
       <!-- Invite row -->
-      <div v-show="pendingBoard.length > 0 ">
+      <div v-show="pendingBoard.length > 0">
         <h1
           v-show="checkAuthToken()"
           class="itbkk-collab-board text-3xl font-bold text-black ml-2 mt-10 mb-6"
