@@ -92,7 +92,7 @@ function handleAuthAction() {
       </div>
 
       <!-- Board Sections -->
-      <div class="flex-grow overflow-y-auto">
+      <div class="flex-grow">
         <div class="flex flex-col space-y-2 p-4">
           <!-- PersonalBoard Section -->
           <div
@@ -109,7 +109,7 @@ function handleAuthAction() {
           <!-- Dropdown for PersonalBoard -->
           <div
             v-show="isPersonalDropdownOpen && isExtend"
-            class="w-full pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 overflow-y-auto"
+            class="w-full pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 "
           >
             <ul>
               <li
@@ -144,7 +144,7 @@ function handleAuthAction() {
           <!-- Dropdown for CollabBoards -->
           <div
             v-show="isCollabDropdownOpen && isExtend"
-            class="w-full pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 overflow-y-auto"
+            class="w-full pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32"
           >
             <ul>
               <li
@@ -179,7 +179,7 @@ function handleAuthAction() {
           <!-- Dropdown for PublicBoards -->
           <div
             v-show="isPublicDropdownOpen && isExtend"
-            class="w-full pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32 overflow-y-auto"
+            class="w-full pl-4 border border-gray-300 bg-white rounded-md shadow-lg max-h-32"
           >
             <ul>
               <li
@@ -235,7 +235,7 @@ function handleAuthAction() {
         @click="handleExtend(!isExtend)"
         class="absolute top-1/2 -right-3 transform -translate-y-1/2 bg-orange-200 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-transform duration-200 hover:scale-110"
       >
-        <component :is="isExtend ? ArrowLeftCircleIcon : ArrowRightCircleIcon" class="h-10 w-10 text-orange-600" />
+        <component :is="isExtend ? ArrowLeftCircleIcon : ArrowRightCircleIcon" class="h-10 w-10 text-orange-600"/>
       </button>
     </div>
 
