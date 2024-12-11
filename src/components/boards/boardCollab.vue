@@ -144,7 +144,7 @@ function getBoardName() {
   if (board) {
     boardName.value = board.board_name;
   } else {
-    console.log("ไม่พบบอร์ด");
+    //console.log("ไม่พบบอร์ด");
     boardName.value = "";
   }
 }

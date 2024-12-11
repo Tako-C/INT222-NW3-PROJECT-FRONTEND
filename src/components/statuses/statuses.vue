@@ -62,7 +62,6 @@ watch(
 
 
 onMounted(() => {
-  // fetchData()
   checkrequestNewToken(router);
 });
 
@@ -76,47 +75,17 @@ function checkOwner() {
     const userInboard = foundBoard.owner.oid;
     return checkUserInAuthToken(userInboard, userLogin);
   } else {
-    // console.log(Store.boards);
     Store.errorPage404 = true;
     Store.errortext404 = "The Status does not exist";
     router.push({ name: "notFound" });
-    // }
   }
 }
-function userCollab() {
-  // const userCollab =
-  //   Store.boards.boards.find((uCollab) => uCollab.boardId === boardId.value) ||
-  //   Store.boards.collaborate.find(
-  //     (uCollab) => uCollab.boardId === boardId.value
-  //   );
 
-  // if (checkOwner()) {
-  //   return true;
-  // } else {
-  //   if (userCollab) {
-  //     if (userCollab.accessRight == "read") {
-  //       console.log("read");
-  //       return false;
-  //     }
-  //     if (userCollab.accessRight == "write") {
-  //       console.log("write");
-  //       return true;
-  //     } else {
-  //       console.log("Erroe permition");
-  //       return false;
-  //     }
-  //   } else {
-  //     return false;
-  //   }
-  // }
-}
 async function getMyCollab() {
   let AllCollabInCurrentBoard = []
   AllCollabInCurrentBoard =  await getDataByBoard(`${boardId.value}/collabs`);
-  console.log(AllCollabInCurrentBoard);
   
   let myCollabData = AllCollabInCurrentBoard.collaborators.find((collab)=> collab.oid === userLogin)
-  console.log(myCollabData);
 
   if (myCollabData.status == "ACCEPTED") {
       if (myCollabData.accessRight == "write") {
@@ -142,9 +111,6 @@ async function fetchData() {
   Store.statuses = resStatus;
   Store.tasks = resTasks;
   Store.collaborate = resBoards.collaborate;
-  // Store.collaborate = resBoards.collaborate
-  // console.log(Store.collaborate)
-  console.log(Store.collaborate);
   PersonalBoard.value = []
   OtherBoard.value = []
 
@@ -175,18 +141,15 @@ async function fetchData() {
       Store.errorToken = true;
       break;
     case 400:
-      // console.log("400 error")
       errorPermission();
       break;
     case 404:
       Store.errortext404 = "The Status does not exist";
       Store.errorPage404 = true;
-      // console.log("404 error")
       errorPermission();
       break;
     case 403:
       Store.errorPage403 = true;
-      // console.log("403 error")
       errorPermission();
       break;
     default:
@@ -202,19 +165,11 @@ async function fetchData() {
 }
 
 function extractGroupBoard() {
-  console.log(Store.boards);
-
-  
-  boardSideBarPersonal.value.push(...PersonalBoard.value);
-  boardSideBarPublic.value.push(...OtherBoard.value);
-  boardSideBarCollab.value.push(...acceptBoard);
-  console.log(boardSideBarPublic.value);
-  //   console.log(PersonalBoard.value);
-  //   console.log(OtherBoard.value);
+ 
+  boardSideBarPersonal.value.push(...PersonalBoard.value)
+  boardSideBarPublic.value.push(...OtherBoard.value)
+  boardSideBarCollab.value.push(...acceptBoard)
 }
-// =======================================================================================================================
-
-// ======================= Remove function ===============================================================================
 
 async function removeStatus() {
   openConfirmed.value = false;
@@ -225,7 +180,6 @@ async function removeStatus() {
 
   if (removeName.value === "No Status" || removeName.value === "Done") {
     Store.errorDeleteNoStatus = true;
-    // console.log(removeName.value)
     openStatuses(route.params.id);
     return;
   }
@@ -237,7 +191,6 @@ async function removeStatus() {
     const result = await removeData(
       `boards/${route.params.id}/statuses/${removeId.value}`
     );
-    // console.log(result);
 
     if (checkOwner() && checkAuthToken()) {
       if (result.status === 401) {
@@ -558,7 +511,7 @@ function checkVariable() {
                   :disabled="!checkAuthToken()"
                   @click="
                     checkOwner() || boardIsmycollab
-                      ? openConfirmModal(task.id, task.title)
+                      ? openConfirmModal(status.statusId, status.name)
                       : ''
                   "
                 />

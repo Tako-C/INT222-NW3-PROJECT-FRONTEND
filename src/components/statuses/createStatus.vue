@@ -147,22 +147,18 @@ function userCollab() {
     ) ||
     Store.boards.collaborate.find(
       (uCollab) => uCollab.boardId === currentBoardId.value.boardId
-    );
-  console.log(userCollab);
+    )
 
   if (checkOwner()) {
     return true;
   } else {
     if (userCollab) {
       if (userCollab.accessRight == "read") {
-        console.log("read");
         return false;
       }
       if (userCollab.accessRight == "write") {
-        console.log("write");
         return true;
       } else {
-        console.log("Erroe permission");
         return false;
       }
     } else {
