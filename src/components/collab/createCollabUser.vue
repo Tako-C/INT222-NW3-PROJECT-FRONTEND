@@ -216,7 +216,7 @@ onMounted(() => {
                     <button 
                         type="submit"
                         class="itbkk-button-ok button buttonOK "
-                        @click="saveBoardData()"
+                        @click="checkrequestNewToken(router),saveBoardData()"
                         :disabled=" collabData.email.length === 0"
                         :class="{ 'cursor-not-allowed tooltip tooltip-left': !checkAuthToken() }"
                         :data-tip="checkAuthToken() ? '' : 'You do not have permission to use this feature.'"

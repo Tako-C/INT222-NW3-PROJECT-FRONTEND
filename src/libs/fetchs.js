@@ -1,34 +1,29 @@
-
-
-import { getAuthToken,clearCookies,setAuthToken} from '@/libs/authToken.js'
+import { getAuthToken, clearCookies, setAuthToken } from "@/libs/authToken.js"
 // Path URL
 const url = import.meta.env.VITE_BASE_URL
 
 async function requestToken(refresh_token) {
-    console.log(refresh_token)
-    
     const res = await fetch(`${url}/token`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${refresh_token}`,
-        }
+        },
     })
 
     if (res.ok) {
         const result = await res.json()
         if (result) {
-
-            console.log("request successful:", result)
+            //console.log("request successful:", result)
         } else {
             console.error("Token not found in response")
         }
-        console.log("request successful:")
-        console.log(result)
-        
+        //console.log("request successful:")
+        //console.log(result)
+
         return result
     } else {
-        console.log("Error during login:", res.statusText)
+        //console.log("Error during login:", res.statusText)
         return null
     }
 }
@@ -50,20 +45,19 @@ async function login(username, password) {
         if (result) {
             setAuthToken(result)
 
-            console.log("Login successful:", result)
+            //console.log("Login successful:", result)
         } else {
             console.error("Token not found in response")
         }
-        console.log("Login successful:")
+        //console.log("Login successful:")
         return result
     } else {
-        console.log("Error during login:", res.statusText)
+        //console.log("Error during login:", res.statusText)
         return null
     }
 }
 
 async function getDataByBoard(path) {
-    getAuthToken()
     const response = await fetch(`${url}/v3/boards/${path}`, {
         method: "GET",
         headers: {
@@ -82,12 +76,6 @@ async function getDataByBoard(path) {
 }
 
 async function addData(data, path) {
-    getAuthToken()
-
-    if (!getAuthToken()) {
-        console.error("Token not found")
-    }
-
     const response = await fetch(`${url}/v3/${path}`, {
         method: "POST", // or 'PUT' if needed
         headers: {
@@ -99,21 +87,15 @@ async function addData(data, path) {
 
     if (!response.ok) {
         const error = await response.json()
-        return error;
+        return error
     }
 
     const result = await response.json()
-    console.log("Success:", result)
+    //console.log("Success:", result)
     return result
 }
 
 async function editDatas(path, data) {
-    getAuthToken()
-
-    if (!getAuthToken()) {
-
-    }
-
     const response = await fetch(`${url}/v3/${path}`, {
         method: "PUT",
         headers: {
@@ -121,16 +103,16 @@ async function editDatas(path, data) {
             "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-    });
+    })
 
     if (!response.ok) {
         const error = await response.json()
         return error
     }
 
-    const result = await response.json();
-    console.log("Success:", result);
-    return result;
+    const result = await response.json()
+    //console.log("Success:", result);
+    return result
 }
 
 async function removeData(path) {
@@ -142,21 +124,20 @@ async function removeData(path) {
     const response = await fetch(`${url}/v3/${path}`, {
         method: "DELETE",
         headers: {
-            Authorization: `Bearer ${getAuthToken()}`, 
+            Authorization: `Bearer ${getAuthToken()}`,
         },
     })
 
     if (!response.ok) {
         const error = await response.json()
-        return error;
-        
+        return error
     }
 
-    console.log("Task deleted successfully")
+    //console.log("Task deleted successfully")
     return response
 }
 
-async function PatchData(path,data) {
+async function PatchData(path, data) {
     getAuthToken()
     if (!getAuthToken()) {
         console.error("Token not found")
@@ -173,26 +154,18 @@ async function PatchData(path,data) {
 
     if (!response.ok) {
         const error = await response.json()
-        return error;
-        
+        return error
     }
     return response
 }
 
 async function getAllBoard(path) {
-    getAuthToken()
-
-    if (!getAuthToken()) {
-        console.error("Token not found")
-    }
-
     const response = await fetch(`${url}/v3/${path}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${getAuthToken()}`
+            Authorization: `Bearer ${getAuthToken()}`,
         },
-        
     })
 
     if (!response.ok) {
@@ -205,7 +178,6 @@ async function getAllBoard(path) {
 }
 async function getAllBoardByPublic(path) {
     getAuthToken()
-
     if (!getAuthToken()) {
         console.error("Token not found")
     }
@@ -214,9 +186,8 @@ async function getAllBoardByPublic(path) {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            Authorization: ``
+            Authorization: ``,
         },
-        
     })
 
     if (!response.ok) {
@@ -228,7 +199,6 @@ async function getAllBoardByPublic(path) {
 }
 
 async function accept(path) {
-    getAuthToken()
     if (!getAuthToken()) {
         console.error("Token not found")
     }
@@ -236,17 +206,16 @@ async function accept(path) {
     const response = await fetch(`${url}/v3/${path}`, {
         method: "POST",
         headers: {
-            Authorization: `Bearer ${getAuthToken()}`, 
+            Authorization: `Bearer ${getAuthToken()}`,
         },
     })
 
     if (!response.ok) {
         const error = await response.json()
-        return error;
-        
+        return error
     }
 
-    console.log("Task deleted successfully")
+    //console.log("Task deleted successfully")
     return response
 }
 
@@ -261,5 +230,5 @@ export {
     clearCookies,
     PatchData,
     getAllBoard,
-    accept
+    accept,
 }

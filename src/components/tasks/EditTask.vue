@@ -1,27 +1,30 @@
 <script setup>
 import { ref, onMounted, onUpdated, watch } from "vue";
-import { getAllBoard, editDatas } from "@/libs/fetchs.js";
-import { useRoute, useRouter } from "vue-router";
+import { getAllBoard, editDatas,getDataByBoard } from "@/libs/fetchs.js";
+import { useRoute, useRouter  } from "vue-router";
 import { useStore } from "@/stores/store.js";
 import { validateTask } from "@/libs/varidateTask.js";
 import {
   checkrequestNewToken,
   checkAuthToken,
   checkUserInAuthToken,
-} from "@/libs/authToken.js";
-import Cookies from "js-cookie";
+} from "@/libs/authToken.js"
+import Cookies from "js-cookie"
 
 let createTimeInBrowserTimezone = ref(null);
 let updateTimeInBrowserTimezone = ref(null);
 let browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-const route = useRoute();
-const router = useRouter();
-const Store = useStore();
-const isEdited = ref(false);
-const DefualtStatus = 3;
-let statusObject = ref();
-let userLogin = Cookies.get("oid");
-const currentBoardId = ref({});
+const route = useRoute()
+const router = useRouter()
+const Store = useStore()
+const boardId = ref(route.params.id)
+const isEdited = ref(false)
+const DefualtStatus = 3
+let statusObject = ref()
+let userLogin = Cookies.get("oid")
+const currentBoardId = ref({})
+let boardIsmycollab = ref(false)
+
 
 let taskData = ref({
   id: "",
@@ -54,31 +57,10 @@ function convertToBrowserTimezone(utcTime) {
   const browserTime = date.toLocaleString("en-AU", options);
   return browserTime;
 }
-// console.log(route.params.taskId)
 
-// function checkOwner() {
-//     let userInboard = ''
-//     for (const board of Store.boards) {
-//         if (board.boardId === boardId.value) {
-//             userInboard = board.owner.oid
-//             // console.log(userInboard);
-//             // break
-//         } else{
-//             // router.push({ name: "notFound" })
-//         }
-
-//     }
-//     return checkUserInAuthToken(userInboard,userLogin)
-// }
 
 function checkOwner() {
   let userInboard = "";
-  // for (const board of Store.boards.boards) {
-  //     if (board.boardId === currentBoardId.value) {
-  //         userInboard = board.owner.oid
-  //     } else{
-  //     }
-  // }
   const OwnerBoard =
     Store.boards.boards.find(
       (uCollab) => uCollab.board_name === currentBoardId.value.boardName
@@ -112,6 +94,28 @@ function userCollab() {
       return false;
     }
   }
+}
+async function getMyCollab() {
+    let AllCollabInCurrentBoard = []
+    AllCollabInCurrentBoard = await getDataByBoard(`${boardId.value}/collabs`)
+
+    let myCollabData = AllCollabInCurrentBoard.collaborators.find(
+        (collab) => collab.oid === userLogin
+    )
+    if (!checkOwner()) {
+        if (!checkAuthToken()) {
+            boardIsmycollab.value = false
+        } else if (myCollabData.status == "ACCEPTED") {
+            if (myCollabData.accessRight == "write") {
+                boardIsmycollab.value = true
+            } else {
+                boardIsmycollab.value = false
+            }
+        } else {
+            boardIsmycollab.value = false
+        }
+    } else {
+    }
 }
 
 function userCollabWrite() {
@@ -177,21 +181,13 @@ async function fetchData() {
     if (checkUserInAuthToken(userLogin, currentBoardId.value.owner?.oid)) {
     }
     if (userCollab()) {
-      console.log("Usercollab accessRight is write or read");
       if (currentBoardId.value.status === 404) {
         closeModal();
         Store.errorPage403 = true;
       } else {
-        // taskData.value = currentBoardId
-        // originalStatusData.value = { ...statusData.value }
-
         statusObject = Store.statuses.find(
           (status) => status.name === currentBoardId.value.statusName
         );
-        // console.log( Store.statuses );
-        // console.log(currentBoardId.value.statusName);
-        // console.log(statusObject);
-
         currentBoardId.value.status = statusObject.statusId;
         taskData.value = currentBoardId.value;
         originalTaskData.value = { ...taskData.value };
@@ -203,7 +199,6 @@ async function fetchData() {
         );
       }
     } else {
-      console.log("Usercollab accessRight is not permition");
 
       if (currentBoardVisibility === "private") {
         Store.errorPage403 = true;
@@ -235,8 +230,8 @@ async function fetchData() {
       errorPermission();
     }
     if (currentBoardVisibility === "public") {
-      if (currentStatus.status === 404) {
-        closeModal();
+      if (currentBoardId.value.status === 404) {
+        closeModal()
         // Store.errorNotfoundStatus = true
       } else {
         statusObject = Store.statuses.find(
@@ -254,31 +249,11 @@ async function fetchData() {
       }
     }
   }
-
-  // if (result.status === 404) {
-  //     router.push({ name: "BoardTask", params: { id: route.params.id } })
-  //     Store.errorUpdateTask = true
-  // }
-  // if (result.status === 401) {
-  //     router.push({ name: "login" })
-  //     Store.errorToken = true
-  // } else {
-  //     statusObject = Store.statuses.find(
-  //         (status) => status.name === result.statusName
-  //     )
-  //     result.status = statusObject.statusId
-  //     taskData.value = result
-  //     originalTaskData.value = { ...taskData.value }
-  //     createTimeInBrowserTimezone = convertToBrowserTimezone(result.createdOn)
-  //     updateTimeInBrowserTimezone = convertToBrowserTimezone(result.updatedOn)
-  // }
-
-  // } else {
-  //     router.push({ name: "notFound" })
-  // }
+  getMyCollab()
 }
 
 async function updateTask() {
+  checkrequestNewToken(router)
   if (!validateTask(taskData.value)) {
     return;
   }
@@ -306,7 +281,6 @@ async function updateTask() {
       router.push({ name: "login" });
       Store.errorToken = true;
     } else {
-      // TaskID.value = result.id
       Store.successUpdateTask = true;
       addToStore();
     }
@@ -322,7 +296,6 @@ async function updateTask() {
       Store.errorPage403 = true;
       errorPermission();
     }
-    // errorPermission()
   }
 }
 
@@ -344,46 +317,22 @@ function addToStore() {
   } else {
     Store.tasks.push(taskData.value);
   }
-  // console.log(Store.tasks)
 
-  closeModal();
+  closeModal()
 }
 
 function closeModal() {
-  router.push({ name: "BoardTask", params: { id: route.params.id } });
-}
-
-// function checkTokenLogin() {
-//     TokenLogin.value = getAuthToken()
-// }
-
-function checkUserPermition() {
-  // console.log(checkAuthToken())
-  if (checkAuthToken() === false) {
-    errorPermission();
-  } else {
-  }
+  router.push({ name: "BoardTask", params: { id: route.params.id } })
 }
 
 function errorPermission() {
-  router.push({ name: "notFound" });
+  router.push({ name: "notFound" })
 }
 
-// watch(
-//     boardId,
-//     async (newBoardId) => {
-//         if (newBoardId) {
-//             await fetchData()
-//             // checkTokenLogin()
-//         }
-//     },
-//     { immediate: true }
-// )
-
 onMounted(() => {
-  checkrequestNewToken(router);
-  fetchData();
-});
+  checkrequestNewToken(router)
+  fetchData()
+})
 
 onUpdated(() => {
   if (
@@ -520,25 +469,25 @@ onUpdated(() => {
         <button
           type="submit"
           class="itbkk-button-confirm button buttonOK tooltip"
-          :disabled="!isEdited || !checkAuthToken() || !userCollabWrite()"
+          :disabled="(!isEdited && boardIsmycollab) || (!isEdited && checkOwner()) || (isEdited && !boardIsmycollab) || (isEdited && !checkOwner()) || !isEdited"
           :class="{
             'tooltip-left': !checkAuthToken(),
           }"
           :data-tip="
-            checkAuthToken()
+            checkAuthToken() || boardIsmycollab || checkOwner()
               ? 'Update Task Data.'
               : 'You do not have permission to use this feature.'
           "
-          @click="
+          @click=" boardIsmycollab || checkOwner() ?
             updateTask(route.params.id, {
               title: taskData.title,
               description: taskData.description,
               assignees: taskData.assignees,
               status: taskData.status,
-            })
+            }) :''
           "
         >
-          Update
+          Update {{ boardIsmycollab }}
         </button>
       </div>
     </div>

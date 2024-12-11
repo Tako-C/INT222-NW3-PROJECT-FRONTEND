@@ -22,9 +22,9 @@ let userLogin = Cookies.get("oid");
 const currentBoardId = ref({});
 
 onMounted(() => {
-  checkrequestNewToken(router);
-  fetchData();
-  setDefualtStatus();
+  checkrequestNewToken(router)
+  fetchData()
+  setDefualtStatus()
 });
 
 async function setDefualtStatus() {
@@ -44,6 +44,7 @@ let taskData = ref({
 });
 
 async function fetchData() {
+  
   let endpoint = "boards";
 
   let resBoards = await getAllBoard(endpoint);
@@ -100,7 +101,7 @@ function userCollab() {
 
 async function saveTaskData() {
   if (!validateTask(taskData.value)) {
-    return; // Stop execution if validation fails
+    return
   }
   taskData.value.title = taskData.value.title.trim();
   if (taskData.value.description !== null) {
@@ -112,30 +113,54 @@ async function saveTaskData() {
 
   let result = await addData(taskData.value, `boards/${boardId.value}/tasks`);
 
-  if (checkOwner() && checkAuthToken()) {
-    if (result.status === 401) {
-      router.push({ name: "login" });
-      Store.errorToken = true;
-    } else {
-      // console.log(result)
-      TaskID.value = result.id;
-      addToStore();
-    }
-  } else {
-    if (result.status === 403) {
-      Store.errorPage403 = true;
-      errorPermission();
-    }
-    if (result.status === 401) {
-      Store.errorPage401 = true;
-      errorPermission();
-    }
-    addToStore();
+  // if (checkOwner() && checkAuthToken()) {
+  //   if (result.status === 401) {
+  //     router.push({ name: "login" });
+  //     Store.errorToken = true;
+  //   } else {
+  //     // console.log(result)
+  //     TaskID.value = result.id;
+  //     addToStore();
+  //   }
+  // } else {
+  //   if (result.status === 403) {
+  //     Store.errorPage403 = true;
+  //     errorPermission();
+  //   }
+  //   if (result.status === 401) {
+  //     Store.errorPage401 = true;
+  //     errorPermission();
+  //   }
+  //   addToStore();
 
-    // errorPermission()
+  //   // errorPermission()
+  // }
+  switch (result.status) {
+    case 401:
+      router.push({ name: "login" })
+      Store.errorToken = true
+      break
+    case 400:
+      router.push({ name: "Board" })
+      break
+    case 404:
+      Store.errortext404 = "The Colabulate does not exist"
+      Store.errorPage404 = true
+      errorPermission()
+      break;
+    case 403:
+      Store.errorPage403 = true
+      errorPermission()
+      break
+    default:
+      addToStore()
+      closeModal()
+      break
   }
-  fetchData();
-  closeModal();
+
+
+  // fetchData();
+  // closeModal();
 }
 
 function closeModal() {
@@ -151,7 +176,7 @@ function addToStore() {
   taskData.value.statusName = statusObject.name;
   Store.tasks.push(taskData.value);
   Store.successAddTask = true;
-  closeModal();
+  closeModal()
 }
 
 function checkUserPermition() {
@@ -255,7 +280,7 @@ function errorPermission() {
           <button
             type="submit"
             class="itbkk-button-confirm button buttonOK tooltip tooltip-left"
-            @click="saveTaskData()"
+            @click="checkrequestNewToken(router),saveTaskData()"
             :data-tip="
               checkAuthToken()
                 ? 'Create your task.'
