@@ -36,20 +36,27 @@ function convertToBrowserTimezone(utcTime) {
   return date.toLocaleString("en-AU", options);
 }
 
-async function fetchData() {
-  let result = await getAllBoard(`boards/${route.params.id}`);
-
-  if (result.status === 404) {
-    Store.errorPrivate404 = true;
-    Store.errorPrivate404Content = "Board";
-    router.push({ name: "board", params: { id: route.params.id } });
-  } else if (result.status === 403) {
-    Store.errorPage403 = true;
-    router.push({ name: "notFound" });
-  } else if (result.status === 401) {
-    router.push({ name: "login" });
-    Store.errorToken = true;
-  } else {
+function CheckError(result){
+  console.log(result.status);
+  
+  switch (result.status) {
+    case 401:
+      router.push({ name: "login" })
+      Store.errorToken = true
+      break
+    case 400:
+      router.push({ name: "Board" })
+      break
+    case 404:
+      Store.errorPrivate404 = true;
+      Store.errorPrivate404Content = "Board"
+      router.push({ name: "board", params: { id: route.params.id } })
+      break;
+    case 403:
+      Store.errorPage403 = true
+      errorPermission()
+      break
+    default:
     boardData.value = result;
     fetchHaveData.value = true;
     createTimeInBrowserTimezone.value = convertToBrowserTimezone(
@@ -59,7 +66,37 @@ async function fetchData() {
       result.updatedOn
     );
   }
-  checkOwner();
+}
+
+function errorPermission() {
+  router.push({ name: "notFound" });
+}
+
+
+async function fetchData() {
+  let result = await getAllBoard(`boards/${route.params.id}`);
+  CheckError(result)
+  // if (result.status === 404) {
+  //   Store.errorPrivate404 = true;
+  //   Store.errorPrivate404Content = "Board";
+  //   router.push({ name: "board", params: { id: route.params.id } });
+  // } else if (result.status === 403) {
+  //   Store.errorPage403 = true;
+  //   router.push({ name: "notFound" });
+  // } else if (result.status === 401) {
+  //   router.push({ name: "login" });
+  //   Store.errorToken = true;
+  // } else {
+  //   boardData.value = result;
+  //   fetchHaveData.value = true;
+  //   createTimeInBrowserTimezone.value = convertToBrowserTimezone(
+  //     result.createdOn
+  //   );
+  //   updateTimeInBrowserTimezone.value = convertToBrowserTimezone(
+  //     result.updatedOn
+  //   );
+  // }
+  checkOwner()
 }
 
 function checkOwner() {

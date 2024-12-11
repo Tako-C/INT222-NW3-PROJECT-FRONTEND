@@ -1,10 +1,10 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { addData } from "@/libs/fetchs.js";
-import { useRouter, useRoute } from "vue-router";
-import { useStore } from "@/stores/store.js";
-import Cookies from "js-cookie";
-import { checkAuthToken, checkrequestNewToken } from "@/libs/authToken.js";
+import { ref, onMounted } from "vue"
+import { addData } from "@/libs/fetchs.js"
+import { useRouter, useRoute } from "vue-router"
+import { useStore } from "@/stores/store.js"
+import Cookies from "js-cookie"
+import { checkAuthToken, checkrequestNewToken } from "@/libs/authToken.js"
 
 const router = useRouter();
 const route = useRoute();
@@ -14,38 +14,61 @@ let userLogin = Cookies.get("name");
 
 function checkUserPermition() {
   if (checkAuthToken() === false) {
-    router.push({ name: "notFound" });
+    Store.errorPage403 = true
+    router.push({ name: "notFound" })
   }
 }
 
 let boardData = ref({
   board_name: `${Cookies.get("name")} personal board`,
-});
+})
 
 function closeModal() {
-  router.push({ name: "Board" });
-  clearData();
+  router.push({ name: "Board" })
+  clearData()
 }
 
 function addToStore(newBoard) {
-  boardData.value = { ...newBoard };
-  boardData.value.owner = { ...boardData.value.owner };
-  boardData.value.owner.oid = newBoard.oid;
-  boardData.value.owner.name = userLogin;
+  boardData.value = { ...newBoard }
+  boardData.value.owner = { ...boardData.value.owner }
+  boardData.value.owner.oid = newBoard.oid
+  boardData.value.owner.name = userLogin
 
-  Store.boards.push(boardData.value);
-  Store.successAddStatus = true;
+  Store.boards.push(boardData.value)
+  Store.successAddStatus = true
 }
 
 async function saveBoardData() {
-  boardData.value.boards = boardId.value;
-  let result = await addData(boardData.value, `boards`);
-  if (result.status === 400) {
-    router.push({ name: "Board" });
-  } else {
-    addToStore(result);
-    closeModal();
+  checkrequestNewToken(router)
+  boardData.value.boards = boardId.value
+  let result = await addData(boardData.value, `boards`)
+
+  switch (result.status) {
+    case 401:
+      router.push({ name: "login" })
+      Store.errorToken = true
+      break
+    case 400:
+      router.push({ name: "Board" })
+      break
+    case 404:
+      Store.errortext404 = "The Colabulate does not exist"
+      Store.errorPage404 = true
+      errorPermission()
+      break;
+    case 403:
+      Store.errorPage403 = true
+      errorPermission()
+      break
+    default:
+      addToStore(result)
+      closeModal()
+      break
   }
+}
+
+function errorPermission() {
+  router.push({ name: "notFound" });
 }
 
 function clearData() {
@@ -54,11 +77,12 @@ function clearData() {
   };
 }
 onMounted(() => {
-  checkrequestNewToken(router);
-});
+  checkrequestNewToken(router)
+  checkAuthToken()
+  checkUserPermition()
+})
 
-checkAuthToken();
-checkUserPermition();
+
 </script>
 <template>
   <div
@@ -102,7 +126,7 @@ checkUserPermition();
         <button
           type="submit"
           class="itbkk-button-ok button buttonOK"
-          @click="saveBoardData()"
+          @click="checkrequestNewToken(router),saveBoardData()"
           :disabled="boardData.board_name.length === 0"
           :class="{
             'cursor-not-allowed tooltip tooltip-left': !checkAuthToken(),

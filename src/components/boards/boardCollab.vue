@@ -60,7 +60,8 @@ function checkOwner() {
 }
 
 async function fetchData() {
-  let endpoint = "boards";
+  checkrequestNewToken(router)
+  let endpoint = "boards"
   let resultColab = await getAllBoard(`boards/${boardId.value}/collabs`);
   let resStatuses = await getDataByBoard(`${boardId.value}/statuses`);
   resultAllBoard = await getAllBoard(endpoint);
@@ -106,13 +107,13 @@ async function changeAccessRight() {
   }
   if (indexToUpdate !== -1) {
     Store.collaborate[indexToUpdate].accessRight =
-      CollabDetail.value.accessRight;
+      CollabDetail.value.accessRight
   }
-  closeNotificationModal();
+  closeNotificationModal()
 }
 
 async function patchAccessRight() {
-  checkrequestNewToken(router);
+  checkrequestNewToken(router)
 
   let result = await PatchData(
     `boards/${boardId.value}/collabs/invitations/${CollabDetail.value.oid}`,
@@ -203,6 +204,7 @@ function openConfirmDeleteCollabModal(collab) {
   }
 }
 async function removeCollabUser() {
+  checkrequestNewToken(router)
   if (checkAuthToken()) {
     let collabBoard;
 

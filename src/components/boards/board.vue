@@ -8,44 +8,44 @@ import {
   checkUserInAuthToken,
   checkAuthToken,
   checkrequestNewToken,
-} from "@/libs/authToken.js";
+} from "@/libs/authToken.js"
 
-import Cookies from "js-cookie";
-import BoardVisibilityConfirmation from "@/components/boards/boardVisibilityConfirmation.vue";
-import modalNotification from "@/components/modals/modalNotification.vue";
-import boardCollabLeave from "@/components/boards/modalConfirmedLeaveCollab.vue";
-import sidebarV2 from "./sidebarV2.vue";
+import Cookies from "js-cookie"
+import BoardVisibilityConfirmation from "@/components/boards/boardVisibilityConfirmation.vue"
+import modalNotification from "@/components/modals/modalNotification.vue"
+import boardCollabLeave from "@/components/boards/modalConfirmedLeaveCollab.vue"
+import sidebarV2 from "./sidebarV2.vue"
 import {
   UserGroupIcon,
   PlusCircleIcon,
   BellAlertIcon,
-} from "@heroicons/vue/24/solid";
+} from "@heroicons/vue/24/solid"
 
-const Store = useStore();
-const router = useRouter();
-const route = useRoute();
+const Store = useStore()
+const router = useRouter()
+const route = useRoute()
 // checkLoginUser
-const loadpage = ref(route.params);
-// let TokenLogin = ref(false)
+const loadpage = ref(route.params)
+
 
 const username = ref(Cookies.get("name"));
-const openConfirmedChangeVisibility = ref(false);
-let visibilityBoard = ref({});
-let userLogin = Cookies.get("oid");
-let CollabLeave = ref({});
-let boardSideBarPersonal = ref([]);
-let boardSideBarCollab = ref([]);
-let boardSideBarPublic = ref([]);
-const openConfirmedLeaveCollab = ref(false);
+const openConfirmedChangeVisibility = ref(false)
+let visibilityBoard = ref({})
+let userLogin = Cookies.get("oid")
+let CollabLeave = ref({})
+let boardSideBarPersonal = ref([])
+let boardSideBarCollab = ref([])
+let boardSideBarPublic = ref([])
+const openConfirmedLeaveCollab = ref(false)
 
 function getImageUrl(index) {
-  return `/images/${(index % 5) + 1}.png`;
+  return `/images/${(index % 5) + 1}.png`
 }
 
-let PersonalBoard = ref([]);
-let OtherBoard = ref([]);
-let acceptBoard = [];
-let pendingBoard = [];
+let PersonalBoard = ref([])
+let OtherBoard = ref([])
+let acceptBoard = []
+let pendingBoard = []
 
 function assignVisibility(visibility) {
   if (visibility === "public") {
@@ -55,19 +55,19 @@ function assignVisibility(visibility) {
   }
 }
 async function fetchData() {
-  let dataRaw = await getAllBoard("boards");
+  let dataRaw = await getAllBoard("boards")
 
   for (let i = 0; i < dataRaw.boards.length; i++) {
     dataRaw.boards[i].isCheck = assignVisibility(dataRaw.boards[i].visibility);
     if (dataRaw.boards[i].owner.oid === userLogin) {
-      PersonalBoard.value.push(dataRaw.boards[i]);
+      PersonalBoard.value.push(dataRaw.boards[i])
     }
 
     if (
       dataRaw.boards[i].owner.oid !== userLogin &&
       dataRaw.boards[i].visibility === "public"
     ) {
-      OtherBoard.value.push(dataRaw.boards[i]);
+      OtherBoard.value.push(dataRaw.boards[i])
     }
   }
 
@@ -76,12 +76,10 @@ async function fetchData() {
       dataRaw.collaborate[i].isCheck = assignVisibility(
         dataRaw.collaborate[i].visibility
       );
-      OtherBoard.value.push(dataRaw.collaborate[i]);
+      OtherBoard.value.push(dataRaw.collaborate[i])
     }
   }
-
-  Store.collaborate = dataRaw.collaborate;
-
+  Store.collaborate = dataRaw.collaborate
   Store.collaborate.forEach((collab) => {
     if (collab.status === "ACCEPTED") {
       acceptBoard.push(collab);
@@ -94,10 +92,10 @@ async function fetchData() {
 }
 
 function openBoardTaskModal(boardId) {
-  router.push({ name: "BoardTask", params: { id: boardId } });
+  router.push({ name: "BoardTask", params: { id: boardId } })
 }
 function openBoardDetailModal(boardId) {
-  router.push({ name: "BoardDetail", params: { id: boardId } });
+  router.push({ name: "BoardDetail", params: { id: boardId } })
 }
 function openCreateBoard(boardId) {
   if (!checkAuthToken) {
@@ -112,7 +110,7 @@ function errorPermission() {
 }
 
 async function updateVisibility() {
-  checkrequestNewToken(router);
+  checkrequestNewToken(router)
 
   if (visibilityBoard.value.isCheck == true) {
     visibilityBoard.value.visibility = "public";
@@ -496,7 +494,7 @@ watch(
 
       <!-- collab row -->
       <h1
-        v-show="checkAuthToken()"
+        v-show="Store.collaborate.length > 0"
         class="itbkk-collab-board text-3xl font-bold text-black ml-2 mt-10 mb-6"
       >
         Collab Boards

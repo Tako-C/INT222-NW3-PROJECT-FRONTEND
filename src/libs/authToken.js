@@ -40,7 +40,6 @@ function checkAuthRefreshToken() {
     refreshToken.value = Cookies.get("refresh_token");
     return !!refreshToken.value;
 }
-console.log(checkAuthRefreshToken())
 
 
 function requestNewToken() {
@@ -51,21 +50,21 @@ function requestNewToken() {
 
 function checkrequestNewToken(router) {
     if (checkAuthToken()) {
-      if (checkExpAuthToken() && checkAuthToken()) {
-          console.log(checkAuthRefreshToken(), checkExpAuthToken())
+      if (checkExpAuthToken()) {
+
         if (!checkAuthRefreshToken()) {
-          
-            console.log("Token ยังใช้งานต่อไม่ได้")
-            clearCookies()
             router.push({ name: "login" })
+            // console.log("Token ยังใช้งานต่อไม่ได้")
+            clearCookies()
+            
         } else {
           requestNewToken()
         }
       } else {
-        console.log("Token ใช้งานต่อได้")
+        // console.log("Token ใช้งานต่อได้")
       }
     } else {
-      console.log("User Not Login")
+    //   console.log("User Not Login")
     }
   }
 
@@ -89,16 +88,9 @@ function clearCookies() {
 }
 
 async function fetchToken(token) {
-    console.log(token)
-
     const result = await requestToken(token)
-    console.log(result)
-
     const token_raw = result.access_token // Parse result into JSON before using
-    console.log(token_raw);
-
     const decodedToken = jwtDecode(token_raw); // Decode access_token
-    console.log(decodedToken);
     const now = Math.floor(Date.now() / 1000)
     const exp = decodedToken.exp
 
@@ -118,7 +110,6 @@ async function fetchToken(token) {
 }
 
 function setAuthToken(result) {
-    console.log(result);
 
     const token_raw = JSON.parse(result); // Parse result into JSON before using
     const decodedToken = jwtDecode(token_raw.access_token); // Decode access_token

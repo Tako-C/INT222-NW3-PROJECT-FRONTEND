@@ -60,31 +60,42 @@ async function fetchData() {
     return;
   }
 
-  if (checkAuthToken()) {
-    if (checkUserInAuthToken(userLogin, currentBoardId.value.owner.oid)) {
-      if (userCollab()) {
-        // console.log("Usercollab accessRight is write");
+  // if (checkAuthToken()) {
+  //   if (checkUserInAuthToken(userLogin, currentBoardId.value.owner.oid)) {
+  //     if (userCollab()) {
+  //       // console.log("Usercollab accessRight is write");
 
-        if (currentStatus.name == "No Status" || currentStatus.name == "Done") {
-          window.alert("You can not edit this Status.");
-          openStatuses();
-        }
-        if (currentStatus.status === 404) {
-          openStatuses();
-          Store.errorNotfoundStatus = true;
-        } else {
-          statusData.value = currentStatus;
-          originalStatusData.value = { ...statusData.value };
-        }
-      } else {
-        console.log("Usercollab accessRight is read or not permition");
-        handlePermissionError(currentStatus);
-      }
-    } else {
-      handlePermissionError(currentStatus);
-    }
+  //       if (currentStatus.name == "No Status" || currentStatus.name == "Done") {
+  //         window.alert("You can not edit this Status.");
+  //         openStatuses();
+  //       }
+  //       if (currentStatus.status === 404) {
+  //         openStatuses();
+  //         Store.errorNotfoundStatus = true;
+  //       } else {
+  //         statusData.value = currentStatus;
+  //         originalStatusData.value = { ...statusData.value };
+  //       }
+  //     } else {
+  //       console.log("Usercollab accessRight is read or not permition");
+  //       handlePermissionError(currentStatus);
+  //     }
+  //   } else {
+  //     handlePermissionError(currentStatus);
+  //   }
+    
+  // }
+
+  if (currentStatus.name == "No Status" || currentStatus.name == "Done") {
+      window.alert("You can not edit this Status.")
+      openStatuses()
+    
+  } else {
+    statusData.value = currentStatus;
+    originalStatusData.value = { ...statusData.value }
   }
 }
+
 
 function userCollab() {
   const userCollab =
