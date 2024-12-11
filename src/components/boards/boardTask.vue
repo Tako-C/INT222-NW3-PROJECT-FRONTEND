@@ -244,31 +244,6 @@ async function removeTask() {
         `boards/${route.params.id}/tasks/${taskID.value}`
     )
 
-    // if (checkOwner() && checkAuthToken()) {
-    //     if (removedTask.status === 401) {
-    //         router.push({ name: "login" })
-    //         Store.errorToken = true
-    //     }
-    //     if (removedTask.status === 404) {
-    //         console.log("result :", removedTask.status)
-    //         errorDelete.value = true
-    //     } else {
-    //         Store.tasks = Store.tasks.filter((task) => task.id !== taskID.value)
-    //         successDelete.value = true
-    //     }
-    // } else {
-    //     if (removedTask.status === 403) {
-    //         Store.errorPage403 = true
-    //         errorPermission()
-    //     }
-    //     if (removedTask.status === 401) {
-    //         Store.errorPage401 = true
-    //         errorPermission()
-    //     }
-    // }
-    // fetchData()
-    // closeNotificationModal()
-
     switch (removedTask.status) {
     case 401:
       router.push({ name: "login" })

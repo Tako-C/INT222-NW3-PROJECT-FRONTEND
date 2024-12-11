@@ -207,7 +207,6 @@ async function leaveConfirm() {
   } else {
     for (let i = 0; i < collabBoard.collaborators.length; i++) {
       if (userLogin === collabBoard.collaborators[i].oid) {
-        console.log(collabBoard.collaborators[i]);
         collabOid = collabBoard.collaborators[i].oid;
         acceptBoard = acceptBoard.filter(
           (info) => info.boardId != collabBoard.collaborators[i].boardsId

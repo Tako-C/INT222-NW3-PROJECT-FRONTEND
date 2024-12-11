@@ -99,16 +99,13 @@ async function saveBoardData() {
             Store.errorToken = true
             break
         case 400:
-            // console.log("400 error")
             errorPermission()
             break
         case 404:
             Store.errorPage404 = true
-            // console.log("404 error")
             break
         case 409:
             Store.errorPage409 = true
-            // console.log("409 error")
             break
         default:
             addToStore(result.user)

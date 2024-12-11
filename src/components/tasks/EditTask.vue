@@ -132,14 +132,11 @@ function userCollabWrite() {
   } else {
     if (userCollab) {
       if (userCollab.accessRight === "read") {
-        console.log("read");
         return false;
       }
       if (userCollab.accessRight === "write") {
-        console.log("write");
         return true;
       } else {
-        console.log("Public Borard");
         return false;
       }
     } else {
@@ -159,10 +156,6 @@ async function fetchData() {
   Store.boards = resultBoardAll;
   Store.statuses = resultStatuses;
   currentBoardId.value = result;
-
-  // console.log(currentBoardId.value)
-  // console.log(Store.boards)
-  // console.log(userCollab());
 
   const BoardVisibility =
     Store.boards.boards.find(
@@ -469,7 +462,7 @@ onUpdated(() => {
         <button
           type="submit"
           class="itbkk-button-confirm button buttonOK tooltip"
-          :disabled="(!isEdited && boardIsmycollab) || (!isEdited && checkOwner()) || (isEdited && !boardIsmycollab) || (isEdited && !checkOwner()) || !isEdited"
+          :disabled="!isEdited "
           :class="{
             'tooltip-left': !checkAuthToken(),
           }"

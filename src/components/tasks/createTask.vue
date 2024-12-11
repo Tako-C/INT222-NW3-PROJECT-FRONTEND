@@ -59,7 +59,6 @@ function checkOwner() {
   const foundBoard =
     Store.boards.boards.find((board) => board.boardId === boardId.value) ||
     Store.boards.collaborate.find((board) => board.boardId === boardId.value);
-  console.log(foundBoard);
 
   if (foundBoard.boardId === boardId.value) {
     userInboard = foundBoard.owner.oid;
@@ -75,22 +74,18 @@ function userCollab() {
     ) ||
     Store.boards.collaborate.find(
       (uCollab) => uCollab.boardId === currentBoardId.value.boardId
-    );
-  console.log(userCollab);
+    )
 
   if (checkOwner()) {
     return true;
   } else {
     if (userCollab) {
       if (userCollab.accessRight == "read") {
-        console.log("read");
         return false;
       }
       if (userCollab.accessRight == "write") {
-        console.log("write");
         return true;
       } else {
-        console.log("Erroe permition");
         return false;
       }
     } else {
@@ -113,28 +108,6 @@ async function saveTaskData() {
 
   let result = await addData(taskData.value, `boards/${boardId.value}/tasks`);
 
-  // if (checkOwner() && checkAuthToken()) {
-  //   if (result.status === 401) {
-  //     router.push({ name: "login" });
-  //     Store.errorToken = true;
-  //   } else {
-  //     // console.log(result)
-  //     TaskID.value = result.id;
-  //     addToStore();
-  //   }
-  // } else {
-  //   if (result.status === 403) {
-  //     Store.errorPage403 = true;
-  //     errorPermission();
-  //   }
-  //   if (result.status === 401) {
-  //     Store.errorPage401 = true;
-  //     errorPermission();
-  //   }
-  //   addToStore();
-
-  //   // errorPermission()
-  // }
   switch (result.status) {
     case 401:
       router.push({ name: "login" })
@@ -181,7 +154,6 @@ function addToStore() {
 
 function checkUserPermition() {
   if (userCollab() || checkOwner()) {
-    console.log("gooo");
   } else {
     Store.errorPage403 = true;
     router.push({ name: "notFound" });

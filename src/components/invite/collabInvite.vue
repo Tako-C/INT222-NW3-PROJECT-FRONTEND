@@ -55,11 +55,9 @@ async function fetchData() {
 
   Store.boards = resBoards.boards;
   Store.collaborate = resBoards.collaborate;
-console.log(resBoards.collaborate[0])
 
 for (let i = 0; i < resBoards.boards.length; i++) {
     if (resBoards.boards[i].owner.oid === userLogin) {
-      console.log('yoooo')
       PersonalBoard.value.push(resBoards.boards[i]);
     }
 
@@ -206,18 +204,15 @@ function errorDetection(status) {
       Store.errorToken = true;
       break;
     case 400:
-      // console.log("400 error")
       errorPermission();
       break;
     case 404:
       Store.errortext404 = "The Colabulate does not exist";
       Store.errorPage404 = true;
-      console.log("404 error");
       errorPermission();
       break;
     case 403:
       Store.errorPage403 = true;
-      // console.log("403 error")
       errorPermission();
       break;
     default:
@@ -231,7 +226,6 @@ watch(
     if (newBoardId) {
       await fetchData();
       getBoardName();
-      // console.log(boardName.value);
     }
   },
   { immediate: true }

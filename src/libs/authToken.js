@@ -29,7 +29,7 @@ function checkExpAuthToken() {
     const exp = decodedToken.exp
 
     if (now > exp) {
-        console.log("มากเกินไป");
+        // console.log("มากเกินไป");
         return true
     } else{
         return false

@@ -73,12 +73,10 @@ function handleAuthAction() {
 </script>
 
 <template>
-  <div class="h-screen flex">
+  <div class="h-screen flex mr-4">
     <div
       class="relative flex flex-col transition-all duration-300 ease-in-out bg-white shadow-lg"
       :class="isExtend ? 'w-64' : 'w-16'"
-      @mouseenter="() => handleExtend(true)"
-      @mouseleave="() => handleExtend(false)"
     >
       <!-- Logo and Title -->
       <div class="flex items-center p-4 bg-orange-100">
