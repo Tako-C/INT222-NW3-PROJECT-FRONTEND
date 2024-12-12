@@ -1,5 +1,8 @@
 # itb-kk-nw-3
 
+This is frontend component
+https://www.figma.com/board/0bajf8vzvOwpY1bglbupeK/Untitled?node-id=0-1&node-type=canvas&t=fk0qGr5kixE98Vxw-0
+
 This template should help get you started developing with Vue 3 in Vite.
 
 ## Recommended IDE Setup
